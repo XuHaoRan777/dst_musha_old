@@ -1107,6 +1107,23 @@ elseif not inst.open then
   
 ---------hat
 
+local function SetDroppedYamcheResting(inst)
+	if inst.components.follower ~= nil then
+		inst.components.follower:SetLeader(nil)
+	end
+	inst.sleepn = true
+	inst.fightn = true
+	inst.active_hunt = false
+	inst.slave = false
+	inst.yamche = true
+	if inst.MiniMapEntity ~= nil then
+		inst.MiniMapEntity:SetIcon("musha_small.txt")
+	end
+	if inst.components.sleeper ~= nil and not inst.components.sleeper:IsAsleep() then
+		inst.components.sleeper:AddSleepiness(3, 10)
+	end
+end
+
 local function Dropped_Yamche(inst,data)
 inst.house = false
 --with sw mods on the sea
@@ -1168,6 +1185,8 @@ inst.sg:GoToState("walk")
 		inst.fightn = false
 		inst.slave = true
 		v.follow = true
+	else
+		SetDroppedYamcheResting(inst)
     end
 end	
 
@@ -4607,6 +4626,50 @@ local function onsave(inst, data)
 
 end
 
+local function GetYamcheMigrationOffset(inst, x, y, z)
+	return 1.5, 0, 1.5
+end
+
+local function OnYamcheLeaderChanged(inst, data)
+	local new_leader = data ~= nil and data.new or nil
+	local old_leader = data ~= nil and data.old or nil
+
+	if old_leader ~= nil
+		and old_leader.components.petleash ~= nil
+		and old_leader.components.petleash:IsPet(inst)
+		and old_leader ~= new_leader then
+		if old_leader.musha_is_despawning then
+			return
+		end
+		old_leader.components.petleash:DetachPet(inst)
+		inst.persists = true
+	end
+
+	if new_leader ~= nil
+		and new_leader:HasTag("musha")
+		and new_leader.components.petleash ~= nil
+		and not inst.house
+		and not inst.hat
+		and not inst.picked then
+		if not new_leader.components.petleash:IsPet(inst) then
+			new_leader.components.petleash:AttachPet(inst)
+		end
+		inst.persists = false
+		inst.picked = false
+		inst.house = false
+		inst.hat = false
+		inst.sleepn = false
+		inst.fightn = false
+		inst.slave = true
+		new_leader.follow = true
+		new_leader.yamche_follow = true
+	elseif old_leader ~= nil and old_leader:HasTag("musha") and old_leader.components.leader ~= nil then
+		if old_leader.components.leader:CountFollowers("yamcheb") <= 0 then
+			old_leader.follow = false
+		end
+	end
+end
+
 local function FollowPlayer(inst)
 local x,y,z = inst.Transform:GetWorldPosition()
 	local ents = TheSim:FindEntities(x,y,z, 10, {"musha"})
@@ -4749,6 +4812,9 @@ local function create_common(inst)
     inst:AddComponent("follower")
 	inst.components.follower:KeepLeaderOnAttacked()
     inst.components.follower.keepdeadleader = true
+	inst:ListenForEvent("leaderchanged", OnYamcheLeaderChanged)
+	inst:AddComponent("migrationpetsoverrider")
+	inst.components.migrationpetsoverrider:SetOffsetFromFn(GetYamcheMigrationOffset)
 	inst:AddComponent("leader")
 	inst.taunting = inst:DoPeriodicTask(8,taunting)
 --------------------------------------------------------------------------

@@ -1,21 +1,17 @@
 local function ConsolePostConstruct(inst)
 
 	function inst:OnBecomeActive()
-		SetPause(true)
-
 		inst._base.OnBecomeActive(inst)
 		TheFrontEnd:ShowConsoleLog()
 
 		inst.console_edit:SetFocus()
 		inst.console_edit:SetEditing(true)
-		self:ToggleRemoteExecute(true)
+		inst:ToggleRemoteExecute(true)
 		TheFrontEnd:LockFocus(true)
 	end
 
 	function inst:OnBecomeInactive()
-    	SetPause(false)
-
-    	inst._base.OnBecomeInactive(self)
+		inst._base.OnBecomeInactive(inst)
 
     	if inst.runtask ~= nil then
         	inst.runtask:Cancel()

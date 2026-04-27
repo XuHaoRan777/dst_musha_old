@@ -462,7 +462,7 @@ return {
 		MUSHA_TALL2 = "Who is stronger? Yamche or the Beefaloes?\nOrder keys:(Z,V,B)",
 		MUSHA_TALLRR1 = "Who is stronger? Yamche or the Beefaloes?\nOrder keys:(Z,V,B)",
 		MUSHA_TALLRR2 = "Who is stronger? Yamche or the Beefaloes?\nOrder keys:Z,V,B)",
-		MUSHA_TALLRR3 = "Who is stronger? Yamche or the Beefaloes?\Order keys:(Z,V,B)",
+		MUSHA_TALLRR3 = "Who is stronger? Yamche or the Beefaloes?\nOrder keys:(Z,V,B)",
 		MUSHA_TALLRR4 = "Who is stronger? Yamche or the Beefaloes?\nOrder keys:(Z,V,B)",
 		MUSHA_TALLRR5 = "Who is stronger? Yamche or the Beefaloes?\nOrder keys:(Z,V,B)",
 		MUSHA_TALLRRICE = "Who is stronger? Yamche or the Beefaloes?\nOrder keys:(Z,V,B)",

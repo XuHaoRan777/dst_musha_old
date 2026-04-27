@@ -122,7 +122,7 @@ modimport("scripts/musha_adds_actions.lua")
 modimport("scripts/musha_adds_container.lua")
 
 --bodyguard wilson
-function bodyguardwilson(inst)
+local function bodyguardwilson(inst)
 if IsServer then
   if bodyguard_wilson == 1 then
 	inst.no_bodyguard = true
@@ -2961,34 +2961,103 @@ end
 AddModRPCHandler("musha","arong", order_arong)
  
  -----------------------------
- function yamche_update(inst)
+local function can_command_yamche(yamche)
+return yamche ~= nil
+	and yamche.components ~= nil
+	and yamche.components.follower ~= nil
+	and not yamche.house
+	and not yamche.hat
+	and not yamche.picked
+end
+
+local function find_commandable_yamche(inst)
 local x,y,z = inst.Transform:GetWorldPosition()
 local ents = TheSim:FindEntities(x,y,z, 25, {"yamcheb"})
+local closest = nil
+local closest_distsq = nil
 for k,v in pairs(ents) do
-if not v.house and not v.hat then
-if inst.follow and v.components.follower and not v.components.follower.leader and not inst.components.leader:IsFollower(v) and inst.components.leader:CountFollowers("yamcheb") == 0 then
-inst.components.leader:AddFollower(v)
-v.MiniMapEntity:SetIcon( "" )
---on_yamche(inst)
-v.yamche = true
-v.sleepn = false 
-v.fightn = false
-v.slave = true
---off_yamche(inst)
-elseif not inst.follow and v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and inst.components.leader:CountFollowers("yamcheb") == 1 then
-v.sleepn = true
-v.yamche = true 
-v.fightn = true
-v.active_hunt = false
-v.slave = false
-inst.components.leader:RemoveFollowersByTag("yamcheb")
-v.MiniMapEntity:SetIcon( "musha_small.txt" )
-if v.pick1 then
-v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_GATHER_STOP)
-v.pick1 = false
-v.working_food = false
+if can_command_yamche(v) then
+local distsq = inst:GetDistanceSqToInst(v)
+if closest == nil or distsq < closest_distsq then
+closest = v
+closest_distsq = distsq
 end
-end end end
+end
+end
+return closest
+end
+
+local function find_owned_yamche(inst)
+local x,y,z = inst.Transform:GetWorldPosition()
+local ents = TheSim:FindEntities(x,y,z, 25, {"yamcheb"})
+local closest = nil
+local closest_distsq = nil
+for k,v in pairs(ents) do
+if v.components ~= nil
+	and v.components.follower ~= nil
+	and (v.components.follower.leader == inst or inst.components.leader:IsFollower(v)) then
+local distsq = inst:GetDistanceSqToInst(v)
+if closest == nil or distsq < closest_distsq then
+closest = v
+closest_distsq = distsq
+end
+end
+end
+return closest
+end
+
+local function set_yamche_following(inst, yamche)
+if not can_command_yamche(yamche) or inst.components.leader == nil then
+return false
+end
+if yamche.components.follower.leader ~= inst then
+yamche.components.follower:SetLeader(inst)
+end
+if not inst.components.leader:IsFollower(yamche) and inst.components.leader:CountFollowers("yamcheb") == 0 then
+inst.components.leader:AddFollower(yamche)
+end
+yamche.MiniMapEntity:SetIcon( "" )
+yamche.yamche = true
+yamche.sleepn = false 
+yamche.fightn = false
+yamche.slave = true
+return true
+end
+
+local function set_yamche_resting(inst, yamche)
+if yamche == nil or yamche.components == nil or yamche.components.follower == nil or inst.components.leader == nil then
+return
+end
+yamche.sleepn = true
+yamche.yamche = true 
+yamche.fightn = true
+yamche.active_hunt = false
+yamche.slave = false
+yamche.components.follower:SetLeader(nil)
+if inst.components.leader:IsFollower(yamche) then
+inst.components.leader:RemoveFollowersByTag("yamcheb")
+end
+yamche.MiniMapEntity:SetIcon( "musha_small.txt" )
+if yamche.components.sleeper ~= nil and not yamche.components.sleeper:IsAsleep() then
+yamche.components.sleeper:AddSleepiness(3, 10)
+end
+if yamche.pick1 then
+yamche.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_GATHER_STOP)
+yamche.pick1 = false
+yamche.working_food = false
+end
+end
+
+function yamche_update(inst)
+local yamche = inst.follow and find_commandable_yamche(inst) or (find_owned_yamche(inst) or find_commandable_yamche(inst))
+if yamche == nil then
+return
+end
+if inst.follow then
+set_yamche_following(inst, yamche)
+else
+set_yamche_resting(inst, yamche)
+end
 end
  
  function order_yamche(inst)
@@ -2999,35 +3068,46 @@ for k,v in pairs(ents) do
 inst.writing = true
 end 
 if not inst.writing and not inst.hat and not inst.house then
-if inst.yamche_follow and not inst.follow and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
+local commandable_yamche = find_commandable_yamche(inst)
+local owned_yamche = find_owned_yamche(inst)
+local has_yamche_follower = inst.components.leader:CountFollowers("yamcheb") > 0
+if commandable_yamche ~= nil and commandable_yamche.components.follower.leader == inst then
+has_yamche_follower = true
+end
+if owned_yamche ~= nil then
+has_yamche_follower = true
+end
+if not has_yamche_follower and commandable_yamche ~= nil and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_FOLLOW)
 local emote = "happy"
 			if emote ~= nil then
 				MushaCommands.RunTextUserCommand(emote, inst, false)
 			end
 inst.follow = true
+inst.yamche_follow = true
 --master_yamche(inst)
 yamche_update(inst)
-elseif inst.yamche_follow and inst.follow and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
+elseif has_yamche_follower and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_STAY)
 
 inst.follow = false
 inst.yamche_follow = false
 --master_yamche(inst)
 yamche_update(inst)
-elseif not inst.yamche_follow and not inst:HasTag("playerghost") then
+elseif commandable_yamche == nil and not inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_LOST)
 
-elseif inst.yamche_follow and not inst.follow and inst:HasTag("playerghost") then
+elseif not has_yamche_follower and commandable_yamche ~= nil and inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_FOLLOW)
 inst.follow = true
+inst.yamche_follow = true
 yamche_update(inst)
-elseif inst.yamche_follow and inst.follow and inst:HasTag("playerghost") then
+elseif has_yamche_follower and inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_STAY)
 inst.follow = false
 inst.yamche_follow = false
 yamche_update(inst)
-elseif not inst.yamche_follow and inst:HasTag("playerghost") then
+elseif commandable_yamche == nil and inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_OOOOH)
 end
 end
@@ -4277,36 +4357,36 @@ AddModRPCHandler("musha","ydebug", ydebug)]]
 
 ------------------------------------------------
 -------------comfortable health info
-local healthinfoActive = 0
-for _, moddir in ipairs(GLOBAL.KnownModIndex:GetModsToLoad()) do
-    if GLOBAL.KnownModIndex:GetModInfo(moddir).name == "Health Info" then
-		healthinfoActive = 1
-   end end 
-
 -------------------------------------------------
 --yamche health/hunger info (thx health info)
 
-if healthinfoActive == 0 or healthinfoActive == 1 then
 AddClassPostConstruct("components/health_replica", function(self)
+local old_SetCurrent = self.SetCurrent
 self.SetCurrent = function(self, current)
-if self.inst.components and self.inst.components.health and self.inst.components.healthinfo_copy and self.inst.components.hungerinfo and (self.inst:HasTag("yamche") or self.inst:HasTag("arongbaby")) then
+if self.inst.components and self.inst.components.health and self.inst.components.healthinfo_copy and (self.inst:HasTag("yamche") or self.inst:HasTag("arongbaby")) then
 ---------
 local str = self.inst.components.healthinfo_copy.text
 if str ~= nil then
 			local h = self.inst.components.health
 			local mx = math.floor(h.maxhealth-h.minhealth)
 			local cur = math.floor(h.currenthealth-h.minhealth)
+			if self.inst.components.hungerinfo and self.inst.components.hunger then
 			local h2 = self.inst.components.hunger
 			local mx2 = math.floor(h2.max-h2.hungerrate)
 			local cur2 = math.floor(h2.current-h2.hungerrate)
 local i,j = string.find(str, " [", nil, true)
 if i ~= nil and i > 1 then str = string.sub(str, 1, (i-1)) end
 str = "["..math.floor(cur*100/mx).."%/"..math.floor(cur2*100/mx2).."%]"
+			else
+str = "["..math.floor(cur*100/mx).."%]"
+			end
 if self.inst.components.healthinfo_copy and (self.inst:HasTag("yamche") or self.inst:HasTag("arongbaby"))  then
 self.inst.components.healthinfo_copy:SetText(str)
 end end 
 end
-if self.classified ~= nil then
+if old_SetCurrent ~= nil then
+old_SetCurrent(self, current)
+elseif self.classified ~= nil then
 self.classified:SetValue("currenthealth", current)
 end end end)
 --hover text
@@ -4394,7 +4474,6 @@ if changed then
 local pos = TheInput:GetScreenPosition()
 self:UpdatePosition(pos.x, pos.y)
 end end end)
-end
 
 --------------------------------
 AddPrefabPostInitAny(function(inst)
@@ -4402,12 +4481,12 @@ AddPrefabPostInitAny(function(inst)
 		if not inst.components.healthinfo_copy then
 		inst:AddComponent("healthinfo_copy")
 		end
-		if not inst.components.healthinfo_copy then
+		if not inst.components.hungerinfo then
 		inst:AddComponent("hungerinfo")
 		end
-	Updateyamche = inst:DoPeriodicTask(0.2, function()
+	inst:DoPeriodicTask(0.2, function()
 	if inst.components.health and inst.components.hunger then
-			str = ""
+			local str = ""
 			local h=inst.components.health
 			local mx=math.floor(h.maxhealth-h.minhealth)
 			local cur=math.floor(h.currenthealth-h.minhealth)
@@ -4428,7 +4507,7 @@ AddPrefabPostInitAny(function(inst)
 		inst:AddComponent("healthinfo_copy")
 		end
 	if inst.components.health then
-			str = ""
+			local str = ""
 			local h=inst.components.health
 			local mx=math.floor(h.maxhealth-h.minhealth)
 			local cur=math.floor(h.currenthealth-h.minhealth)
@@ -4655,17 +4734,6 @@ if IsServer then
  end end
 end
 AddPrefabPostInit("musha", Difficulty_sanity)
-
---bodyguard wilson
-function bodyguardwilson(inst)
-if IsServer then
-  if bodyguard_wilson == 1 then
-	inst.no_bodyguard = true
- end end
-end
-AddPrefabPostInit("musha", bodyguardwilson)
-
-
 
 -------
 AddModCharacter("musha","FEMALE")

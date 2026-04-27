@@ -11,6 +11,20 @@ local function onfinished(inst)
 	inst.broken = true
 end end
 
+local function SpawnMushaFluteHealFx(inst)
+	local heal_fx = SpawnPrefab("spider_heal_fx")
+	if heal_fx ~= nil then
+		heal_fx.Transform:SetScale(.4, .4, .4)
+		heal_fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
+	end
+
+	local fx2 = SpawnPrefab("mighty_gym_bell_succeed_fx")
+	if fx2 ~= nil then
+		fx2.entity:SetParent(inst.entity)
+		fx2.Transform:SetPosition(0, 2.5, 0)
+	end
+end
+
 local function Hearmusha(inst, musician, instrument, data)
 local user = musician
 if not inst.broken then
@@ -20,13 +34,7 @@ if not inst.broken then
 	if inst.components.health ~= nil and inst.components.sanity ~= nil and inst:HasTag("player") then
 	inst.components.health:DoDelta(40) 
 	inst.components.sanity:DoDelta(3)
-	local heal_fx = SpawnPrefab("spider_heal_fx")
-	heal_fx.Transform:SetScale(.4, .4, .4)
-    heal_fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
-	
-		local fx2 = SpawnPrefab("mighty_gym_bell_succeed_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(0, 2.5, 0)
+	SpawnMushaFluteHealFx(inst)
 	
 	--SpawnPrefab("green_leaves").Transform:SetPosition(inst:GetPosition():Get())
 		
@@ -37,8 +45,10 @@ if not inst.broken then
 	if inst.components.health ~= nil and (inst:HasTag("companion") or inst:HasTag("yamcheb") or inst:HasTag("critter")) then
  	inst.components.health:DoDelta(250) 
 	local heal_fx = SpawnPrefab("spider_heal_fx")
-	heal_fx.Transform:SetScale(.4, .4, .4)
-    heal_fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
+	if heal_fx ~= nil then
+		heal_fx.Transform:SetScale(.4, .4, .4)
+		heal_fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
+	end
 	--SpawnPrefab("green_leaves").Transform:SetPosition(inst:GetPosition():Get())
 		
 		inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" )

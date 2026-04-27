@@ -141,7 +141,7 @@ function Spellpower:DoRegen(dt)
 	
 if unstable_mana(self.inst) then
 	if self.current > 0 then 
-		if Mana_shield_check then
+		if Mana_shield_check(self.inst) then
 		regen = -1
 		else
 		regen = 0.0

@@ -387,6 +387,10 @@ function Pickable:CanBePicked()
     return self.canbepicked
 end
 
+function Pickable:IsStuck()
+    return false
+end
+
 function Pickable:Regen()
     self.canbepicked = true
     if self.onregenfn ~= nil then

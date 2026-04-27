@@ -1,7 +1,5 @@
 local function ChatPostConstruct(inst)
 	function inst:OnBecomeActive()
-		SetPause(true)
-
 		inst._base.OnBecomeActive(inst)
 
 		inst.chat_edit:SetFocus()
@@ -10,9 +8,7 @@ local function ChatPostConstruct(inst)
 	end
 
 	function inst:OnBecomeInactive()
-    	SetPause(false)
-
-    	inst._base.OnBecomeInactive(self)
+		inst._base.OnBecomeInactive(inst)
 
     	if inst.runtask ~= nil then
         	inst.runtask:Cancel()

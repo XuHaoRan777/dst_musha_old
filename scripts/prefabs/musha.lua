@@ -3,31 +3,7 @@ local MushaCommands = require("usercommands")
 --local easing = require("easing")
 local assets = {
   Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
-        Asset( "ANIM", "anim/player_basic.zip" ),
-        Asset( "ANIM", "anim/player_idles_shiver.zip" ),
-        Asset( "ANIM", "anim/player_actions.zip" ),
-        Asset( "ANIM", "anim/player_actions_axe.zip" ),
-        Asset( "ANIM", "anim/player_actions_pickaxe.zip" ),
-        Asset( "ANIM", "anim/player_actions_shovel.zip" ),
-        Asset( "ANIM", "anim/player_actions_blowdart.zip" ),
-        Asset( "ANIM", "anim/player_actions_eat.zip" ),
-        Asset( "ANIM", "anim/player_actions_item.zip" ),
-        Asset( "ANIM", "anim/player_actions_uniqueitem.zip" ),
-		Asset( "ANIM", "anim/player_actions_uniqueitem_2.zip" ),
-		Asset( "ANIM", "anim/player_actions_speargun.zip" ),
-		Asset( "ANIM", "anim/player_actions_telescope.zip" ),
-        Asset( "ANIM", "anim/player_actions_bugnet.zip" ),
-        Asset( "ANIM", "anim/player_actions_fishing.zip" ),
-        Asset( "ANIM", "anim/player_actions_boomerang.zip" ),
-        Asset( "ANIM", "anim/player_bush_hat.zip" ),
-        Asset( "ANIM", "anim/player_attacks.zip" ),
-        Asset( "ANIM", "anim/player_idles.zip" ),
-        Asset( "ANIM", "anim/player_rebirth.zip" ),
-        Asset( "ANIM", "anim/player_jump.zip" ),
-        Asset( "ANIM", "anim/player_amulet_resurrect.zip" ),
-        Asset( "ANIM", "anim/player_teleport.zip" ),
         Asset( "ANIM", "anim/wilson_fx.zip" ),
-        Asset( "ANIM", "anim/player_one_man_band.zip" ),
         Asset( "ANIM", "anim/shadow_hands.zip" ),
 		
         Asset( "SOUND", "sound/sfx.fsb" ),
@@ -1266,110 +1242,87 @@ local other = data.target
 	
 	
 	--Electric Shield (spellpower shield)
-local function on_Lshield_1(inst, attacked)
-   local Lshield1 = 0.2
-   if not inst.forcefields then
-   if math.random() < Lshield1 and inst.components.spellpower.current >= 2 and not inst.components.health:IsDead() and inst.components.spellpower:GetPercent() >0 then
-	--SpawnPrefab("shock_fx").Transform:SetPosition(inst:GetPosition():Get())
-	--inst.SoundEmitter:PlaySound("dontstarve/common/lightningrod")
+local ELECTRIC_SHIELD_LEVELS =
+{
+	[1] = { chance = 0.20, heal = 5 },
+	[2] = { chance = 0.24, heal = 7 },
+	[3] = { chance = 0.28, heal = 9 },
+	[4] = { chance = 0.32, heal = 12 },
+	[5] = { chance = 0.36, heal = 15 },
+}
+
+local function SpawnMushaShieldProcFx(inst)
 	local heal_fx = SpawnPrefab("spider_heal_fx")
-	heal_fx.Transform:SetScale(.4, .4, .4)
-    heal_fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
-	local fx2 = SpawnPrefab("mighty_gym_bell_succeed_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(0, 2.5, 0)
-		inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" )
-		inst:DoTaskInTime(1.8, function() if inst.wormlight == nil and not inst.switch then
-		inst.AnimState:SetBloomEffectHandle( "" ) end end)
-		
-        inst.components.health:DoDelta(5)
-        inst.components.spellpower:DoDelta(-2)
-		inst:RemoveEventCallback("attacked", on_Lshield_1)
-	end end end
-local function on_Lshield_2(inst, attacked)
-   local Lshield2 = 0.24
-   if not inst.forcefields then
-   if math.random() < Lshield2 and inst.components.spellpower.current >= 2 and not inst.components.health:IsDead() and inst.components.spellpower:GetPercent() >0 then
-		local heal_fx = SpawnPrefab("spider_heal_fx")
-	heal_fx.Transform:SetScale(.4, .4, .4)
-    heal_fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
-	local fx2 = SpawnPrefab("mighty_gym_bell_succeed_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(0, 2.5, 0)
-		inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" )
-		inst:DoTaskInTime(1.8, function() if inst.wormlight == nil and not inst.switch then
-		inst.AnimState:SetBloomEffectHandle( "" ) end end)
-        inst.components.health:DoDelta(7)
-        inst.components.spellpower:DoDelta(-2)
-		inst:RemoveEventCallback("attacked", on_Lshield_2)
-	end end end
-local function on_Lshield_3(inst, attacked)
-   local Lshield3 = 0.28
-   if not inst.forcefields then
-   if math.random() < Lshield3 and inst.components.spellpower.current >= 2 and not inst.components.health:IsDead() and inst.components.spellpower:GetPercent() >0 then
-		local heal_fx = SpawnPrefab("spider_heal_fx")
-	heal_fx.Transform:SetScale(.4, .4, .4)
-    heal_fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
-	local fx2 = SpawnPrefab("mighty_gym_bell_succeed_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(0, 2.5, 0)
-		inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" )
-		inst:DoTaskInTime(1.8, function() if inst.wormlight == nil and not inst.switch then
-		inst.AnimState:SetBloomEffectHandle( "" ) end end)
-        inst.components.health:DoDelta(9)
-        inst.components.spellpower:DoDelta(-2)
-		inst:RemoveEventCallback("attacked", on_Lshield_3)
-	end end end
-local function on_Lshield_4(inst, attacked)
-   local Lshield4 = 0.32
-   if not inst.forcefields then
-   if math.random() < Lshield4 and inst.components.spellpower.current >= 2 and not inst.components.health:IsDead() and inst.components.spellpower:GetPercent() >0 then
-		local heal_fx = SpawnPrefab("spider_heal_fx")
-	heal_fx.Transform:SetScale(.4, .4, .4)
-    heal_fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
-	local fx2 = SpawnPrefab("mighty_gym_bell_succeed_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(0, 2.5, 0)
-		inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" )
-		inst:DoTaskInTime(1.8, function() if inst.wormlight == nil and not inst.switch then
-		inst.AnimState:SetBloomEffectHandle( "" ) end end)
-        inst.components.health:DoDelta(12)
-        inst.components.spellpower:DoDelta(-2)
-		inst:RemoveEventCallback("attacked", on_Lshield_4)
-	end end	end
-local function on_Lshield_5(inst, attacked)
-   local Lshield5 = 0.36
-   if not inst.forcefields then
-   if math.random() < Lshield5 and inst.components.spellpower.current >= 2 and not inst.components.health:IsDead() and inst.components.spellpower:GetPercent() >0 then
-		local heal_fx = SpawnPrefab("spider_heal_fx")
-	heal_fx.Transform:SetScale(.4, .4, .4)
-    heal_fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
-	local fx2 = SpawnPrefab("mighty_gym_bell_succeed_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(0, 2.5, 0)
-		inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" )
-		inst:DoTaskInTime(1.8, function() if inst.wormlight == nil and not inst.switch then
-		inst.AnimState:SetBloomEffectHandle( "" ) end end)
-        inst.components.health:DoDelta(15)
-        inst.components.spellpower:DoDelta(-2)
-		inst:RemoveEventCallback("attacked", on_Lshield_5)
-	end end	end
-	
-    local function Lshield_level_1(inst)
-    inst:ListenForEvent("attacked", on_Lshield_1)
+	if heal_fx ~= nil then
+		heal_fx.Transform:SetScale(.4, .4, .4)
+		heal_fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
 	end
-    local function Lshield_level_2(inst)
-    inst:ListenForEvent("attacked", on_Lshield_2)
+
+	local fx2 = SpawnPrefab("mighty_gym_bell_succeed_fx")
+	if fx2 ~= nil then
+		fx2.entity:SetParent(inst.entity)
+		fx2.Transform:SetPosition(0, 2.5, 0)
 	end
-    local function Lshield_level_3(inst)
-    inst:ListenForEvent("attacked", on_Lshield_3)
+end
+
+local function on_electric_shield_attacked(inst, attacked)
+	local shield = ELECTRIC_SHIELD_LEVELS[inst.electric_shield_level or 0]
+	if shield == nil
+		or inst.forcefields
+		or inst.components.health == nil
+		or inst.components.health:IsDead()
+		or inst.components.spellpower == nil
+		or inst.components.spellpower.current < 2
+		or inst.components.spellpower:GetPercent() <= 0
+		or math.random() >= shield.chance then
+		return
 	end
-    local function Lshield_level_4(inst)
-    inst:ListenForEvent("attacked", on_Lshield_4)
+
+	SpawnMushaShieldProcFx(inst)
+	inst.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
+	inst:DoTaskInTime(1.8, function()
+		if inst.wormlight == nil and not inst.switch then
+			inst.AnimState:SetBloomEffectHandle("")
+		end
+	end)
+
+	inst.components.health:DoDelta(shield.heal)
+	inst.components.spellpower:DoDelta(-2)
+end
+
+local function SetElectricShieldLevel(inst, level)
+	inst.electric_shield_level = level or 0
+
+	if inst.electric_shield_level > 0 then
+		if inst.electric_shield_listener == nil then
+			inst.electric_shield_listener = on_electric_shield_attacked
+			inst:ListenForEvent("attacked", inst.electric_shield_listener)
+		end
+	elseif inst.electric_shield_listener ~= nil then
+		inst:RemoveEventCallback("attacked", inst.electric_shield_listener)
+		inst.electric_shield_listener = nil
 	end
-	local function Lshield_level_5(inst)
-    inst:ListenForEvent("attacked", on_Lshield_5)
-	end	
+end
+
+local function Lshield_level_1(inst)
+	SetElectricShieldLevel(inst, 1)
+end
+
+local function Lshield_level_2(inst)
+	SetElectricShieldLevel(inst, 2)
+end
+
+local function Lshield_level_3(inst)
+	SetElectricShieldLevel(inst, 3)
+end
+
+local function Lshield_level_4(inst)
+	SetElectricShieldLevel(inst, 4)
+end
+
+local function Lshield_level_5(inst)
+	SetElectricShieldLevel(inst, 5)
+end
 	
 	
 	
@@ -3521,6 +3474,8 @@ Valkyrie_level_4(inst)	--max 14 (prototype1 + Lightning 8 + Armor 4 + Duration 1
 inst.berserk_a_3= true  --max3 (armor + AOS attack)]]
 
 
+			SetElectricShieldLevel(inst, 0)
+
 			if inst.level >0 and inst.level <= 4 then
 
 			elseif inst.level >4 and inst.level <= 5 then
@@ -5567,7 +5522,6 @@ local function onbecameghost(inst)
     end
 end
 
-
 local function onload(inst)
 	
     inst:ListenForEvent("ms_respawnedfromghost", onbecamehuman)
@@ -5980,6 +5934,9 @@ if inst.components.petleash ~= nil then
 	inst.components.health:SetMaxHealth(80)
 	inst.components.sanity:SetMax(80)
 	inst.components.hunger:SetMax(200)
+	inst:ListenForEvent("player_despawn", function(inst)
+		inst.musha_is_despawning = true
+	end)
 	
 	inst.components.temperature.hurtrate = 0.5
 	

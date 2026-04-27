@@ -8,6 +8,14 @@ local tent_assets =
 	Asset("ANIM", "anim/musha_oven_fire.zip"),
 }
 
+local function SpawnForgeBellFx(inst, prefab)
+	local fx = SpawnPrefab(prefab)
+	if fx ~= nil then
+		fx.entity:SetParent(inst.entity)
+		fx.Transform:SetPosition(-0.2, 0.5, 0)
+	end
+end
+
 local function cooked(inst)
 if inst.components.container ~= nil then
 	local container = inst.components.container
@@ -108,25 +116,15 @@ if inst.warm_tent and inst.active_forge then
 	    fx.Transform:SetPosition(-0.2, 0, 0.5)
 		
 		if inst._5 then
-		local fx2 = SpawnPrefab("mighty_gym_bell_perfect_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(-0.2, 0.5, 0)
+		SpawnForgeBellFx(inst, "mighty_gym_bell_perfect_fx")
 		elseif inst._4 then
-		local fx2 = SpawnPrefab("mighty_gym_bell_perfect_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(-0.2, 0.5, 0)
+		SpawnForgeBellFx(inst, "mighty_gym_bell_perfect_fx")
 		elseif inst._3 then
-		local fx2 = SpawnPrefab("mighty_gym_bell_succeed_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(-0.2, 0.5, 0)
+		SpawnForgeBellFx(inst, "mighty_gym_bell_succeed_fx")
 		elseif inst._2 then
-		local fx2 = SpawnPrefab("mighty_gym_bell_succeed_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(-0.2, 0.5, 0)
+		SpawnForgeBellFx(inst, "mighty_gym_bell_succeed_fx")
 		elseif inst._1 then
-		local fx2 = SpawnPrefab("mighty_gym_bell_fail_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(-0.2, 0.5, 0)
+		SpawnForgeBellFx(inst, "mighty_gym_bell_fail_fx")
 		end
 
 inst.active_forge = false
@@ -348,25 +346,15 @@ if container ~= nil and inst.burning then
 	    fx.Transform:SetPosition(-0.2, 0, 0.5)
 		
 		if inst._5 then
-		local fx2 = SpawnPrefab("mighty_gym_bell_perfect_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(-0.2, 0.5, 0)
+		SpawnForgeBellFx(inst, "mighty_gym_bell_perfect_fx")
 		elseif inst._4 then
-		local fx2 = SpawnPrefab("mighty_gym_bell_perfect_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(-0.2, 0.5, 0)
+		SpawnForgeBellFx(inst, "mighty_gym_bell_perfect_fx")
 		elseif inst._3 then
-		local fx2 = SpawnPrefab("mighty_gym_bell_succeed_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(-0.2, 0.5, 0)
+		SpawnForgeBellFx(inst, "mighty_gym_bell_succeed_fx")
 		elseif inst._2 then
-		local fx2 = SpawnPrefab("mighty_gym_bell_succeed_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(-0.2, 0.5, 0)
+		SpawnForgeBellFx(inst, "mighty_gym_bell_succeed_fx")
 		elseif inst._1 then
-		local fx2 = SpawnPrefab("mighty_gym_bell_fail_fx")
-        fx2.entity:SetParent(inst.entity)
-	    fx2.Transform:SetPosition(-0.2, 0.5, 0)
+		SpawnForgeBellFx(inst, "mighty_gym_bell_fail_fx")
 		end
 		
 			end
