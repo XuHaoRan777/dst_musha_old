@@ -1,3 +1,4 @@
+return {
     ConfigOption(
         "difficultrecipe",
         "难度：配方",
@@ -19,3 +20,4 @@
         },
         "color"
     ),
+}

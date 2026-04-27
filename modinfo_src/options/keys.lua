@@ -1,3 +1,4 @@
+return {
     KeyOption(
         "key",
         "信息：等级",
@@ -118,3 +119,4 @@
         "Control companion Dall.",
         283
     ),
+}

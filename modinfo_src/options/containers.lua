@@ -1,3 +1,4 @@
+return {
     ConfigOption(
         "musha_incontainer",
         "护甲可放入容器",
@@ -16,3 +17,4 @@
         ENABLE_DISABLE_OPTIONS,
         0
     ),
+}

@@ -27,6 +27,18 @@ function Read-SourceFile($relativePath) {
     return [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8).TrimEnd()
 }
 
+function Read-OptionFile($relativePath) {
+    $content = (Read-SourceFile $relativePath).Trim()
+    $match = [regex]::Match($content, '^\s*return\s*\{(?<body>[\s\S]*)\}\s*$')
+    if (-not $match.Success) {
+        throw "Option source must be a standalone Lua table: $relativePath"
+    }
+    $body = $match.Groups["body"].Value
+    $body = [regex]::Replace($body, '^\r?\n', '')
+    $body = [regex]::Replace($body, '\r?\n\s*$', '')
+    return $body
+}
+
 $parts = New-Object System.Collections.Generic.List[string]
 $parts.Add((Read-SourceFile "meta.lua"))
 $parts.Add("")
@@ -34,7 +46,7 @@ $parts.Add("configuration_options =")
 $parts.Add("{")
 
 foreach ($optionFile in $OptionFiles) {
-    $parts.Add((Read-SourceFile $optionFile))
+    $parts.Add((Read-OptionFile $optionFile))
 }
 
 $parts.Add("} ")

@@ -6,7 +6,7 @@ Maintain configuration definitions here instead:
 
 - `meta.lua` contains top-level mod metadata.
 - `meta.lua` also contains shared helpers such as `T(zh, en)`, `ConfigOption`, and common option tables.
-- `options/*.lua` contains grouped `configuration_options` entries.
+- `options/*.lua` returns grouped `configuration_options` entries as a standalone Lua table.
 - `tools/build_modinfo.ps1` joins these files back into root `modinfo.lua`.
 
 Localization:
@@ -27,3 +27,5 @@ Check:
 ```powershell
 .\tools\build_modinfo.ps1 -Check
 ```
+
+Each `options/*.lua` file is intentionally written as `return { ... }` so editors and `luac` can parse it as a normal Lua file. The build script removes that wrapper when generating `configuration_options`.

@@ -1,3 +1,4 @@
+return {
     ConfigOption(
         "difficultmana",
         "难度：魔力",
@@ -137,3 +138,4 @@
         },
         "normal"
     ),
+}

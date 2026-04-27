@@ -1,3 +1,4 @@
+return {
     {
         name = "modlanguage",
         label = T("游戏内语言", "In-game Language"),
@@ -14,3 +15,4 @@
         },
         default = "auto",
     },
+}

@@ -1,3 +1,4 @@
+return {
     ConfigOption(
         "avisual_musha",
         "Musha 背包外观",
@@ -40,3 +41,4 @@
         },
         "pirate"
     ),
+}

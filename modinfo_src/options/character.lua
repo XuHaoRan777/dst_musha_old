@@ -1,3 +1,4 @@
+return {
     ConfigOption(
         "deathPenalty",
         "死亡惩罚",
@@ -79,3 +80,4 @@
         YES_NO_OPTIONS,
         0
     ),
+}

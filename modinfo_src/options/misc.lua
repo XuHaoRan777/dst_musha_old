@@ -1,3 +1,4 @@
+return {
     ConfigOption(
         "frostblade3rd",
         "冰霜之刃：第三阶段强化",
@@ -50,3 +51,4 @@
         },
         "off"
     ),
+}
