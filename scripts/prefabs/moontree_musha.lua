@@ -964,6 +964,144 @@ end
 end
 end
 
+local DALL_PLANT_TAG = "dall_plant"
+local DALL_DRAKE_TAG = "dall_drake"
+local DALL_PLANT_LIMIT = 15
+
+local function count_dall_plants(inst)
+local radius = inst.radius_spawning and 5 or 30
+local x, y, z = inst.Transform:GetWorldPosition()
+local count = 0
+local ents = TheSim:FindEntities(x, y, z, radius, {DALL_PLANT_TAG})
+for _, plant in pairs(ents) do
+if plant.dall_owner == nil or plant.dall_owner == inst then
+count = count + 1
+end
+end
+return count
+end
+
+local function can_spawn_dall_plant(inst)
+return count_dall_plants(inst) < DALL_PLANT_LIMIT
+end
+
+local function mark_dall_plant(inst, plant)
+if plant then
+plant:AddTag(DALL_PLANT_TAG)
+plant.dall_owner = inst
+if plant.components and plant.components.follower then
+plant.components.follower:SetLeader(inst)
+end
+if inst.components and inst.components.leader and plant.components and plant.components.follower then
+inst.components.leader:AddFollower(plant)
+end
+end
+return plant
+end
+
+local function is_dall_plant(inst, plant)
+if not plant or not plant:IsValid() then
+return false
+end
+if plant.dall_owner == inst then
+return true
+end
+return (plant.dall_owner == nil and plant:HasTag(DALL_PLANT_TAG))
+or (plant.components
+and plant.components.follower
+and plant.components.follower.leader == inst)
+end
+
+local function spawn_dall_plant(inst, prefab, x, y, z, force)
+if not force and not can_spawn_dall_plant(inst) then
+return nil
+end
+local plant = SpawnPrefab(prefab)
+if plant then
+plant.Transform:SetPosition(x, y, z)
+mark_dall_plant(inst, plant)
+end
+return plant
+end
+
+local function spawn_dall_rest_plant(inst, x, y, z, force)
+if math.random() < 0.5 then
+local moonbush = spawn_dall_plant(inst, "moonbush", x, y, z, force)
+if moonbush then
+moonbush.AnimState:PlayAnimation("shake")
+end
+else
+local moonlight = spawn_dall_plant(inst, "moonlight_plant", x, y, z, force)
+if moonlight then
+moonlight.AnimState:PlayAnimation("grow")
+end
+end
+end
+
+local function mark_dall_drake(inst, drake)
+if drake then
+drake:AddTag(DALL_DRAKE_TAG)
+drake.dall_owner = inst
+if drake.components and drake.components.follower then
+drake.components.follower:SetLeader(inst)
+end
+if inst.components and inst.components.leader then
+inst.components.leader:AddFollower(drake)
+end
+drake.slave = true
+drake.exit = false
+end
+return drake
+end
+
+local function is_dall_drake(inst, drake)
+if not drake or not drake:IsValid() then
+return false
+end
+if drake.dall_owner == inst then
+return true
+end
+return drake.components
+and drake.components.follower
+and drake.components.follower.leader == inst
+end
+
+local function restore_dall_drake(inst, drake)
+if not is_dall_drake(inst, drake) or drake.inst_in then
+return false
+end
+local x, y, z = drake.Transform:GetWorldPosition()
+if drake.components and drake.components.follower then
+drake.components.follower:SetLeader(nil)
+end
+drake.inst_in = true
+SpawnPrefab("small_puff").Transform:SetPosition(x, y, z)
+SpawnPrefab("green_leaves").Transform:SetPosition(x, y, z)
+spawn_dall_rest_plant(inst, x, y, z, true)
+drake:Remove()
+return true
+end
+
+local function restore_dall_drakes(inst)
+local x, y, z = inst.Transform:GetWorldPosition()
+local ents = TheSim:FindEntities(x, y, z, 100, {"moondrake"})
+for _, drake in pairs(ents) do
+restore_dall_drake(inst, drake)
+end
+end
+
+local function spawn_dall_drake(inst, x, y, z)
+local drake = SpawnPrefab("moonnutdrake")
+if drake then
+drake.Transform:SetPosition(x, y, z)
+mark_dall_drake(inst, drake)
+if drake.sg then
+drake.sg:GoToState("enter")
+end
+end
+return drake
+end
+
 local function summon_check(inst, data)
  	--summon
 -- moondrake 
@@ -976,6 +1114,7 @@ end
 for k,v in pairs(ents) do
 if not inst.sleep_on and v.components.follower and not v.components.follower.leader and not inst.components.leader:IsFollower(v) then 
 inst.components.leader:AddFollower(v)
+mark_dall_drake(inst, v)
 v.inst_in = false
 end 
 if inst.level1 then
@@ -1024,53 +1163,14 @@ elseif inst.level15 then
 if inst.components.leader:CountFollowers("moondrake") >= 15 then inst.full_kkobong = true
 elseif inst.components.leader:CountFollowers("moondrake") < 15 then inst.full_kkobong = false end
 end
-if inst.sleep_on and not v.inst_in and not v.slave then
---inst.moondrake_exit = true
-v.components.follower:SetLeader(nil)
-v.inst_in = true
-v.sg:GoToState("exit")
---v.AnimState:PlayAnimation("exit")
-local chance1 = 0.5
-local chance2 = 0.4
-local chance3 = 0.3
-local chance4 = 0.2
-v:DoTaskInTime(1.8, function() 
-if math.random() < chance1 then
-SpawnPrefab("small_puff").Transform:SetPosition(v:GetPosition():Get())
-local carrot = SpawnPrefab("farm_plant_randomseed")
-carrot.Transform:SetPosition(v:GetPosition():Get())
-elseif math.random() < chance2 then
-SpawnPrefab("green_leaves").Transform:SetPosition(v:GetPosition():Get())
-local moonbush = SpawnPrefab("moonbush")
-moonbush.Transform:SetPosition(v:GetPosition():Get())
-moonbush.AnimState:PlayAnimation("shake")
-elseif math.random() < chance3 then
---SpawnPrefab("green_leaves_chop").Transform:SetPosition(v:GetPosition():Get())
-local moonlight = SpawnPrefab("moonlight_plant")
-moonlight.Transform:SetPosition(v:GetPosition():Get())
-moonlight.AnimState:PlayAnimation("grow")
-elseif math.random() < chance2 then
---SpawnPrefab("green_leaves").Transform:SetPosition(v:GetPosition():Get())
-local mushroom = SpawnPrefab("green_mushroom")
-mushroom.Transform:SetPosition(v:GetPosition():Get())
-mushroom.AnimState:PlayAnimation("open_green")
-mushroom:DoTaskInTime(2, function() if not TheWorld.state.isdusk then
-mushroom.AnimState:PlayAnimation("open_inground")
---v.SoundEmitter:PlaySound("dontstarve/common/mushroom_down")
-end end )
---mushroom.SoundEmitter:PlaySound("dontstarve/common/mushroom_up")
---elseif math.random() < chance1 then
---seed.Transform:SetPosition(v:GetPosition():Get())
-end 
-v.inst_in = false
-v:Remove()
-end)
+if inst.sleep_on then
+restore_dall_drake(inst, v)
 end	 end
 local x,y,z = inst.Transform:GetWorldPosition()
 local ents = TheSim:FindEntities(x,y,z, 20, {"moonbush"})
 for k,v in pairs(ents) do
 if inst.sleep_on and v.components.follower and not v.components.follower.leader and not inst.components.leader:IsFollower(v) then 
-inst.components.leader:AddFollower(v)
+mark_dall_plant(inst, v)
 end 
 if inst.level1 then
 if inst.components.leader:CountFollowers("moonbush") >= 1 then inst.full_moon_bush = true
@@ -1118,24 +1218,32 @@ elseif inst.level15 then
 if inst.components.leader:CountFollowers("moonbush") >= 15 then inst.full_moon_bush = true
 elseif inst.components.leader:CountFollowers("moonbush") < 15 then inst.full_moon_bush = false end
 end
-if not inst.sleep_on and not v.move then
+if not inst.sleep_on and inst.dall_command_follow and not v.move and is_dall_plant(inst, v) then
 v.move = true
 v.AnimState:PlayAnimation("shake")
+if v.components and v.components.follower then
 v.components.follower:SetLeader(nil)
+end
 inst.components.leader:IsFollower(nil)
     if v:HasTag("moonbush") then
 	    v.AnimState:PlayAnimation("shake_empty")
         v.AnimState:PushAnimation("idle_dead")
-  v:DoTaskInTime(1.25, function() SpawnPrefab("green_leaves").Transform:SetPosition(v:GetPosition():Get()) SpawnPrefab("small_puff").Transform:SetPosition(v:GetPosition():Get()) SpawnPrefab("moonnutdrake").Transform:SetPosition(v:GetPosition():Get()) v:Remove() end)
+  v:DoTaskInTime(1.25, function(v)
+local x, y, z = v.Transform:GetWorldPosition()
+SpawnPrefab("green_leaves").Transform:SetPosition(x, y, z)
+SpawnPrefab("small_puff").Transform:SetPosition(x, y, z)
+spawn_dall_drake(inst, x, y, z)
+v:Remove()
+end)
  
-   		end
+    		end
 --v.AnimState:PlayAnimation("exit")
 end	 end
 local x,y,z = inst.Transform:GetWorldPosition()
 local ents = TheSim:FindEntities(x,y,z, 20, {"moonlight"})
 for k,v in pairs(ents) do
 if inst.sleep_on and v.components.follower and not v.components.follower.leader and not inst.components.leader:IsFollower(v) then 
-inst.components.leader:AddFollower(v)
+mark_dall_plant(inst, v)
 end 
 if inst.level1 then
 if inst.components.leader:CountFollowers("moonlight") >= 1 then inst.full_moonlight_plant = true
@@ -1183,15 +1291,23 @@ elseif inst.level15 then
 if inst.components.leader:CountFollowers("moonlight") >= 8 then inst.full_moonlight_plant = true
 elseif inst.components.leader:CountFollowers("moonlight") < 8 then inst.full_moonlight_plant = false end
 end
-if not inst.sleep_on and not v.move then
+if not inst.sleep_on and inst.dall_command_follow and not v.move and is_dall_plant(inst, v) then
 v.move = true
 v.AnimState:PlayAnimation("picking")
+if v.components and v.components.follower then
 v.components.follower:SetLeader(nil)
+end
 inst.components.leader:IsFollower(nil)
     if v:HasTag("moonlight") then
-  v:DoTaskInTime(1.25, function() SpawnPrefab("green_leaves").Transform:SetPosition(v:GetPosition():Get()) SpawnPrefab("small_puff").Transform:SetPosition(v:GetPosition():Get()) SpawnPrefab("moonnutdrake").Transform:SetPosition(v:GetPosition():Get()) v:Remove() end)
+  v:DoTaskInTime(1.25, function(v)
+local x, y, z = v.Transform:GetWorldPosition()
+SpawnPrefab("green_leaves").Transform:SetPosition(x, y, z)
+SpawnPrefab("small_puff").Transform:SetPosition(x, y, z)
+spawn_dall_drake(inst, x, y, z)
+v:Remove()
+end)
  
-   		end
+    		end
 --v.AnimState:PlayAnimation("exit")
 end	 end
 	local x,y,z = inst.Transform:GetWorldPosition()
@@ -1249,7 +1365,9 @@ elseif inst.components.leader:CountFollowers("wild_veggie") < 8 then inst.full_c
 end
 if not inst.sleep_on and not v.move then
 v.move = true
+if v.components and v.components.follower then
 v.components.follower:SetLeader(nil)
+end
 inst.components.leader:IsFollower(nil)
 
  end end
@@ -1309,33 +1427,31 @@ elseif inst.components.leader:CountFollowers("mushrooms") < 6 then inst.full_mus
 end
 if not inst.sleep_on and not v.move then
 v.move = true
+if v.components and v.components.follower then
 v.components.follower:SetLeader(nil)
+end
 inst.components.leader:IsFollower(nil)
 
  end end
  end
 end 
  
- local function summon_drake(inst, data)
+local function summon_drake(inst, data)
 
 if not inst.stop_spawning then
  -- moondrake
 if not inst.sleep_on and  not inst.full_kkobong then
-local drake = SpawnPrefab("moonnutdrake")
 local drakeangle = math.random(1, 360)
 local offset = FindWalkableOffset(inst:GetPosition(), drakeangle*DEGREES, math.random(2,TUNING.DECID_MONSTER_TARGET_DIST), 30, false, false)
 local x,y,z = inst.Transform:GetWorldPosition()
 	if offset ~= nil then
-	drake.Transform:SetPosition(x + offset.x, y + offset.y, z + offset.z)
-	--drake.components.follower:SetLeader(inst)
-	drake.components.follower:SetLeader(inst)
-	inst.components.leader:AddFollower(drake)
-	drake.slave = true	
-drake.sg:GoToState("enter")
-drake.AnimState:PlayAnimation("enter")
+	local drake = spawn_dall_drake(inst, x + offset.x, y + offset.y, z + offset.z)
+	if drake then
+	drake.AnimState:PlayAnimation("enter")
 	if drake.components.combat then
 	drake.components.combat:SuggestTarget(drake.target)
-	end		
+	end
+	end
 	end
 end		
 end	
@@ -1347,15 +1463,16 @@ if not inst.stop_spawning then
 if not inst.radius_spawning then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	--full_moon_bush
-	if inst.sleep_on and not inst.stop_day and not inst.full_moon_bush then
+	if inst.sleep_on and not inst.stop_day and can_spawn_dall_plant(inst) then
 	local drakeangle = math.random(1, 360)
 	local offset = FindWalkableOffset(inst:GetPosition(), drakeangle*DEGREES, math.random(2,TUNING.DECID_MONSTER_TARGET_DIST), 10, false, false)
 	if offset ~= nil then
-	local berrybush = SpawnPrefab("moonbush")
 	local x,y,z = inst.Transform:GetWorldPosition()
-	berrybush.Transform:SetPosition(x + offset.x, y + offset.y, z + offset.z)
+	local berrybush = spawn_dall_plant(inst, "moonbush", x + offset.x, y + offset.y, z + offset.z)
+	if berrybush then
 	SpawnPrefab("green_leaves").Transform:SetPosition(berrybush:GetPosition():Get())
 	berrybush.AnimState:PlayAnimation("shake")
+	end
 	end 
 	end
 	end 
@@ -1363,15 +1480,16 @@ if not inst.radius_spawning then
 elseif inst.radius_spawning then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	--full_moon_bush
-	if inst.sleep_on and not inst.stop_day and not inst.full_moon_bush then
+	if inst.sleep_on and not inst.stop_day and can_spawn_dall_plant(inst) then
 	local drakeangle = math.random(1, 360)
 	local offset = FindWalkableOffset(inst:GetPosition(), drakeangle*DEGREES, math.random(2,3), 3, false, false)
 	if offset ~= nil then
 	local x,y,z = inst.Transform:GetWorldPosition()
-	local berrybush = SpawnPrefab("moonbush")
-	berrybush.Transform:SetPosition(x + offset.x, y + offset.y, z + offset.z)
+	local berrybush = spawn_dall_plant(inst, "moonbush", x + offset.x, y + offset.y, z + offset.z)
+	if berrybush then
 	SpawnPrefab("green_leaves").Transform:SetPosition(berrybush:GetPosition():Get())
 	berrybush.AnimState:PlayAnimation("shake")
+	end
 	end 
 	end 
 	end 
@@ -1384,15 +1502,16 @@ if not inst.stop_spawning then
 if not inst.radius_spawning then		
 	if TheWorld.state.isday or TheWorld.state.iscaveday then 
 		--veggies
-	if inst.sleep_on and not inst.stop_day and not inst.full_carrot then
+	if inst.sleep_on and not inst.stop_day and can_spawn_dall_plant(inst) then
 	local drakeangle = math.random(1, 360)
 	local offset = FindWalkableOffset(inst:GetPosition(), drakeangle*DEGREES, math.random(2,TUNING.DECID_MONSTER_TARGET_DIST), 30, false, false)
 	if offset ~= nil then
-	local carrot = SpawnPrefab("farm_plant_randomseed")
 	local x,y,z = inst.Transform:GetWorldPosition()
-	carrot.Transform:SetPosition(x + offset.x, y + offset.y, z + offset.z)
+	local carrot = spawn_dall_plant(inst, "carrot_planted", x + offset.x, y + offset.y, z + offset.z)
+	if carrot then
 	SpawnPrefab("green_leaves").Transform:SetPosition(carrot:GetPosition():Get())
 	SpawnPrefab("small_puff").Transform:SetPosition(carrot:GetPosition():Get())
+	end
 	--carrot.AnimState:PlayAnimation("planted")
 	end
 	end 
@@ -1400,15 +1519,16 @@ if not inst.radius_spawning then
 elseif inst.radius_spawning then		
 	if TheWorld.state.isday or TheWorld.state.iscaveday then 
 		--veggies
-	if inst.sleep_on and not inst.stop_day and not inst.full_carrot then
+	if inst.sleep_on and not inst.stop_day and can_spawn_dall_plant(inst) then
 	local drakeangle = math.random(1, 360)
 	local offset = FindWalkableOffset(inst:GetPosition(), drakeangle*DEGREES, math.random(2,3), 3, false, false)
 	if offset ~= nil then
-	local carrot = SpawnPrefab("farm_plant_randomseed")
 	local x,y,z = inst.Transform:GetWorldPosition()
-	carrot.Transform:SetPosition(x + offset.x, y + offset.y, z + offset.z)
+	local carrot = spawn_dall_plant(inst, "carrot_planted", x + offset.x, y + offset.y, z + offset.z)
+	if carrot then
 	SpawnPrefab("green_leaves").Transform:SetPosition(carrot:GetPosition():Get())
 	SpawnPrefab("small_puff").Transform:SetPosition(carrot:GetPosition():Get())	 
+	end
 	end 
 	end 
 	end
@@ -1420,15 +1540,16 @@ local function summon_dusk(inst, data)
 if not inst.stop_spawning then
 if not inst.radius_spawning then		
 	if TheWorld.state.isdusk or TheWorld.state.iscavedusk then
-	if inst.sleep_on and not inst.stop_dusk and not inst.full_musharoom then
+	if inst.sleep_on and not inst.stop_dusk and can_spawn_dall_plant(inst) then
 	local drakeangle = math.random(1, 360)
 	local offset = FindWalkableOffset(inst:GetPosition(), drakeangle*DEGREES, math.random(2,TUNING.DECID_MONSTER_TARGET_DIST), 10, false, false)
 	if offset ~= nil then
-	local green = SpawnPrefab("green_mushroom")
 	local x,y,z = inst.Transform:GetWorldPosition()
-	green.Transform:SetPosition(x + offset.x, y + offset.y, z + offset.z)
+	local green = spawn_dall_plant(inst, "green_mushroom", x + offset.x, y + offset.y, z + offset.z)
+	if green then
 	green.AnimState:PlayAnimation("open_green")
 	green.SoundEmitter:PlaySound("dontstarve/common/mushroom_up")
+	end
 --[[ inst:DoTaskInTime(2, function() if not TheWorld.state.isdusk then
 green.AnimState:PlayAnimation("open_inground")
 inst.SoundEmitter:PlaySound("dontstarve/common/mushroom_down")
@@ -1438,15 +1559,16 @@ end end )]]
 	end
 elseif inst.radius_spawning then		
 	if TheWorld.state.isdusk or TheWorld.state.iscavedusk then
-	if inst.sleep_on and not inst.stop_dusk and not inst.full_musharoom then
+	if inst.sleep_on and not inst.stop_dusk and can_spawn_dall_plant(inst) then
 	local drakeangle = math.random(1, 360)
 	local offset = FindWalkableOffset(inst:GetPosition(), drakeangle*DEGREES, math.random(2,3), 3, false, false)
 	if offset ~= nil then
-	local green = SpawnPrefab("green_mushroom")
 	local x,y,z = inst.Transform:GetWorldPosition()
-	green.Transform:SetPosition(x + offset.x, y + offset.y, z + offset.z)
+	local green = spawn_dall_plant(inst, "green_mushroom", x + offset.x, y + offset.y, z + offset.z)
+	if green then
 	green.AnimState:PlayAnimation("open_green")
 	green.SoundEmitter:PlaySound("dontstarve/common/mushroom_up")	 
+	end
 	end 
 	end
 	end 
@@ -1461,16 +1583,17 @@ if TheWorld.state.isnight or TheWorld.state.iscavenight then
 	if inst.sleep_on then
 	SpawnPrefab("musha_spore").Transform:SetPosition(inst:GetPosition():Get())	
 	end
-	if inst.sleep_on and not inst.stop_night and not inst.full_moonlight_plant then
+	if inst.sleep_on and not inst.stop_night and can_spawn_dall_plant(inst) then
 	local drakeangle = math.random(1, 360)
 	local offset = FindWalkableOffset(inst:GetPosition(), drakeangle*DEGREES, math.random(2,TUNING.DECID_MONSTER_TARGET_DIST), 10, false, false)
 	if offset ~= nil then
-	local moonlight = SpawnPrefab("moonlight_plant")
 	local x,y,z = inst.Transform:GetWorldPosition()
-	moonlight.Transform:SetPosition(x + offset.x, y + offset.y, z + offset.z)
+	local moonlight = spawn_dall_plant(inst, "moonlight_plant", x + offset.x, y + offset.y, z + offset.z)
+	if moonlight then
 	SpawnPrefab("green_leaves").Transform:SetPosition(moonlight:GetPosition():Get())
 	moonlight.AnimState:PlayAnimation("picking")
 	moonlight:DoTaskInTime(1, function() moonlight.AnimState:PlayAnimation("grow") end)
+	end
 	end 
 	end
 	end 
@@ -1479,17 +1602,17 @@ if TheWorld.state.isnight or TheWorld.state.iscavenight then
 	if inst.sleep_on then
 	SpawnPrefab("musha_spore").Transform:SetPosition(inst:GetPosition():Get())	
 	end
-	if inst.sleep_on and not inst.stop_night and not inst.full_moonlight_plant then
-	local moonlight = SpawnPrefab("moonlight_plant")
+	if inst.sleep_on and not inst.stop_night and can_spawn_dall_plant(inst) then
 	local drakeangle = math.random(1, 360)
 	local offset = FindWalkableOffset(inst:GetPosition(), drakeangle*DEGREES, math.random(2,3), 3, false, false)
 	if offset ~= nil then
-	local moonlight = SpawnPrefab("moonlight_plant")
 	local x,y,z = inst.Transform:GetWorldPosition()
-	moonlight.Transform:SetPosition(x + offset.x, y + offset.y, z + offset.z)
+	local moonlight = spawn_dall_plant(inst, "moonlight_plant", x + offset.x, y + offset.y, z + offset.z)
+	if moonlight then
 	SpawnPrefab("green_leaves").Transform:SetPosition(moonlight:GetPosition():Get())
 	moonlight.AnimState:PlayAnimation("picking")
 	moonlight:DoTaskInTime(1, function() moonlight.AnimState:PlayAnimation("grow") end)
+	end
 	end 
 	end
 	end
@@ -1503,7 +1626,7 @@ if inst.stop_spawning then
 kill_summoned(inst)
 end
 local leader = inst.components.follower.leader
-if not inst.components.follower.leader and not inst.sleep_on then
+if not inst.components.follower.leader and not inst.sleep_on and not inst.dall_command_follow then
 inst.sg:GoToState("sleeping")
 inst.sleep_on = true
 end 
@@ -1728,10 +1851,10 @@ end
 	
 inst.summon_check = inst:DoPeriodicTask(1, summon_check)  	
 inst.summon_drake = inst:DoPeriodicTask(25, summon_drake)  
-inst.summon_1 = inst:DoPeriodicTask(90, summon_bush) 
-inst.summon_2 = inst:DoPeriodicTask(120, summon_carrot) 
-inst.summon_3 = inst:DoPeriodicTask(360, summon_dusk) 
-inst.summon_4 = inst:DoPeriodicTask(180, summon_night)
+inst.summon_1 = inst:DoPeriodicTask(75, summon_bush) 
+inst.summon_2 = inst:DoPeriodicTask(100, summon_carrot) 
+inst.summon_3 = inst:DoPeriodicTask(300, summon_dusk) 
+inst.summon_4 = inst:DoPeriodicTask(150, summon_night)
 
 	
 local leader = inst.components.follower.leader
@@ -1780,6 +1903,7 @@ end
 	
    inst.OnSave = OnSave
     inst.OnLoad = OnLoad
+	inst.RestoreDallDrakes = restore_dall_drakes
 	
     inst:SetBrain(brain)
 

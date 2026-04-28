@@ -603,7 +603,9 @@ local states=
             inst.AnimState:PlayAnimation("death")
             inst.Physics:Stop()
             RemovePhysicsColliders(inst)
-            inst.components.lootdropper:DropLoot(inst:GetPosition())
+            if inst.components.lootdropper ~= nil then
+                inst.components.lootdropper:DropLoot(inst:GetPosition())
+            end
 
             -- we handle our own erode, rather than the health component ~gjans
             inst:DoTaskInTime(2, ErodeAway)

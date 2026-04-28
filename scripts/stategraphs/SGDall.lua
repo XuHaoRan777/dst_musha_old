@@ -42,7 +42,9 @@ local states=
             inst.Physics:Stop()
             RemovePhysicsColliders(inst)
             inst.SoundEmitter:PlaySound("dontstarve/forest/treeFall")
-            inst.components.lootdropper:DropLoot(Vector3(inst.Transform:GetWorldPosition()))
+            if inst.components.lootdropper ~= nil then
+                inst.components.lootdropper:DropLoot(Vector3(inst.Transform:GetWorldPosition()))
+            end
         end,
 
     },

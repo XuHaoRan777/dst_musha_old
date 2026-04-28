@@ -35,6 +35,14 @@ local loot_cold =
   --  "musha_egg_arong",
 }
 ----------------
+local function AddMushaSpecific(inst)
+	if inst.components.characterspecific_musha == nil then
+		inst:AddComponent("characterspecific_musha")
+	end
+	inst.components.characterspecific_musha:SetOwner("musha")
+	inst.components.characterspecific_musha:SetStorable(false)
+end
+
 local function Activateicon(inst)
 local minimap = TheWorld.minimap.MiniMap
  
@@ -234,9 +242,7 @@ local inst = CreateEntity()
         inst.components.cookable.product = "musha_egg_arong_cooked"
     end
 	
-	inst:AddComponent("characterspecific_musha")	
-	inst.components.characterspecific_musha:SetOwner("musha")
-	inst.components.characterspecific_musha:SetStorable(false)
+	AddMushaSpecific(inst)
 	
     return inst
 end
@@ -256,9 +262,7 @@ local function defaultfn(anim)
     inst.components.hatchable:SetHeaterPrefs(false, nil, true)
 	inst.components.hatchable:StartUpdating()
 	
-	inst:AddComponent("characterspecific_musha")	
-	inst.components.characterspecific_musha:SetOwner("musha")
-	inst.components.characterspecific_musha:SetStorable(false)
+	AddMushaSpecific(inst)
 
     inst.components.inventoryitem:SetOnDroppedFn(OnDropped)
     inst.components.inventoryitem:SetOnPutInInventoryFn(OnPutInInventory)
@@ -320,9 +324,7 @@ local function cookedfn()
     inst.components.hatchable:SetHeaterPrefs(false, nil, true)
 	inst.components.hatchable:StartUpdating()
 	
-	inst:AddComponent("characterspecific_musha")	
-	inst.components.characterspecific_musha:SetOwner("musha")
-	inst.components.characterspecific_musha:SetStorable(false)
+	AddMushaSpecific(inst)
 
     inst.components.inventoryitem:SetOnDroppedFn(OnDropped)
     inst.components.inventoryitem:SetOnPutInInventoryFn(OnPutInInventory_hatched)

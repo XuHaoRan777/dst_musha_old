@@ -9,6 +9,7 @@ local Vector3 = GLOBAL.Vector3
 TECH = GLOBAL.TECH
 local IsServer = GLOBAL.TheNet:GetIsServer()
 local containers = require("containers")
+local CompanionStates = require("musha_companionstates")
 
 ACTIONS.GIVE.priority = 2
 ACTIONS.ADDFUEL.priority = 4
@@ -2827,36 +2828,49 @@ end
  
   ---------------------moon tree
  
- function dall_update(inst)
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 25, {"dall"})
-for k,v in pairs(ents) do
-if inst.follow_dall and v.components.follower and not v.components.follower.leader and not inst.components.leader:IsFollower(v) and inst.components.leader:CountFollowers("dall") == 0 then
-if not v.onsleep then
-inst.components.leader:AddFollower(v)
-v.yamche = true
-v.sleep_on = false
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_DALL_FOLLOW)
-local emote = "happy"
-			if emote ~= nil then
-				MushaCommands.RunTextUserCommand(emote, inst, false)
-			end
-elseif v.onsleep then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_DALL_SLEEPY)
+local DALL_TAG = "dall"
+local DALL_RADIUS = 25
+local DALL_COMPANION =
+{
+	can_command = function(dall)
+		return dall.components ~= nil and dall.components.follower ~= nil
+	end,
+	on_follow = function(owner, dall)
+		dall.yamche = true
+		dall.sleep_on = false
+		dall.dall_command_follow = true
+		owner.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_DALL_FOLLOW)
+		MushaCommands.RunTextUserCommand("happy", owner, false)
+	end,
+	on_rest = function(owner, dall)
+		dall.yamche = true
+		dall.sleep_on = true
+		dall.dall_command_follow = false
+		if dall.RestoreDallDrakes ~= nil then
+			dall:RestoreDallDrakes()
+		end
+		owner.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_DALL_STAY)
+	end,
+}
 
+function dall_update(inst)
+	local dall = inst.follow_dall
+		and CompanionStates.FindCommandable(inst, DALL_TAG, DALL_RADIUS, DALL_COMPANION)
+		or (CompanionStates.FindOwned(inst, DALL_TAG, DALL_RADIUS)
+			or CompanionStates.FindCommandable(inst, DALL_TAG, DALL_RADIUS, DALL_COMPANION))
+
+	if dall == nil then
+		return
+	end
+
+	if dall.onsleep then
+		inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_DALL_SLEEPY)
+	elseif inst.follow_dall then
+		CompanionStates.SetFollowing(inst, dall, DALL_TAG, DALL_COMPANION)
+	else
+		CompanionStates.SetResting(inst, dall, DALL_TAG, DALL_COMPANION)
+	end
 end
-elseif not inst.follow_dall and v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and inst.components.leader:CountFollowers("dall") == 1 then
-if not v.onsleep then
-v.yamche = true 
-v.sleep_on = true
-inst.components.leader:RemoveFollowersByTag("dall")
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_DALL_STAY)
-
-elseif v.onsleep then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_DALL_SLEEPY)
-
-end
-end end end
  
  function order_dall(inst)
 inst.writing = false
@@ -2866,28 +2880,32 @@ for k,v in pairs(ents) do
 inst.writing = true
 end 
 if not inst.writing then
-			
-if inst.dall_follow and not inst.follow_dall and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
+local commandable_dall = CompanionStates.FindCommandable(inst, DALL_TAG, DALL_RADIUS, DALL_COMPANION)
+local has_dall_follower = CompanionStates.HasOwned(inst, DALL_TAG, DALL_RADIUS)
+
+if commandable_dall ~= nil and not has_dall_follower and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
 
 inst.follow_dall = true
+inst.dall_follow = true
 dall_update(inst)
-elseif inst.dall_follow and inst.follow_dall and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
+elseif has_dall_follower and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
 
 inst.follow_dall = false
 inst.dall_follow = false
 dall_update(inst)
-elseif not inst.dall_follow and not inst:HasTag("playerghost") then
+elseif commandable_dall == nil and not inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_DALL_LOST)
-elseif inst.dall_follow and not inst.follow_dall and inst:HasTag("playerghost") then
+elseif commandable_dall ~= nil and not has_dall_follower and inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_FOLLOW)
 inst.follow_dall = true
+inst.dall_follow = true
 dall_update(inst)
-elseif inst.dall_follow and inst.follow_dall and inst:HasTag("playerghost") then
+elseif has_dall_follower and inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_STAY)
 inst.follow_dall = false
 inst.dall_follow = false
 dall_update(inst)
-elseif not inst.dall_follow and inst:HasTag("playerghost") then
+elseif commandable_dall == nil and inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_OOOOH)
 end
 end
@@ -2899,31 +2917,51 @@ AddModRPCHandler("musha","dall", order_dall)
  
  ---------------------arong
  
- function arong_update(inst)
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 25, {"Arongb"})
-for k,v in pairs(ents) do
-if inst.follow_arong and v.components.follower and not v.components.follower.leader and not inst.components.leader:IsFollower(v) and inst.components.leader:CountFollowers("Arongb") == 0 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_ARONG_FOLLOW)
-local emote = "happy"
-			if emote ~= nil then
-				MushaCommands.RunTextUserCommand(emote, inst, false)
-			end
-inst.components.leader:AddFollower(v)
-v.yamche = true
-v.mount = true
-v.sleep_on = false
-v.follow = true
-elseif not inst.follow_arong and v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and inst.components.leader:CountFollowers("Arongb") == 1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_ARONG_STAY)
+local ARONG_TAG = "Arongb"
+local ARONG_RADIUS = 25
+local ARONG_COMPANION =
+{
+	can_command = function(arong)
+		return arong.components ~= nil and arong.components.follower ~= nil
+	end,
+	on_follow = function(owner, arong)
+		owner.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_ARONG_FOLLOW)
+		MushaCommands.RunTextUserCommand("happy", owner, false)
+		arong.yamche = true
+		arong.mount = true
+		arong.command_sleep = false
+		arong.force_sleep = false
+		arong.idle_sleep = false
+		arong.sleep_on = false
+		arong.follow = true
+	end,
+	on_rest = function(owner, arong)
+		owner.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_ARONG_STAY)
+		arong.yamche = true
+		arong.active_hunt = false
+		arong.mount = false
+		arong.command_sleep = true
+		arong.force_sleep = false
+		arong.sleep_on = true
+		arong.follow = false
+	end,
+}
 
-v.yamche = true 
-v.active_hunt = false
-v.mount = false
-v.sleep_on = true
-v.follow = false
-inst.components.leader:RemoveFollowersByTag("Arongb")
-end end 
+function arong_update(inst)
+	local arong = inst.follow_arong
+		and CompanionStates.FindCommandable(inst, ARONG_TAG, ARONG_RADIUS, ARONG_COMPANION)
+		or (CompanionStates.FindOwned(inst, ARONG_TAG, ARONG_RADIUS)
+			or CompanionStates.FindCommandable(inst, ARONG_TAG, ARONG_RADIUS, ARONG_COMPANION))
+
+	if arong == nil then
+		return
+	end
+
+	if inst.follow_arong then
+		CompanionStates.SetFollowing(inst, arong, ARONG_TAG, ARONG_COMPANION)
+	else
+		CompanionStates.SetResting(inst, arong, ARONG_TAG, ARONG_COMPANION)
+	end
 end
  
  function order_arong(inst)
@@ -2934,25 +2972,30 @@ for k,v in pairs(ents) do
 inst.writing = true
 end 
 if not inst.writing then
-if inst.arong_follow and not inst.follow_arong and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
+local commandable_arong = CompanionStates.FindCommandable(inst, ARONG_TAG, ARONG_RADIUS, ARONG_COMPANION)
+local has_arong_follower = CompanionStates.HasOwned(inst, ARONG_TAG, ARONG_RADIUS)
+
+if commandable_arong ~= nil and not has_arong_follower and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
 inst.follow_arong = true
+inst.arong_follow = true
 arong_update(inst)
-elseif inst.arong_follow and inst.follow_arong and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
+elseif has_arong_follower and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
 inst.follow_arong = false
 inst.arong_follow = false
 arong_update(inst)
-elseif not inst.arong_follow and not inst:HasTag("playerghost") then
+elseif commandable_arong == nil and not inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_ARONG_LOST)
-elseif inst.arong_follow and not inst.follow_arong and inst:HasTag("playerghost") then
+elseif commandable_arong ~= nil and not has_arong_follower and inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_FOLLOW)
 inst.follow_arong = true
+inst.arong_follow = true
 arong_update(inst)
-elseif inst.arong_follow and inst.follow_arong and inst:HasTag("playerghost") then
+elseif has_arong_follower and inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_STAY)
 inst.follow_arong = false
 inst.arong_follow = false
 arong_update(inst)
-elseif not inst.arong_follow and inst:HasTag("playerghost") then
+elseif commandable_arong == nil and inst:HasTag("playerghost") then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_OOOOH)
 end
 end
@@ -2961,91 +3004,57 @@ end
 AddModRPCHandler("musha","arong", order_arong)
  
  -----------------------------
-local function can_command_yamche(yamche)
-return yamche ~= nil
-	and yamche.components ~= nil
-	and yamche.components.follower ~= nil
-	and not yamche.house
-	and not yamche.hat
-	and not yamche.picked
-end
+local YAMCHE_TAG = "yamcheb"
+local YAMCHE_RADIUS = 25
+local YAMCHE_COMPANION =
+{
+	can_command = function(yamche)
+		return yamche ~= nil
+			and yamche.components ~= nil
+			and yamche.components.follower ~= nil
+			and not yamche.house
+			and not yamche.hat
+			and not yamche.picked
+	end,
+	on_follow = function(owner, yamche)
+		yamche.MiniMapEntity:SetIcon("")
+		yamche.yamche = true
+		yamche.sleepn = false 
+		yamche.fightn = false
+		yamche.slave = true
+	end,
+	on_rest = function(owner, yamche)
+		yamche.sleepn = true
+		yamche.yamche = true 
+		yamche.fightn = true
+		yamche.active_hunt = false
+		yamche.slave = false
+		yamche.MiniMapEntity:SetIcon("musha_small.txt")
+		if yamche.components.sleeper ~= nil and not yamche.components.sleeper:IsAsleep() then
+			yamche.components.sleeper:AddSleepiness(3, 10)
+		end
+		if yamche.pick1 then
+			yamche.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_GATHER_STOP)
+			yamche.pick1 = false
+			yamche.working_food = false
+		end
+	end,
+}
 
 local function find_commandable_yamche(inst)
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 25, {"yamcheb"})
-local closest = nil
-local closest_distsq = nil
-for k,v in pairs(ents) do
-if can_command_yamche(v) then
-local distsq = inst:GetDistanceSqToInst(v)
-if closest == nil or distsq < closest_distsq then
-closest = v
-closest_distsq = distsq
-end
-end
-end
-return closest
+return CompanionStates.FindCommandable(inst, YAMCHE_TAG, YAMCHE_RADIUS, YAMCHE_COMPANION)
 end
 
 local function find_owned_yamche(inst)
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 25, {"yamcheb"})
-local closest = nil
-local closest_distsq = nil
-for k,v in pairs(ents) do
-if v.components ~= nil
-	and v.components.follower ~= nil
-	and (v.components.follower.leader == inst or inst.components.leader:IsFollower(v)) then
-local distsq = inst:GetDistanceSqToInst(v)
-if closest == nil or distsq < closest_distsq then
-closest = v
-closest_distsq = distsq
-end
-end
-end
-return closest
+return CompanionStates.FindOwned(inst, YAMCHE_TAG, YAMCHE_RADIUS)
 end
 
 local function set_yamche_following(inst, yamche)
-if not can_command_yamche(yamche) or inst.components.leader == nil then
-return false
-end
-if yamche.components.follower.leader ~= inst then
-yamche.components.follower:SetLeader(inst)
-end
-if not inst.components.leader:IsFollower(yamche) and inst.components.leader:CountFollowers("yamcheb") == 0 then
-inst.components.leader:AddFollower(yamche)
-end
-yamche.MiniMapEntity:SetIcon( "" )
-yamche.yamche = true
-yamche.sleepn = false 
-yamche.fightn = false
-yamche.slave = true
-return true
+return CompanionStates.SetFollowing(inst, yamche, YAMCHE_TAG, YAMCHE_COMPANION)
 end
 
 local function set_yamche_resting(inst, yamche)
-if yamche == nil or yamche.components == nil or yamche.components.follower == nil or inst.components.leader == nil then
-return
-end
-yamche.sleepn = true
-yamche.yamche = true 
-yamche.fightn = true
-yamche.active_hunt = false
-yamche.slave = false
-yamche.components.follower:SetLeader(nil)
-if inst.components.leader:IsFollower(yamche) then
-inst.components.leader:RemoveFollowersByTag("yamcheb")
-end
-yamche.MiniMapEntity:SetIcon( "musha_small.txt" )
-if yamche.components.sleeper ~= nil and not yamche.components.sleeper:IsAsleep() then
-yamche.components.sleeper:AddSleepiness(3, 10)
-end
-if yamche.pick1 then
-yamche.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_GATHER_STOP)
-yamche.pick1 = false
-yamche.working_food = false
-end
+return CompanionStates.SetResting(inst, yamche, YAMCHE_TAG, YAMCHE_COMPANION)
 end
 
 function yamche_update(inst)

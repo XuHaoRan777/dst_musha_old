@@ -917,6 +917,15 @@ for k,v in pairs(ents) do
 	end 
 end 
 end
+
+local function RefreshArongSleepState(inst)
+local has_rider = inst.components.rideable ~= nil and inst.components.rideable:GetRider() ~= nil
+local has_leader = inst.components.follower ~= nil and inst.components.follower.leader ~= nil
+
+inst.idle_sleep = not has_rider and not has_leader
+inst.sleep_on = inst.command_sleep == true or inst.force_sleep == true or inst.idle_sleep == true
+end
+
 local function flower_shield(inst, attacked, data) 
  	if not inst.components.health:IsDead() then
 	--inst.fight_on = true
@@ -996,7 +1005,7 @@ end
   elseif TheWorld.state.iscavedusk and not inst.force_sleep then
   inst.digest = true
 	inst.onsleep = false
-  elseif TheWorld.state.iscavenight then
+	elseif TheWorld.state.iscavenight then
 	inst.onsleep = true
 	if inst.digest and inst.components.sleeper:IsAsleep() then
 	 inst.digest = false
@@ -1005,6 +1014,8 @@ end
 	end	
 	end
 end
+
+RefreshArongSleepState(inst)
 
 if inst.yamche then
 inst.sg:GoToState("bellow")
@@ -1056,8 +1067,7 @@ elseif not leader then
 inst.components.health.externalabsorbmodifiers:SetModifier(inst, .6)
 inst.components.locomotor.walkspeed = 0.5
 end
-if not inst.components.rideable:GetRider() and not inst.components.follower.leader then
-inst.sleep_on = true
+if inst.idle_sleep then
 InShadow(inst)
 end
 local x,y,z = inst.Transform:GetWorldPosition()
@@ -1088,21 +1098,18 @@ local function on_wakeup(inst, data)
 if inst.components.hunger:GetPercent() < 0.5 then
   SpawnPrefab("pine_needles_chop").Transform:SetPosition(inst:GetPosition():Get())
 end 
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 5, {"musha"})
-for k,v in pairs(ents) do
-if inst.components.follower.leader and (v.sleep_on or v.tiny_sleep) then
+local leader = inst.components.follower ~= nil and inst.components.follower.leader or nil
+if leader ~= nil and (leader.sleep_on or leader.tiny_sleep) then
 inst.force_sleep = true
 inst.onsleep = true
-inst.sleep_on = true
 --inst.sg:GoToState("sleeping")
-elseif inst.components.follower.leader and not (v.sleep_on or v.tiny_sleep) then
+elseif leader ~= nil then
 if inst.components.sleeper:IsAsleep() then
 inst.components.sleeper:WakeUp() end
 inst.force_sleep = false
 inst.onsleep = false
-inst.sleep_on = false
-end end
+end
+RefreshArongSleepState(inst)
  end  
 
 local function OnDomesticationDelta(inst, data)
