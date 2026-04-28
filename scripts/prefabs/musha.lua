@@ -5285,6 +5285,27 @@ local function OnSpawnPet(inst, pet)
         elseif pet._killtask == nil then
             pet._killtask = pet:DoTaskInTime(math.random(), KillPet)
         end
+    elseif pet:HasTag("dall") then
+        inst.follow_dall = true
+        inst.dall_follow = true
+        pet.musha_migration_companion = true
+        pet.yamche = true
+        pet.sleep_on = false
+        pet.onsleep = false
+        pet.dall_command_follow = true
+        pet.persists = false
+    elseif pet:HasTag("Arongb") or pet:HasTag("arongb") then
+        inst.follow_arong = true
+        inst.arong_follow = true
+        pet.musha_migration_companion = true
+        pet.yamche = true
+        pet.mount = true
+        pet.command_sleep = false
+        pet.force_sleep = false
+        pet.idle_sleep = false
+        pet.sleep_on = false
+        pet.follow = true
+        pet.persists = false
     elseif inst._OnSpawnPet ~= nil then
         inst:_OnSpawnPet(pet)
     end
@@ -5293,6 +5314,11 @@ end
 local function OnDespawnPet(inst, pet)
     if pet:HasTag("shadowminion") then
         DoEffects(pet)
+        pet:Remove()
+    elseif pet.musha_migration_companion then
+        if pet.RemoveDallDrakesForMigration ~= nil then
+            pet:RemoveDallDrakesForMigration()
+        end
         pet:Remove()
     elseif inst._OnDespawnPet ~= nil then
         inst:_OnDespawnPet(pet)
@@ -5905,10 +5931,10 @@ local function master_postinit(inst)
 if inst.components.petleash ~= nil then
         inst._OnSpawnPet = inst.components.petleash.onspawnfn
         inst._OnDespawnPet = inst.components.petleash.ondespawnfn
-        inst.components.petleash:SetMaxPets(inst.components.petleash:GetMaxPets() + 4)
+        inst.components.petleash:SetMaxPets(inst.components.petleash:GetMaxPets() + 6)
     else
         inst:AddComponent("petleash")
-        inst.components.petleash:SetMaxPets(4)
+        inst.components.petleash:SetMaxPets(6)
     end
     inst.components.petleash:SetOnSpawnFn(OnSpawnPet)
     inst.components.petleash:SetOnDespawnFn(OnDespawnPet)

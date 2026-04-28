@@ -1066,6 +1066,38 @@ and drake.components.follower
 and drake.components.follower.leader == inst
 end
 
+local function count_dall_drakes(inst)
+local x, y, z = inst.Transform:GetWorldPosition()
+local ents = TheSim:FindEntities(x, y, z, 100, {DALL_DRAKE_TAG})
+local count = 0
+for _, drake in pairs(ents) do
+if is_dall_drake(inst, drake) and not drake.inst_in then
+count = count + 1
+end
+end
+return count
+end
+
+local function remove_dall_drake_for_migration(inst, drake)
+if not is_dall_drake(inst, drake) or drake.inst_in then
+return false
+end
+if drake.components and drake.components.follower then
+drake.components.follower:SetLeader(nil)
+end
+drake.inst_in = true
+drake:Remove()
+return true
+end
+
+local function remove_dall_drakes_for_migration(inst)
+local x, y, z = inst.Transform:GetWorldPosition()
+local ents = TheSim:FindEntities(x, y, z, 100, {DALL_DRAKE_TAG})
+for _, drake in pairs(ents) do
+remove_dall_drake_for_migration(inst, drake)
+end
+end
+
 local function restore_dall_drake(inst, drake)
 if not is_dall_drake(inst, drake) or drake.inst_in then
 return false
@@ -1100,6 +1132,21 @@ drake.sg:GoToState("enter")
 end
 end
 return drake
+end
+
+local function spawn_migration_dall_drakes(inst)
+local count = inst.pending_migration_drakes or 0
+inst.pending_migration_drakes = nil
+if count <= 0 or inst.sleep_on then
+return
+end
+
+local x, y, z = inst.Transform:GetWorldPosition()
+for i = 1, count do
+local angle = math.random() * 2 * math.pi
+local radius = 2 + math.random() * 2
+spawn_dall_drake(inst, x + math.cos(angle) * radius, y, z + math.sin(angle) * radius)
+end
 end
 
 local function summon_check(inst, data)
@@ -1718,11 +1765,21 @@ local function OnLoad(inst, data)
 			if data.health and data.health.health then inst.components.health.currenthealth = data.health.health end
 			inst.components.health:DoDelta(0)
 		end
+		if data.migration_drakes and data.migration_drakes > 0 then
+			inst.pending_migration_drakes = data.migration_drakes
+			inst:DoTaskInTime(0, spawn_migration_dall_drakes)
+		end
 	end
 end  
 		
 local function OnSave(inst, data)
    		data.level = inst.level
+		if inst.musha_migration_companion and not inst.sleep_on then
+			local migration_drakes = count_dall_drakes(inst)
+			if migration_drakes > 0 then
+				data.migration_drakes = migration_drakes
+			end
+		end
 end
 
 
@@ -1901,9 +1958,10 @@ end
 	inst.Transform:SetScale(0.7, 0.7, 0.7)
  inst:ListenForEvent("levelup", levelexp)
 	
-   inst.OnSave = OnSave
+	inst.OnSave = OnSave
     inst.OnLoad = OnLoad
 	inst.RestoreDallDrakes = restore_dall_drakes
+	inst.RemoveDallDrakesForMigration = remove_dall_drakes_for_migration
 	
     inst:SetBrain(brain)
 

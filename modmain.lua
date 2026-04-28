@@ -2832,6 +2832,7 @@ local DALL_TAG = "dall"
 local DALL_RADIUS = 25
 local DALL_COMPANION =
 {
+	migrate_with_owner = true,
 	can_command = function(dall)
 		return dall.components ~= nil and dall.components.follower ~= nil
 	end,
@@ -2921,6 +2922,7 @@ local ARONG_TAG = "Arongb"
 local ARONG_RADIUS = 25
 local ARONG_COMPANION =
 {
+	migrate_with_owner = true,
 	can_command = function(arong)
 		return arong.components ~= nil and arong.components.follower ~= nil
 	end,

@@ -79,6 +79,10 @@ function CompanionStates.SetFollowing(owner, companion, tag, opts)
         opts.on_follow(owner, companion)
     end
 
+    if opts ~= nil and opts.migrate_with_owner then
+        CompanionStates.AttachMigrationPet(owner, companion)
+    end
+
     return true
 end
 
@@ -91,6 +95,10 @@ function CompanionStates.SetResting(owner, companion, tag, opts)
         return false
     end
 
+    if opts ~= nil and opts.migrate_with_owner then
+        CompanionStates.DetachMigrationPet(owner, companion)
+    end
+
     if owner.components.leader:IsFollower(companion) then
         owner.components.leader:RemoveFollowersByTag(tag)
     end
@@ -101,6 +109,40 @@ function CompanionStates.SetResting(owner, companion, tag, opts)
         opts.on_rest(owner, companion)
     end
 
+    return true
+end
+
+function CompanionStates.AttachMigrationPet(owner, companion)
+    if owner.components == nil
+        or owner.components.petleash == nil
+        or companion == nil
+        or not companion:IsValid() then
+        return false
+    end
+
+    if not owner.components.petleash:IsPet(companion)
+        and not owner.components.petleash:AttachPet(companion) then
+        return false
+    end
+
+    companion.musha_migration_companion = true
+    companion.persists = false
+    return true
+end
+
+function CompanionStates.DetachMigrationPet(owner, companion)
+    if owner.components == nil
+        or owner.components.petleash == nil
+        or companion == nil then
+        return false
+    end
+
+    if owner.components.petleash:IsPet(companion) then
+        owner.components.petleash:DetachPet(companion)
+    end
+
+    companion.musha_migration_companion = nil
+    companion.persists = true
     return true
 end
 
