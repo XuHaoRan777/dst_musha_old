@@ -1,3 +1,5 @@
+local SkillDefs = require("musha_skilldefs")
+
 local assets=
 {
 	Asset("ANIM", "anim/frosthammer.zip"),
@@ -365,7 +367,7 @@ local owner = inst.components.inventoryitem.owner
 	inst.power = true
 	boostFX(inst)
         if not inst.winter then
-        owner.components.spellpower:DoDelta(-2,false)
+        SkillDefs.SpendMana(owner, "frosthammer_boost", false)
 		end
 		inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
 		owner.AnimState:OverrideSymbol("swap_object", "swap_frosthammer2", "frosthammer")
@@ -523,7 +525,7 @@ end
 local function summoning(staff, target, pos)
 --local player = inst.components.inventoryitem.owner
     local caster = staff.components.inventoryitem.owner
-if caster.components.spellpower.current >= 25 and caster.components.leader:CountFollowers("frost_tentacle") < 8 then
+if SkillDefs.HasMana(caster, "frost_tentacle") and caster.components.leader:CountFollowers("frost_tentacle") < 8 then
     local light1 = SpawnPrefab("splash")
     local monster = SpawnPrefab("tentacle_frost")
  	local fail1 = SpawnPrefab("statue_transition")
@@ -536,9 +538,9 @@ if caster.components.spellpower.current >= 25 and caster.components.leader:Count
 	--monster.limited = true
 	monster.components.follower:SetLeader(caster)
 	
-	caster.components.spellpower:DoDelta(-25)
+	SkillDefs.SpendMana(caster, "frost_tentacle")
 
-    elseif caster.components.spellpower.current < 25 then
+    elseif not SkillDefs.HasMana(caster, "frost_tentacle") then
 	local fail1 = SpawnPrefab("small_puff")
     fail1.Transform:SetPosition(pos.x, pos.y, pos.z)
 	caster.components.talker:Say(STRINGS.MUSHA_TALK_CANNOT)

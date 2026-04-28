@@ -1272,8 +1272,7 @@ local function on_electric_shield_attacked(inst, attacked)
 		or inst.forcefields
 		or inst.components.health == nil
 		or inst.components.health:IsDead()
-		or inst.components.spellpower == nil
-		or inst.components.spellpower.current < 2
+		or not SkillDefs.HasMana(inst, "electric_shield")
 		or inst.components.spellpower:GetPercent() <= 0
 		or math.random() >= shield.chance then
 		return
@@ -1288,7 +1287,7 @@ local function on_electric_shield_attacked(inst, attacked)
 	end)
 
 	inst.components.health:DoDelta(shield.heal)
-	inst.components.spellpower:DoDelta(-2)
+	SkillDefs.SpendMana(inst, "electric_shield")
 end
 
 local function SetElectricShieldLevel(inst, level)
@@ -1942,8 +1941,8 @@ inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
 	
   local function Lightnings_level_1(inst)
   local randomL = 0.05
-if inst.components.spellpower.current > 0 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
-inst.components.spellpower:DoDelta(-1)
+if SkillDefs.HasMana(inst, "valkyrie_passive_lightning") and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
+SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 	inst.on_hitLightnings = true inst.vl1 = true
 	--inst:DoTaskInTime(2, function() if inst.vl1 then inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
 	local shocking = SpawnPrefab("musha_spin_fx")
@@ -1964,8 +1963,8 @@ SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
  end end
   local function Lightnings_level_2(inst)
   local randomL = 0.05
-if inst.components.spellpower.current > 0 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
-inst.components.spellpower:DoDelta(-1)
+if SkillDefs.HasMana(inst, "valkyrie_passive_lightning") and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
+SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 	inst.on_hitLightnings = true inst.vl2 = true
 	--inst:DoTaskInTime(2, function() if inst.vl2 then inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
 	local shocking = SpawnPrefab("musha_spin_fx")
@@ -1986,8 +1985,8 @@ SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
  end end
   local function Lightnings_level_3(inst)
   local randomL = 0.1
-if inst.components.spellpower.current > 0 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
-inst.components.spellpower:DoDelta(-1)
+if SkillDefs.HasMana(inst, "valkyrie_passive_lightning") and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
+SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 	inst.on_hitLightnings = true inst.vl3 = true
 	--inst:DoTaskInTime(2, function() if inst.vl3 then inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
 	local shocking = SpawnPrefab("musha_spin_fx")
@@ -2008,8 +2007,8 @@ SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
  end end
   local function Lightnings_level_4(inst)
   local randomL = 0.15
-if inst.components.spellpower.current > 0 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
-inst.components.spellpower:DoDelta(-1)
+if SkillDefs.HasMana(inst, "valkyrie_passive_lightning") and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
+SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 	inst.on_hitLightnings = true inst.vl4 = true
 	--inst:DoTaskInTime(2, function() if inst.vl4 then inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
 	local shocking = SpawnPrefab("musha_spin_fx")
@@ -2030,8 +2029,8 @@ SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
  end end
  local function Lightnings_level_5(inst)
  local randomL = 0.1
-if inst.components.spellpower.current > 0 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
-inst.components.spellpower:DoDelta(-1)
+if SkillDefs.HasMana(inst, "valkyrie_passive_lightning") and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
+SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 	inst.on_hitLightnings = true inst.vl5 = true
 	--inst:DoTaskInTime(2, function() if inst.vl5 then inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
 	local shocking = SpawnPrefab("musha_spin_fx")
@@ -2052,8 +2051,8 @@ SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
  end end
  local function Lightnings_level_6(inst)
  local randomL = 0.2
-if inst.components.spellpower.current > 0 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
-inst.components.spellpower:DoDelta(-1)
+if SkillDefs.HasMana(inst, "valkyrie_passive_lightning") and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
+SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 	inst.on_hitLightnings = true inst.vl6 = true
 	--inst:DoTaskInTime(2, function() if inst.vl6 then inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
 	local shocking = SpawnPrefab("musha_spin_fx")
@@ -2074,8 +2073,8 @@ SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
  end end
  local function Lightnings_level_7(inst)
  local randomL = 0.25
-if inst.components.spellpower.current > 0 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
-inst.components.spellpower:DoDelta(-1)
+if SkillDefs.HasMana(inst, "valkyrie_passive_lightning") and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
+SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 	inst.on_hitLightnings = true inst.vl7 = true
 	--inst:DoTaskInTime(2, function() if inst.vl7 then inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
 	local shocking = SpawnPrefab("musha_spin_fx")
@@ -2096,8 +2095,8 @@ SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
  end end
  local function Lightnings_level_8(inst)
  local randomL = 0.3
-if inst.components.spellpower.current > 0 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
-inst.components.spellpower:DoDelta(-1)
+if SkillDefs.HasMana(inst, "valkyrie_passive_lightning") and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
+SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 	inst.on_hitLightnings = true inst.vl8 = true
 	--inst:DoTaskInTime(2, function() if inst.vl8 then inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
 	local shocking = SpawnPrefab("musha_spin_fx")
@@ -2118,8 +2117,8 @@ SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
  end end
  local function Lightnings_level_9(inst)
  local randomL = 0.3
-if inst.components.spellpower.current > 0 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
-inst.components.spellpower:DoDelta(-1)
+if SkillDefs.HasMana(inst, "valkyrie_passive_lightning") and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
+SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 	inst.on_hitLightnings = true inst.vl8 = true
 	--inst:DoTaskInTime(2, function() if inst.vl8 then inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
 	local shocking = SpawnPrefab("musha_spin_fx")
@@ -5071,7 +5070,7 @@ end
 --Armor 
 
 	if inst.berserk or inst.fberserk then
-		if inst.components.spellpower.current >= 5 then
+		if SkillDefs.HasMana(inst, "forcefield") then
 		inst.forcefields = true
 		else
 		inst.forcefields = false
@@ -5082,7 +5081,7 @@ end
 	end
 
 
-	if inst.forcefields and inst.components.spellpower.current < 5 then
+	if inst.forcefields and not SkillDefs.HasMana(inst, "forcefield") then
 		inst.forcefields = false
 	end
 
@@ -5094,7 +5093,7 @@ elseif not inst.sg.currentstate.name ~= "eat" and not inst.sg.currentstate.name 
 		if (inst.on_sparkshield or inst.music_armor or inst.pet_shield or inst.active_skill) and not inst.forcefields then
 		inst.components.health.externalabsorbmodifiers:SetModifier(inst, 1)
 		inst.remove_shield = false
-		elseif inst.forcefields and inst.components.spellpower.current >= 5 then
+		elseif inst.forcefields and SkillDefs.HasMana(inst, "forcefield") then
 		inst.components.health.externalabsorbmodifiers:SetModifier(inst, 1)
 		inst.remove_shield = false
 		elseif not inst.on_sparkshield and not inst.music_armor and not inst.pet_shield and not inst.active_skill and not inst.forcefields then
@@ -5833,11 +5832,11 @@ local function ForceFields_on(inst, data)
 	if (inst.components.health ~= nil and not inst.components.health:IsDead()) then
 		inst:AddDebuff("forcefield", "forcefield2")
 		if not inst.on_sparkshield and not inst.pet_shield then
-		inst.components.spellpower:DoDelta(-5)
+		SkillDefs.SpendMana(inst, "forcefield")
 		end
 	end
 	if ( inst.berserk or inst.fberserk ) then
-	if inst.components.spellpower.current < 5 then
+	if not SkillDefs.HasMana(inst, "forcefield") then
 	inst.forcefields = false
 	end
 	end

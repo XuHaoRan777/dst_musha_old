@@ -17,6 +17,54 @@ local MANA_REGEN_BY_CONFIG =
     dmana_hardcore = 1,
 }
 
+local ACTIVE_SHIELD_LEVELS =
+{
+    {
+        max = 430,
+        cooldown = 90,
+        ready_flag = "timec1",
+        unlock_flag = "shield_level1",
+        cooldown_string = "MUSHA_TALK_SHIELD_COOL_90",
+    },
+    {
+        max = 1880,
+        cooldown = 80,
+        ready_flag = "timec2",
+        unlock_flag = "shield_level2",
+        cooldown_string = "MUSHA_TALK_SHIELD_COOL_80",
+    },
+    {
+        max = 7000,
+        cooldown = 70,
+        ready_flag = "timec3",
+        unlock_flag = "shield_level3",
+        cooldown_string = "MUSHA_TALK_SHIELD_COOL_70",
+    },
+    {
+        cooldown = 60,
+        ready_flag = "timec4",
+        unlock_flag = "shield_level4",
+        cooldown_string = "MUSHA_TALK_SHIELD_COOL_60",
+    },
+}
+
+local MANA_COSTS =
+{
+    frost_wind = 15,
+    power_attack_required = 5,
+    power_attack_cost = 3,
+    lightning_book = 10,
+    berserk_chain_lightning = 1,
+    valkyrie_lightning_start = 9,
+    valkyrie_lightning_refund = 6,
+    valkyrie_passive_lightning = 1,
+    active_shield = 30,
+    electric_shield = 2,
+    forcefield = 5,
+    frosthammer_boost = 2,
+    frost_tentacle = 25,
+}
+
 function SkillDefs.GetLightningLevel(level)
     level = level or 0
     for _, def in ipairs(LIGHTNING_LEVELS) do
@@ -44,6 +92,68 @@ function SkillDefs.GetManaRegen(inst)
         return 1
     end
     return 1
+end
+
+function SkillDefs.GetManaCost(key)
+    return MANA_COSTS[key] or 0
+end
+
+function SkillDefs.HasMana(inst, key, inclusive)
+    local spellpower = inst ~= nil and inst.components ~= nil and inst.components.spellpower or nil
+    if spellpower == nil then
+        return false
+    end
+
+    local cost = SkillDefs.GetManaCost(key)
+    if inclusive == false then
+        return spellpower.current > cost
+    end
+    return spellpower.current >= cost
+end
+
+function SkillDefs.SpendMana(inst, key, overtime)
+    local spellpower = inst ~= nil and inst.components ~= nil and inst.components.spellpower or nil
+    if spellpower == nil then
+        return false
+    end
+
+    local cost = SkillDefs.GetManaCost(key)
+    if cost <= 0 then
+        return true
+    end
+
+    spellpower:DoDelta(-cost, overtime)
+    return true
+end
+
+function SkillDefs.RestoreMana(inst, key)
+    local spellpower = inst ~= nil and inst.components ~= nil and inst.components.spellpower or nil
+    if spellpower == nil then
+        return false
+    end
+
+    local cost = SkillDefs.GetManaCost(key)
+    if cost <= 0 then
+        return true
+    end
+
+    spellpower:DoDelta(cost)
+    return true
+end
+
+function SkillDefs.GetActiveShieldLevel(level)
+    level = level or 0
+    for _, def in ipairs(ACTIVE_SHIELD_LEVELS) do
+        if def.max == nil or level < def.max then
+            return def
+        end
+    end
+end
+
+function SkillDefs.ForEachActiveShieldLevel(fn)
+    for _, def in ipairs(ACTIVE_SHIELD_LEVELS) do
+        fn(def)
+    end
 end
 
 return SkillDefs

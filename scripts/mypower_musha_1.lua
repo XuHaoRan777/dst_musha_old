@@ -1,6 +1,14 @@
 local require = GLOBAL.require
 local STRINGS = GLOBAL.STRINGS
 local ACTIONS = GLOBAL.ACTIONS
+local EQUIPSLOTS = GLOBAL.EQUIPSLOTS
+local SkillDefs = require("musha_skilldefs")
+local PerformPreviewBufferedActionIfAvailable
+local GetSpellpowerCurrent
+local HasManaForAction
+local AddActionOnce
+local CanShowPowerAttack
+local AddMushaSceneActions
 
 local targets = {  "pigman", "bunnyman", "perd", "spider", "spider_warrior", "spiderqueen", "spider_spitter", "spider_dropper", "frog", "monkey", "bat", "hound", "firehound", "icehound", "warg", "tentacle", "walrus", "merm", "knight", "rook", "minotaur", "bishop", "krampus", "mossling", "tallbird", "deerclopse", "bearger", "dragonfly", "moose", "spat", "birchnutdrake", "deerclops", "toadstool", "beequeen", "klaus", "stalker", "antlion", "beefalo", 
 "character", "eyeofterror", "twinofterror1", "twinofterror2", "stalker_forest", "stalker", "stalker_atrium", "ancient_herald", "leif", "leif_sparse", "lordfruitfly", "fruitfly", "pugalisk", "treeguard",
@@ -30,9 +38,9 @@ end
 end]]
 
 AddAction("BOOK22", STRINGS.MUSHA_MYPOWER_FROST_WIND, function(act)
-	if act.doer ~= nil and act.target ~= nil and act.doer:HasTag("musha") and act.target.components.mypower_musha ~= nil and act.doer.components.spellpower ~= nil and act.doer.components.spellpower.current > 15 then
+	if act.doer ~= nil and act.target ~= nil and act.doer:HasTag("musha") and act.target.components.mypower_musha ~= nil and SkillDefs.HasMana(act.doer, "frost_wind", false) then
 		act.target.components.mypower_musha:Boook(act.doer)
-		act.doer.components.spellpower:DoDelta(-15)
+		SkillDefs.SpendMana(act.doer, "frost_wind")
 		return true
 	else
 		return false
@@ -40,18 +48,25 @@ AddAction("BOOK22", STRINGS.MUSHA_MYPOWER_FROST_WIND, function(act)
 end)
 
 AddAction("POWERATTACK", STRINGS.MUSHA_MYPOWER_SMITE, function(act)
-	if act.doer ~= nil and act.target ~= nil and act.target ~= act.doer and act.doer:HasTag("player") and act.doer.components.mypower_musha and (act.target:HasTag("character") or act.target:HasTag("monster") or act.target:HasTag("animal")) and act.target ~= act.doer and act.doer.components.spellpower and act.doer.components.spellpower.current > 5 then
-			
-		act.doer.components.mypower_musha:Lightning(act.target)
-		act.doer.components.combat:SetAreaDamage(3.5, 1)
-		act.doer.components.combat:DoAttack(act.target)
-			if not act.doer.berserk then
-			act.doer.components.combat:SetAreaDamage(0, 0)
+	local doer = act.doer
+	local target = act.target
+	local weapon = doer ~= nil and doer.components ~= nil and doer.components.inventory ~= nil and doer.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS) or nil
+	if doer ~= nil and target ~= nil and target ~= doer and doer:HasTag("player") and doer.components.mypower_musha and weapon ~= nil and weapon.components.weapon ~= nil and (target:HasTag("character") or target:HasTag("pig") or target:HasTag("monster") or target:HasTag("animal")) then
+		if SkillDefs.HasMana(doer, "power_attack_required", false) then
+			doer.components.mypower_musha:Lightning(target)
+			doer.components.combat:SetAreaDamage(3.5, 1)
+			doer.components.combat:DoAttack(target)
+		else
+			doer.components.combat:SetAreaDamage(0, 0)
+			doer.components.combat:DoAttack(target)
+		end
+			if not doer.berserk then
+			doer.components.combat:SetAreaDamage(0, 0)
 			end
 		return true
 	else
-		if not act.doer.berserk then
-		act.doer.components.combat:SetAreaDamage(0, 0)
+		if doer ~= nil and doer.components ~= nil and doer.components.combat ~= nil and not doer.berserk then
+		doer.components.combat:SetAreaDamage(0, 0)
 		end
 		return false
 	end
@@ -61,26 +76,81 @@ end)
 
 -- Component mypower_musha ---------------------
 
-AddComponentAction("SCENE", "mypower_musha", function(inst, doer, actions, right)
+function AddActionOnce(actions, action)
+	for _, existing in ipairs(actions) do
+		if existing == action then
+			return
+		end
+	end
+	table.insert(actions, action)
+end
+
+function CanShowPowerAttack(inst, doer)
+	return inst ~= nil
+		and doer ~= nil
+		and inst ~= doer
+		and doer:HasTag("musha")
+		and (inst:HasTag("character") or inst:HasTag("pig") or inst:HasTag("monster") or inst:HasTag("animal"))
+end
+
+function AddMushaSceneActions(inst, doer, actions, right)
 	if right then
-		if (--[[inst:HasTag("character") or]] inst:HasTag("pig") or inst:HasTag("monster") or inst:HasTag("animal") ) and inst ~= doer and doer:HasTag("musha") then
-			table.insert(actions, GLOBAL.ACTIONS.POWERATTACK)
+		if CanShowPowerAttack(inst, doer) then
+			AddActionOnce(actions, ACTIONS.POWERATTACK)
 		end	
 		if inst:HasTag("musha") and inst == doer then
-			table.insert(actions, GLOBAL.ACTIONS.BOOK22)	
+			AddActionOnce(actions, ACTIONS.BOOK22)
 		end
 		
 	end
-end)
+end
+
+AddComponentAction("SCENE", "mypower_musha", AddMushaSceneActions)
+AddComponentAction("SCENE", "combat", AddMushaSceneActions)
+AddComponentAction("SCENE", "health", AddMushaSceneActions)
 
 
 -- Stategraph ----------------------------
 local FRAMES = GLOBAL.FRAMES
 local TimeEvent = GLOBAL.TimeEvent
 local EventHandler = GLOBAL.EventHandler
-local EQUIPSLOTS = GLOBAL.EQUIPSLOTS
 local SpawnPrefab = GLOBAL.SpawnPrefab
 
+function PerformPreviewBufferedActionIfAvailable(inst)
+    local buffaction = inst:GetBufferedAction()
+    if buffaction ~= nil and buffaction.preview_cb ~= nil then
+        inst:PerformPreviewBufferedAction()
+        return true
+    end
+    return false
+end
+
+function GetSpellpowerCurrent(inst)
+	if inst == nil then
+		return nil
+	end
+
+	if inst.components ~= nil and inst.components.spellpower ~= nil then
+		return inst.components.spellpower.current
+	end
+
+	if inst._currentspellpowerperc ~= nil and inst._spellpowermax ~= nil then
+		return inst._currentspellpowerperc:value() * inst._spellpowermax:value()
+	end
+end
+
+function HasManaForAction(inst, key, inclusive)
+	local current = GetSpellpowerCurrent(inst)
+	if current == nil then
+		return false
+	end
+
+	local cost = SkillDefs.GetManaCost(key)
+	if inclusive == false then
+		return current > cost
+	end
+	return current >= cost
+end
 
 local book22 = GLOBAL.State(
 		{
@@ -91,20 +161,22 @@ local book22 = GLOBAL.State(
 		--[[if inst.components.playercontroller then
 		inst.components.playercontroller:Enable(false)
 		end]]
-		
+		if not SkillDefs.HasMana(inst, "frost_wind", false) then
+			if inst.components.talker ~= nil then
+				inst.components.talker:Say(STRINGS.MUSHA_TALK_NEED_SPELLPOWER)
+			end
+			inst:ClearBufferedAction()
+			inst.sg:GoToState("idle")
+			return
+		end
+
 		 inst.components.locomotor:Stop()
-		
-		 
-		if inst.components.spellpower and inst.components.spellpower.current > 15 then
+
 			if inst.components.health and not inst.components.health:IsDead() then	
 				inst.active_skill = true
 			end
             inst.AnimState:PlayAnimation("action_uniqueitem_pre")
             inst.AnimState:PushAnimation("book", true)
-			
-		else
-			inst.sg:GoToState("mindcontrolled_pst")
-		end		
 		
             inst.AnimState:Show("ARM_normal")
             inst.components.inventory:ReturnActiveActionItem(inst.bufferedaction ~= nil and (inst.bufferedaction.target or inst.bufferedaction.invobject) or nil)
@@ -196,7 +268,7 @@ local book22_c = GLOBAL.State(
             inst.AnimState:PlayAnimation("action_uniqueitem_pre")
             inst.AnimState:PushAnimation("action_uniqueitem_lag", false)
 	      --inst.AnimState:PushAnimation("book", false)
-            inst:PerformPreviewBufferedAction()
+            PerformPreviewBufferedActionIfAvailable(inst)
             inst.sg:SetTimeout(2.5)   
 			
         end,
@@ -287,15 +359,21 @@ local Lightning = GLOBAL.State(
 	
 onenter = function(inst)
 
+            local buffaction = inst:GetBufferedAction()
+            local target = buffaction ~= nil and buffaction.target or nil
+            local equip = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
+            local weapon = inst.components.combat and inst.components.combat:GetWeapon()
+            if target == nil or equip == nil or weapon == nil then
+                inst:ClearBufferedAction()
+                inst.sg:GoToState("idle")
+                return
+            end
+
 			inst.f_attack = true
 			--inst:DoTaskInTime(1.6, function(inst) inst.f_attack = false end )
 			--shield --------
 
 		-------- --------			
-			
-            local buffaction = inst:GetBufferedAction()
-            local target = buffaction ~= nil and buffaction.target or nil
-            local equip = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
 			local cooldown = inst.components.combat.min_attack_period + .5 * FRAMES
             inst.components.combat:SetTarget(target)
             inst.components.combat:StartAttack()
@@ -303,11 +381,11 @@ onenter = function(inst)
 			target.components.locomotor:Stop()
 			end
             inst.components.locomotor:Stop()
-            local weapon = inst.components.combat and inst.components.combat:GetWeapon()
 		
+		local has_power_mana = SkillDefs.HasMana(inst, "power_attack_required", false)
 		if weapon and not inst.components.rider:IsRiding() then
 
-				if inst.components.spellpower and inst.components.spellpower.current > 5 then
+				if has_power_mana then
 				inst.AnimState:PlayAnimation("pickaxe_pre")
 				
 				if inst.components.health ~= nil and not inst.components.health:IsDead() then	
@@ -369,11 +447,16 @@ onenter = function(inst)
 		end]]
 				
 				else
-				inst.sg:GoToState("mindcontrolled_pst")
+				inst.sg.statemem.normal_powerattack_fallback = true
+				inst.AnimState:PlayAnimation("atk_pre")
+				inst.AnimState:PushAnimation("atk", false)
+				inst.SoundEmitter:PlaySound("dontstarve/wilson/attack_weapon")
 				end	
 				
 				cooldown = math.max(cooldown, 6 * FRAMES)
+                    if has_power_mana then
                     inst.SoundEmitter:PlaySound("dontstarve/wilson/attack_icestaff")
+                    end
                     --inst.SoundEmitter:PlaySound("dontstarve/wilson/attack_weapon")
 					
 		elseif inst.components.rider:IsRiding() then
@@ -400,8 +483,9 @@ onenter = function(inst)
                 inst.AnimState:PlayAnimation("punch")
                 --inst.SoundEmitter:PlaySound("dontstarve/wilson/attack_whoosh")
             end
+				inst.sg.statemem.cooldown = cooldown
 				--inst.sg:SetTimeout(cooldown)
-			    inst:PerformPreviewBufferedAction()
+			    PerformPreviewBufferedActionIfAvailable(inst)
 		end,
 		timeline =
         {
@@ -411,6 +495,11 @@ onenter = function(inst)
 				end
             end),
 			TimeEvent(8 * FRAMES, function(inst)
+				if inst.sg.statemem.normal_powerattack_fallback then
+                    inst:PerformBufferedAction()
+                    inst.sg:RemoveStateTag("abouttoattack")
+                    return
+				end
                 if inst.components.rider:IsRiding() then
                     inst:PerformBufferedAction()
                     inst.sg:RemoveStateTag("abouttoattack")
@@ -457,8 +546,12 @@ onenter = function(inst)
             EventHandler("animover", function(inst)
 			if not inst.components.rider:IsRiding() then
                 if inst.AnimState:AnimDone() then
+					if inst.sg.statemem.normal_powerattack_fallback then
+						inst.sg:GoToState("idle")
+						return
+					end
                     inst.sg:GoToState("attacking2")
-					inst.sg:SetTimeout(cooldown)
+					inst.sg:SetTimeout(inst.sg.statemem.cooldown or 0)
                 end
 			end	
             end),
@@ -530,7 +623,7 @@ local powerup2 = GLOBAL.State(
             inst.AnimState:PlayAnimation("staff_pre")
             inst.AnimState:PushAnimation("staff", false)
             inst.components.locomotor:Stop()
-		inst:PerformPreviewBufferedAction()
+		PerformPreviewBufferedActionIfAvailable(inst)
             --Spawn an effect on the player's location
             local staff = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
             local colour = staff ~= nil and staff.fxcolour or { 1, 1, 1 }
@@ -618,7 +711,7 @@ local powerup_c = GLOBAL.State(
             inst.components.locomotor:Stop()
             inst.AnimState:PlayAnimation("staff_pre")
             inst.AnimState:PushAnimation("staff_lag", false)
-            inst:PerformPreviewBufferedAction()
+            PerformPreviewBufferedActionIfAvailable(inst)
             inst.sg:SetTimeout(3)
         end,
 
@@ -646,12 +739,13 @@ local powerup_c = GLOBAL.State(
             inst.AnimState:PlayAnimation("staff_pre")
             inst.AnimState:PushAnimation("staff", false)
             inst.components.locomotor:Stop()
-		inst:PerformPreviewBufferedAction()
+		PerformPreviewBufferedActionIfAvailable(inst)
          
             local staff = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
             local colour = staff ~= nil and staff.fxcolour or { 1, 1, 1 }
+            local rider = inst.replica.rider
 
-            inst.sg.statemem.stafffx = SpawnPrefab(inst.replica.rider:IsRiding() and "staffcastfx_mount" or "staffcastfx")
+            inst.sg.statemem.stafffx = SpawnPrefab(rider ~= nil and rider:IsRiding() and "staffcastfx_mount" or "staffcastfx")
             inst.sg.statemem.stafffx.entity:SetParent(inst.entity)
             inst.sg.statemem.stafffx.Transform:SetRotation(inst.Transform:GetRotation())
            
@@ -733,6 +827,11 @@ local attack_frosthammer22 = GLOBAL.State(
             local buffaction = inst:GetBufferedAction()
             local target = buffaction ~= nil and buffaction.target or nil
             local equip = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
+            if target == nil or equip == nil then
+                inst:ClearBufferedAction()
+                inst.sg:GoToState("idle")
+                return
+            end
             inst.components.combat:SetTarget(target)
             inst.components.combat:StartAttack()
             inst.components.locomotor:Stop()
@@ -827,11 +926,18 @@ local Lightning2 = GLOBAL.State(
 
 	
 			onenter = function(inst)
-			inst.f_attack = true
-			inst:DoTaskInTime(1.6, function(inst) inst.f_attack = false end )
             local buffaction = inst:GetBufferedAction()
             local target = buffaction ~= nil and buffaction.target or nil
             local equip = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
+            local weapon = inst.replica.combat and inst.replica.combat:GetWeapon()
+			if target == nil or equip == nil or weapon == nil then
+				inst:ClearBufferedAction()
+				inst.sg:GoToState("idle")
+				return
+			end
+
+			inst.f_attack = true
+			inst:DoTaskInTime(1.6, function(inst) inst.f_attack = false end )
             --inst.replica.combat:SetTarget(target)
             --inst.replica.combat:StartAttack()
 			local cooldown = inst.replica.combat:MinAttackPeriod() + .5 * FRAMES
@@ -840,7 +946,6 @@ local Lightning2 = GLOBAL.State(
             end
 			
             inst.components.locomotor:Stop()
-            local weapon = inst.replica.combat and inst.replica.combat:GetWeapon()
 			local rider = inst.replica.rider
 			
 			if rider ~= nil and rider:IsRiding() then
@@ -872,12 +977,21 @@ local Lightning2 = GLOBAL.State(
                 end
 				
 			else
-            if weapon and not rider:IsRiding() then
+            local has_power_mana = HasManaForAction(inst, "power_attack_required", false)
+            if weapon and (rider == nil or not rider:IsRiding()) then
+                if has_power_mana then
                 inst.AnimState:PlayAnimation("pickaxe_pre")
 				--inst.AnimState:PushAnimation("pickaxe_lag", false)
 				cooldown = math.max(cooldown, 6 * FRAMES)
                     inst.SoundEmitter:PlaySound("dontstarve/wilson/attack_icestaff")
                     --inst.SoundEmitter:PlaySound("dontstarve/wilson/attack_weapon")
+                else
+				inst.sg.statemem.normal_powerattack_fallback = true
+				inst.AnimState:PlayAnimation("atk_pre")
+				inst.AnimState:PushAnimation("atk", false)
+				inst.SoundEmitter:PlaySound("dontstarve/wilson/attack_weapon")
+				cooldown = math.max(cooldown, 6 * FRAMES)
+                end
 
             else
 				inst.sg.statemem.slow = true
@@ -885,20 +999,26 @@ local Lightning2 = GLOBAL.State(
                 --inst.SoundEmitter:PlaySound("dontstarve/wilson/attack_whoosh")
             end
 				--inst.sg:SetTimeout(cooldown)
-			    inst:PerformPreviewBufferedAction()
+			    inst.sg.statemem.cooldown = cooldown
+			    PerformPreviewBufferedActionIfAvailable(inst)
 		end	
         end,
 		
 		timeline =
         {
             TimeEvent(6 * FRAMES, function(inst)
-				local rider = inst.replica.rider
-				if not rider:IsRiding() then
+			local rider = inst.replica.rider
+			if rider == nil or not rider:IsRiding() then
                 inst.sg:RemoveStateTag("prehammer")
 				end
             end),
 			
 			 TimeEvent(8 * FRAMES, function(inst)
+                if inst.sg.statemem.normal_powerattack_fallback then
+                    PerformPreviewBufferedActionIfAvailable(inst)
+                    inst.sg:RemoveStateTag("abouttoattack")
+                    return
+                end
                 local rider = inst.replica.rider
 				if rider ~= nil and rider:IsRiding() then
                     inst:ClearBufferedAction()
@@ -920,8 +1040,8 @@ local Lightning2 = GLOBAL.State(
         events =
         {
             EventHandler("unequip", function(inst) 
-			local rider = inst.replica.rider			
-			if not rider:IsRiding() then
+			local rider = inst.replica.rider
+			if rider == nil or not rider:IsRiding() then
 			inst:ClearBufferedAction()
             inst.AnimState:PlayAnimation("pickaxe_pst")
 			inst.AnimState:PushAnimation("pickaxe_lag", false)
@@ -932,17 +1052,21 @@ local Lightning2 = GLOBAL.State(
 			
             EventHandler("animover", function(inst)
 			local rider = inst.replica.rider
-			if not rider:IsRiding() then
+			if rider == nil or not rider:IsRiding() then
                 if inst.AnimState:AnimDone() then
+					if inst.sg.statemem.normal_powerattack_fallback then
+						inst.sg:GoToState("idle")
+						return
+					end
                     inst.sg:GoToState("attacking2_c")
-					inst.sg:SetTimeout(cooldown)
+					inst.sg:SetTimeout(inst.sg.statemem.cooldown or 0)
                 end
 			end	
             end),
 			
 			EventHandler("animqueueover", function(inst)
 			local rider = inst.replica.rider
-			if rider:IsRiding() then
+			if rider ~= nil and rider:IsRiding() then
                 if inst.AnimState:AnimDone() then
                     inst.sg:GoToState("idle")
                 end
@@ -953,7 +1077,7 @@ local Lightning2 = GLOBAL.State(
 		
 		onexit = function(inst)
 		local rider = inst.replica.rider
-		if rider:IsRiding() then
+		if rider ~= nil and rider:IsRiding() then
             if inst.sg:HasStateTag("abouttoattack") and inst.replica.combat ~= nil then
                 inst.replica.combat:CancelAttack()
             end
@@ -970,13 +1094,19 @@ local attack_frosthammer22_c = GLOBAL.State(
 
         onenter = function(inst)
 		
-            local cooldown = inst.replica.combat:MinAttackPeriod() + .5 * FRAMES
+            local buffaction = inst:GetBufferedAction()
+            local equip = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
+            if buffaction == nil or buffaction.target == nil or equip == nil then
+                inst:ClearBufferedAction()
+                inst.sg:GoToState("idle")
+                return
+            end
+            local cooldown = inst.replica.combat ~= nil and inst.replica.combat:MinAttackPeriod() + .5 * FRAMES or 0
             if inst.replica.combat ~= nil then
                 inst.replica.combat:StartAttack()
                 --cooldown = inst.replica.combat:MinAttackPeriod() + .5 * FRAMES
             end
             inst.components.locomotor:Stop()
-            local equip = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
             local rider = inst.replica.rider
             if rider ~= nil and rider:IsRiding() then
                 inst.AnimState:PlayAnimation("atk_pre")
@@ -1009,11 +1139,11 @@ local attack_frosthammer22_c = GLOBAL.State(
             end
 			
 				--inst.sg:SetTimeout(cooldown)
-			    inst:PerformPreviewBufferedAction()
+			    PerformPreviewBufferedActionIfAvailable(inst)
 							
             local buffaction = inst:GetBufferedAction()
             if buffaction ~= nil then
-                inst:PerformPreviewBufferedAction()
+                PerformPreviewBufferedActionIfAvailable(inst)
 				--inst.sg:SetTimeout(TIMEOUT)
                 if buffaction.target ~= nil and buffaction.target:IsValid() then
                     inst:FacePoint(buffaction.target:GetPosition())

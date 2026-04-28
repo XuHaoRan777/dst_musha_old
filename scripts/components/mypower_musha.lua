@@ -2,6 +2,7 @@ local Mypower_musha = Class(function(self, inst)
     self.inst = inst
 	--inst:DoTaskInTime(0, function() self:Start() end)
 end)
+local SkillDefs = require("musha_skilldefs")
 
 -----------------------------------------------------------------
 
@@ -167,11 +168,11 @@ end]]
 function Mypower_musha:Lightning(victim)
 local weapon = self.inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
 if weapon and weapon.components.weapon then
-	if victim and self.inst:HasTag("musha") and (victim.components.health and not victim.components.health:IsDead()) and self.inst.components.spellpower and self.inst.components.spellpower.current >=5 then
+	if victim and self.inst:HasTag("musha") and (victim.components.health and not victim.components.health:IsDead()) and SkillDefs.HasMana(self.inst, "power_attack_required") then
 
 	if not victim:HasTag("alignwall") and not victim:HasTag("stalkerminion") and not victim:HasTag("smashable") and not victim:HasTag("alignwall") and not victim:HasTag("shadowminion") then 
 	
-	self.inst.components.spellpower:DoDelta(-3)
+	SkillDefs.SpendMana(self.inst, "power_attack_cost")
 	--self.inst.components.fatigue_sleep:DoDelta(2)
 	
 	--[[if self.inst.loud_2 or self.inst.loud_3 then

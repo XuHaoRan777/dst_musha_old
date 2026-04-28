@@ -31,6 +31,15 @@ local function StopTalkSound(inst, instant)
     end
     inst.SoundEmitter:KillSound("talk")
 end
+
+local function PerformPreviewBufferedActionIfAvailable(inst)
+    local buffaction = inst:GetBufferedAction()
+    if buffaction ~= nil and buffaction.preview_cb ~= nil then
+        inst:PerformPreviewBufferedAction()
+        return true
+    end
+    return false
+end
 -------------------------------------------------
 
 --[[
@@ -1133,7 +1142,7 @@ local attack_frosthammer = GLOBAL.State(
                 --inst.SoundEmitter:PlaySound("dontstarve/wilson/attack_whoosh")
             end
 				--inst.sg:SetTimeout(cooldown)
-			    inst:PerformPreviewBufferedAction()
+			    PerformPreviewBufferedActionIfAvailable(inst)
 		end,
 		timeline =
         {
@@ -1322,7 +1331,7 @@ local shovel_start_c = GLOBAL.State(
                 inst.AnimState:PushAnimation("shovel_lag", false)
             end
 
-            inst:PerformPreviewBufferedAction()
+            PerformPreviewBufferedActionIfAvailable(inst)
             inst.sg:SetTimeout(TIMEOUT)
         end,
 
@@ -1361,7 +1370,7 @@ local bedroll2_c = GLOBAL.State(
             inst.AnimState:PlayAnimation("action_uniqueitem_pre")
             inst.AnimState:PushAnimation("action_uniqueitem_lag", false)
 
-            inst:PerformPreviewBufferedAction()
+            PerformPreviewBufferedActionIfAvailable(inst)
            -- inst.sg:SetTimeout(TIMEOUT)
         end,
 
@@ -1399,7 +1408,7 @@ local book2_c = GLOBAL.State(
             inst.AnimState:PlayAnimation("action_uniqueitem_pre")
             inst.AnimState:PushAnimation("action_uniqueitem_lag", false)
 	      --inst.AnimState:PushAnimation("book", false)
-            inst:PerformPreviewBufferedAction()
+            PerformPreviewBufferedActionIfAvailable(inst)
             inst.sg:SetTimeout(3)   
 				--shield --------
 		--[[inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/raise")
@@ -1544,7 +1553,7 @@ local bowm_c = GLOBAL.State(
 			end
 		
             if buffaction ~= nil then
-                inst:PerformPreviewBufferedAction()
+                PerformPreviewBufferedActionIfAvailable(inst)
 
                 if buffaction.target ~= nil and buffaction.target:IsValid() then
                     inst:FacePoint(buffaction.target:GetPosition())
@@ -1709,7 +1718,7 @@ local attack_frosthammer_c = GLOBAL.State(
                 --inst.SoundEmitter:PlaySound("dontstarve/wilson/attack_whoosh")
             end
 				--inst.sg:SetTimeout(cooldown)
-			    inst:PerformPreviewBufferedAction()
+			    PerformPreviewBufferedActionIfAvailable(inst)
 		end	
         end,
 		
@@ -1834,11 +1843,11 @@ local attack_frosthammer2_c = GLOBAL.State(
             end
 			
 				--inst.sg:SetTimeout(cooldown)
-			    inst:PerformPreviewBufferedAction()
+			    PerformPreviewBufferedActionIfAvailable(inst)
 							
             local buffaction = inst:GetBufferedAction()
             if buffaction ~= nil then
-                inst:PerformPreviewBufferedAction()
+                PerformPreviewBufferedActionIfAvailable(inst)
 				--inst.sg:SetTimeout(TIMEOUT)
                 if buffaction.target ~= nil and buffaction.target:IsValid() then
                     inst:FacePoint(buffaction.target:GetPosition())

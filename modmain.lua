@@ -20,6 +20,121 @@ local ThePlayer = GLOBAL.ThePlayer
 -----------
 local TheInput = GLOBAL.TheInput
 -----------sleep--------
+local function IsNearWriteable(inst)
+	local x, y, z = inst.Transform:GetWorldPosition()
+	local ents = TheSim:FindEntities(x, y, z, 1, { "_writeable" })
+	return ents ~= nil and #ents > 0
+end
+
+local function SayRandomLine(inst, lines)
+	if inst.components.talker == nil or lines == nil or #lines == 0 then
+		return
+	end
+	local chance = 1 / #lines
+	for i = 1, #lines - 1 do
+		if math.random() < chance then
+			inst.components.talker:Say(lines[i])
+			return
+		end
+	end
+	inst.components.talker:Say(lines[#lines])
+end
+
+local function GetMushaSleepRestoreBuild(inst, is_full)
+	if inst.visual_cos then
+		return is_full and "musha" or "musha_normal"
+	end
+
+	if inst.change_visual then
+		return nil
+	end
+
+	if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
+		return is_full and "musha" or "musha_normal"
+	elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
+		return is_full and "musha" or "musha_normal"
+	elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
+		return is_full and "musha_full_k" or "musha_normal_k"
+	elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
+		return is_full and "musha_old" or "musha_normal_old"
+	elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
+		return is_full and "musha_full_sw2" or "musha_normal_sw2"
+	end
+end
+
+local function RestoreMushaBuildAfterBerserk(inst)
+	if not (inst.fberserk or (inst.berserks and not inst:HasTag("playerghost"))) then
+		return
+	end
+
+	inst.berserks = false
+	inst.fberserk = false
+	SpawnPrefab("statue_transition").Transform:SetPosition(inst:GetPosition():Get())
+	SpawnPrefab("statue_transition_2").Transform:SetPosition(inst:GetPosition():Get())
+
+	if inst:HasTag("playerghost") then
+		return
+	end
+
+	local is_full = inst.components.hunger.current >= 160
+	inst.strength = is_full and "full" or "normal"
+	local build = GetMushaSleepRestoreBuild(inst, is_full)
+	if build ~= nil then
+		inst.AnimState:SetBuild(build)
+	end
+end
+
+local function ClearMushaSkillStateForSleep(inst)
+	inst:RemoveTag("notarget")
+	if inst.sneaka or inst.sneak_pang then
+		inst.components.colourtweener:StartTween({ 1, 1, 1, 1 }, 0)
+	end
+	inst.sneaka = false
+	inst.poison_sneaka = false
+	inst.sneak_pang = false
+	if inst.wormlight == nil then
+		inst.AnimState:SetBloomEffectHandle("")
+	end
+	inst.switch = false
+	inst.active_valkyrie = false
+
+	local weapon = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
+	if weapon and weapon.components.weapon and weapon:HasTag("musha_items") then
+		weapon.components.weapon.stimuli = nil
+	end
+end
+
+local function EnableMushaWakeLight(inst)
+	inst.entity:AddLight()
+	inst.Light:SetRadius(1)
+	inst.Light:SetFalloff(.8)
+	inst.Light:SetIntensity(.8)
+	inst.Light:SetColour(150 / 255, 150 / 255, 150 / 255)
+	inst.Light:Enable(true)
+end
+
+local function PlayRandomMushaWakePose(inst, include_yawn)
+	if include_yawn and math.random() < 0.3 then
+		inst.AnimState:PlayAnimation("yawn")
+	elseif math.random() < 0.3 then
+		inst.AnimState:PushAnimation("mime1", false)
+	elseif math.random() < 0.3 then
+		inst.AnimState:PushAnimation("mime4", false)
+	else
+		inst.AnimState:PushAnimation("mime3", false)
+	end
+end
+
+local function PlayMushaWakeAnim(inst, is_deep_sleep)
+	if inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
+		PlayRandomMushaWakePose(inst, false)
+	elseif is_deep_sleep and inst.components.stamina_sleep.current >= 99 then
+		PlayRandomMushaWakePose(inst, true)
+	else
+		inst.AnimState:PlayAnimation("yawn")
+	end
+end
+
 local Badge_type = GetModConfigData("badge_type")
 local Difficult = GetModConfigData("difficultover")
 local DifficultHealth = GetModConfigData("difficulthealth")
@@ -821,9 +936,7 @@ if --[[inst.switch and inst.active_valkyrie and]] not inst.casting then
   	  fx_1.Transform:SetPosition(inst:GetPosition():Get())]]
 	if not inst.casting then 
 	inst.casting = true 
-	if inst.components.spellpower then
-	inst.components.spellpower:DoDelta(-10)
-	end
+	SkillDefs.SpendMana(inst, "lightning_book")
 	inst.sg:GoToState("book2") 
 	end 
 	
@@ -1217,6 +1330,7 @@ end
 
  function Lightning_a(inst)
 inst.writing = false
+local started_valkyrie_this_call = false
 local x,y,z = inst.Transform:GetWorldPosition()
 local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
 for k,v in pairs(ents) do
@@ -1260,9 +1374,9 @@ local fx = SpawnPrefab("stalker_shield_musha")
 	local x,y,z = inst.Transform:GetWorldPosition()	
 	local ents = TheSim:FindEntities(x, y, z, 10)
 	for k,v in pairs(ents) do	
-	if inst.components.spellpower.current > 1 and v:IsValid() and v.entity:IsVisible() and v.components.health and not v.components.health:IsDead() and not v.components.health:IsDead() and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly")) and not v:HasTag("groundspike") and not v:HasTag("player") and not v:HasTag("stalkerminion") and not v:HasTag("structure") and not v:HasTag("groundspike") and not v:HasTag("stalkerminion") and v.components.locomotor and not v.ghost_spark and v.components.combat and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn") or v:HasTag("werepig") or v:HasTag("frog")) then
+	if SkillDefs.HasMana(inst, "berserk_chain_lightning", false) and v:IsValid() and v.entity:IsVisible() and v.components.health and not v.components.health:IsDead() and not v.components.health:IsDead() and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly")) and not v:HasTag("groundspike") and not v:HasTag("player") and not v:HasTag("stalkerminion") and not v:HasTag("structure") and not v:HasTag("groundspike") and not v:HasTag("stalkerminion") and v.components.locomotor and not v.ghost_spark and v.components.combat and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn") or v:HasTag("werepig") or v:HasTag("frog")) then
 	--cost
-	inst.components.spellpower:DoDelta(-1) 
+	SkillDefs.SpendMana(inst, "berserk_chain_lightning")
 	
 	v.ghost_spark = true
 	if inst.loud_1 or inst.loud_2 then
@@ -1356,6 +1470,8 @@ elseif not inst.writing and not inst.berserk then
 		
 if inst.components.stamina_sleep.current  >= 20 and inst.components.sanity.current >= 0 and not inst.components.health:IsDead() and not inst.active_valkyrie and not inst.switch and inst.valkyrie_on then
 inst.active_valkyrie = true
+inst.lightning_spell_cost = false
+started_valkyrie_this_call = true
 
 --inst:DoTaskInTime( 60, function() inst.active_valkyrie = false SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get()) end) 
 elseif (inst.components.stamina_sleep.current < 20 or inst.components.sanity.current <= 0) and not inst.active_valkyrie and inst.valkyrie_on then
@@ -1400,9 +1516,9 @@ inst.switch = false
 inst.active_valkyrie = false
 --inst.components.sanity:DoDelta(4)
 end
-if inst.components.stamina_sleep.current  >= 20 and not inst.switch and inst.components.sanity.current > 0 and not inst.components.health:IsDead() and not inst:HasTag("playerghost") and not ( inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst.vl7 or inst.vl8) and inst.valkyrie_on then
-	if inst.components.spellpower.current >=9 then
-	inst.components.spellpower:DoDelta(-9) inst.lightning_spell_cost = true
+if inst.components.stamina_sleep.current  >= 20 and not inst.switch and inst.components.sanity.current > 0 and not inst.components.health:IsDead() and not inst:HasTag("playerghost") and not ( inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst.vl7 or inst.vl8) and inst.valkyrie_on and SkillDefs.HasMana(inst, "valkyrie_lightning_start") then
+	if SkillDefs.HasMana(inst, "valkyrie_lightning_start") then
+	SkillDefs.SpendMana(inst, "valkyrie_lightning_start") inst.lightning_spell_cost = true
 inst.components.combat:SetRange(10,12)
 inst:ListenForEvent("onhitother", on_hitLightnings_9)
 
@@ -1426,6 +1542,22 @@ local shocking = SpawnPrefab("musha_spin_fx")
 		end	
 --Call_lightining_on(inst)
 --inst.components.sanity:DoDelta(-2)
+elseif not started_valkyrie_this_call and not inst.switch and inst.active_valkyrie and not inst.components.health:IsDead() and not ( inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst.vl7 or inst.vl8) and inst.valkyrie_on then
+inst.components.combat:SetRange(2)
+inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
+
+if inst.wormlight == nil then
+	inst.AnimState:SetBloomEffectHandle( "" )
+	end
+if inst.in_shadow then
+	inst.components.colourtweener:StartTween({1,1,1,1}, 0)
+	inst.in_shadow = false
+end
+inst.SoundEmitter:PlaySound("dontstarve/common/fireOut")
+SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
+inst.switch = false
+inst.active_valkyrie = false
+inst.lightning_spell_cost = false
 elseif not inst.switch and not inst.components.health:IsDead() and ( inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst.vl7 or inst.vl8) and inst.valkyrie_on then
 inst.components.combat:SetRange(2)
 inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
@@ -1443,7 +1575,8 @@ inst.switch = false
 inst.active_valkyrie = false
 --inst.components.sanity:DoDelta(6)
 	if inst.lightning_spell_cost then
-	inst.components.spellpower:DoDelta(6)
+	SkillDefs.RestoreMana(inst, "valkyrie_lightning_refund")
+	inst.lightning_spell_cost = false
 	end
 elseif inst.switch and not inst.components.health:IsDead() and inst.valkyrie_on then
 inst.components.combat:SetRange(2)
@@ -1462,7 +1595,8 @@ inst.switch = false
 inst.active_valkyrie = false
 --inst.components.sanity:DoDelta(1)
 	if inst.lightning_spell_cost then
-	inst.components.spellpower:DoDelta(6)
+	SkillDefs.RestoreMana(inst, "valkyrie_lightning_refund")
+	inst.lightning_spell_cost = false
 	end
 elseif not inst.switch and inst.components.sanity.current <= 0 and not inst.components.health:IsDead() and not inst:HasTag("playerghost") and inst.valkyrie_on then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_NEED_SANITY)
@@ -1534,310 +1668,179 @@ AddModRPCHandler("musha", "Lightning_a", Lightning_a)
 --shield
 --active shield
  function shield_go(inst, attacked, data)
-	
-if not inst.components.health:IsDead() and inst.level < 430 and not inst.activec0 and inst.shield_level1 then
---inst.components.talker:Say("Shield on!!")
---inst.components.health:SetAbsorptionAmount(1)
-local fx = SpawnPrefab("forcefieldfxx")
-inst.on_sparkshield = true 
+	if inst.components.health == nil or inst.components.health:IsDead() or inst.activec0 then
+		return
+	end
 
-inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/raise")
-inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/pop")
-fx.entity:SetParent(inst.entity)
+	local shield = SkillDefs.GetActiveShieldLevel(inst.level)
+	if shield == nil or not inst[shield.unlock_flag] then
+		return
+	end
+
+	local fx = SpawnPrefab("forcefieldfxx")
+	inst.on_sparkshield = true
+
+	inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/raise")
+	inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/pop")
+	if fx ~= nil then
+		fx.entity:SetParent(inst.entity)
 		if inst.components.rider ~= nil and inst.components.rider:IsRiding() then
-		fx.Transform:SetScale(2, 2, 2)
+			fx.Transform:SetScale(2, 2, 2)
 		else
-		fx.Transform:SetScale(0.8, 0.8, 0.8)
+			fx.Transform:SetScale(0.8, 0.8, 0.8)
 		end
-fx.Transform:SetPosition(0, 0.2, 0)
-local fx_hitanim = function()
-fx.AnimState:PlayAnimation("hit")
-fx.AnimState:PushAnimation("idle_loop")
-end
-fx:ListenForEvent("blocked", fx_hitanim, inst)
-inst.activec0 = true
-inst.timec1 = true
-inst:DoTaskInTime(--[[Duration]] 12, function()
-fx:RemoveEventCallback("blocked", fx_hitanim, inst)
+		fx.Transform:SetPosition(0, 0.2, 0)
+	end
 
-if inst:IsValid() then
-fx.kill_fx(fx)
-
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SHIELD_COOL_90)
-inst.on_sparkshield = false 
-
-inst:DoTaskInTime(--[[Cooldown]] 90, function() inst.activec0 = false inst.timec1 = false inst.casting = false end)
-end end) 
-end 
-if not inst.components.health:IsDead() and inst.level >= 430 and inst.level < 1880 and not inst.activec0 and inst.shield_level2 then
---inst.components.talker:Say("Shield on!!")
---inst.components.health:SetAbsorptionAmount(1)
-local fx = SpawnPrefab("forcefieldfxx")
-inst.on_sparkshield = true 
-
-inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/raise")
-inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/pop")
-fx.entity:SetParent(inst.entity)
-if inst.components.rider ~= nil and inst.components.rider:IsRiding() then
-		fx.Transform:SetScale(2, 2, 2)
-		else
-		fx.Transform:SetScale(0.8, 0.8, 0.8)
+	local fx_hitanim = function()
+		if fx ~= nil and fx:IsValid() then
+			fx.AnimState:PlayAnimation("hit")
+			fx.AnimState:PushAnimation("idle_loop")
 		end
-fx.Transform:SetPosition(0, 0.2, 0)
-local fx_hitanim = function()
-fx.AnimState:PlayAnimation("hit")
-fx.AnimState:PushAnimation("idle_loop")
-end
-fx:ListenForEvent("blocked", fx_hitanim, inst)
-inst.activec0 = true
-inst.timec2 = true
-inst:DoTaskInTime(--[[Duration]] 12, function()
-fx:RemoveEventCallback("blocked", fx_hitanim, inst)
-if inst:IsValid() then
-fx.kill_fx(fx)
+	end
 
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SHIELD_COOL_80)
-inst.on_sparkshield = false 
-inst:DoTaskInTime(--[[Cooldown]] 80, function() inst.activec0 = false inst.timec2 = false end)
-end end) 
-end 
-if not inst.components.health:IsDead() and inst.level >= 1880 and inst.level < 7000 and not inst.activec0 and inst.shield_level3 then
---inst.components.talker:Say("Shield on!!")
---inst.components.health:SetAbsorptionAmount(1)
-local fx = SpawnPrefab("forcefieldfxx")
-inst.on_sparkshield = true 
+	if fx ~= nil then
+		fx:ListenForEvent("blocked", fx_hitanim, inst)
+	end
 
-inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/raise")
-inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/pop")
-fx.entity:SetParent(inst.entity)
-if inst.components.rider ~= nil and inst.components.rider:IsRiding() then
-		fx.Transform:SetScale(2, 2, 2)
-		else
-		fx.Transform:SetScale(0.8, 0.8, 0.8)
+	inst.activec0 = true
+	inst[shield.ready_flag] = true
+	inst:DoTaskInTime(12, function()
+		if fx ~= nil and fx:IsValid() then
+			fx:RemoveEventCallback("blocked", fx_hitanim, inst)
 		end
-fx.Transform:SetPosition(0, 0.2, 0)
-local fx_hitanim = function()
-fx.AnimState:PlayAnimation("hit")
-fx.AnimState:PushAnimation("idle_loop")
-end
-fx:ListenForEvent("blocked", fx_hitanim, inst)
-inst.activec0 = true
-inst.timec3 = true
-inst:DoTaskInTime(--[[Duration]] 12, function()
-fx:RemoveEventCallback("blocked", fx_hitanim, inst)
-if inst:IsValid() then
-fx.kill_fx(fx)
 
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SHIELD_COOL_70)
-inst.on_sparkshield = false 
-inst:DoTaskInTime(--[[Cooldown]] 70, function() inst.activec0 = false inst.timec3 = false end)
-end end) 
-end 
-if not inst.components.health:IsDead() and inst.level >= 7000 and not inst.activec0 and inst.shield_level4 then
---inst.components.talker:Say("Shield on!!")
---inst.components.health:SetAbsorptionAmount(1)
-local fx = SpawnPrefab("forcefieldfxx")
-inst.on_sparkshield = true 
+		if inst:IsValid() then
+			if fx ~= nil and fx:IsValid() then
+				if fx.kill_fx ~= nil then
+					fx.kill_fx(fx)
+				else
+					fx:Remove()
+				end
+			end
 
-inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/raise")
-inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/pop")
-fx.entity:SetParent(inst.entity)
-if inst.components.rider ~= nil and inst.components.rider:IsRiding() then
-		fx.Transform:SetScale(2, 2, 2)
-		else
-		fx.Transform:SetScale(0.8, 0.8, 0.8)
+			inst.components.talker:Say(STRINGS[shield.cooldown_string])
+			inst.on_sparkshield = false
+
+			inst:DoTaskInTime(shield.cooldown, function()
+				if inst:IsValid() then
+					inst.activec0 = false
+					inst[shield.ready_flag] = false
+					inst.casting = false
+				end
+			end)
 		end
-fx.Transform:SetPosition(0, 0.2, 0)
-local fx_hitanim = function()
-fx.AnimState:PlayAnimation("hit")
-fx.AnimState:PushAnimation("idle_loop")
-end
-fx:ListenForEvent("blocked", fx_hitanim, inst)
-inst.activec0 = true
-inst.timec4 = true
-inst:DoTaskInTime(--[[Duration]] 12, function()
-fx:RemoveEventCallback("blocked", fx_hitanim, inst)
-if inst:IsValid() then
-fx.kill_fx(fx)
-
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SHIELD_COOL_60)
-inst.on_sparkshield = false 
-
-	--[[if  inst.berserk and inst.berserk_armor_1 and not inst.music_armor then
-	inst.components.health:SetAbsorptionAmount(0.15)
-	elseif  inst.berserk and inst.berserk_armor_2 and not inst.music_armor then
-	inst.components.health:SetAbsorptionAmount(0.3)	
-	elseif  inst.berserk and inst.berserk_armor_3 and not inst.music_armor then
-	inst.components.health:SetAbsorptionAmount(0.45)
-	elseif  inst.valkyrie and not (inst.valkyrie_armor_1 or inst.valkyrie_armor_2 or inst.valkyrie_armor_3 or inst.valkyrie_armor_4) and not inst.music_armor then
-	inst.components.health:SetAbsorptionAmount(0.1)
-	elseif  inst.valkyrie and inst.valkyrie_armor_1 and not inst.music_armor then
-	inst.components.health:SetAbsorptionAmount(0.1)
-	elseif  inst.valkyrie and inst.valkyrie_armor_2 and not inst.music_armor then
-	inst.components.health:SetAbsorptionAmount(0.2)	
-	elseif  inst.valkyrie and inst.valkyrie_armor_3 and not inst.music_armor then
-	inst.components.health:SetAbsorptionAmount(0.25)	
-	elseif  inst.valkyrie and inst.valkyrie_armor_4 and not inst.music_armor then
-	inst.components.health:SetAbsorptionAmount(0.3)
-	else
-	inst.components.health:SetAbsorptionAmount(0)
-	end	]]
-	
-	--inst.components.health:SetAbsorptionAmount(0)
-inst:DoTaskInTime(--[[Cooldown]] 60, function() inst.activec0 = false inst.timec4 = false end)
-end end) 
-end 
-----inst.components.talker.colour = Vector3(0.7, 0.85, 1, 1)
+	end)
 end
 
 ---
  function shieldgo(inst)
-if not inst.activec0 and not inst.timec1 and inst.level < 430  then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SHIELD_FULL)
-SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-inst.timec1 = true
-elseif not inst.activec0 and not inst.timec2 and inst.level >= 430 and inst.level < 1880  then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SHIELD_FULL)
-SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-inst.timec2 = true
-elseif not inst.activec0 and not inst.timec3 and inst.level >= 1880 and inst.level < 7000  then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SHIELD_FULL)
-SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-inst.timec3 = true
-elseif not inst.activec0 and not inst.timec4 and inst.level >= 7000 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SHIELD_FULL)
-SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-inst.timec4 = true
-end 
-----inst.components.talker.colour = Vector3(0.7, 0.85, 1, 1)
+	local shield = SkillDefs.GetActiveShieldLevel(inst.level)
+	if shield ~= nil and not inst.activec0 and not inst[shield.ready_flag] then
+		inst.components.talker:Say(STRINGS.MUSHA_TALK_SHIELD_FULL)
+		SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
+		inst[shield.ready_flag] = true
+	end
 end
  function on_shield_act(inst)
+	inst.writing = IsNearWriteable(inst)
+	if inst.writing then
+		return
+	end
 
-inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end 
-if not inst.writing then
-if inst.components.health ~=nil and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
-inst:ListenForEvent("hungerdelta", shieldgo )
---inst:ListenForEvent("attacked", Sparkshield_1)
-if inst.level < 430 then
-inst.shield_level1 = true
-elseif inst.level >= 430 and inst.level < 1880 then
-inst.shield_level2 = true
-inst.shield_level1 = false
-elseif inst.level >= 1880 and inst.level < 7000 then
-inst.shield_level3 = true
-inst.shield_level2 = false
-inst.shield_level1 = false
-elseif inst.level >= 7000 then
-inst.shield_level4 = true
-inst.shield_level3 = false
-inst.shield_level2 = false
-inst.shield_level1 = false
-end
+	if inst:HasTag("playerghost") then
+		inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_OOOOH)
+		return
+	end
 
-if not inst.activec0 and inst.components.spellpower.current >= 30 then
---[[local fx_1 = SpawnPrefab("stalker_shield_musha")
-	  fx_1.Transform:SetScale(0.4, 0.4, 0.4)
-  	  fx_1.Transform:SetPosition(inst:GetPosition():Get())]]
-	  --inst.components.locomotor:Stop()
-		if not inst.casting and not inst.components.rider:IsRiding() and not inst.sg:HasStateTag("moving") and not inst.sg:HasStateTag("attack") then 
-		inst.casting = true 
-		--inst.sg:GoToState("book2") 
-		--inst.AnimState:PlayAnimation("sing")
-		inst.on_sparkshield = true 
-		end 
-			
-	local shocking_self = SpawnPrefab("musha_spin_fx")
-		shocking_self.Transform:SetPosition(inst:GetPosition():Get())
-		if shocking_self then
-		local follower = shocking_self.entity:AddFollower()
-		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0.5 )
-		end	
+	if inst.components.health == nil or inst.components.health:IsDead() then
+		return
+	end
 
-	local x,y,z = inst.Transform:GetWorldPosition()	
-	local ents = TheSim:FindEntities(x, y, z, 10)
-for k,v in pairs(ents) do	
-if inst.components.sanity and v:IsValid() and v.entity:IsVisible() and v.components.health and not v.components.health:IsDead() and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly")) and not v:HasTag("groundspike") and not v:HasTag("player") and not v:HasTag("companion") and not v:HasTag("stalkerminion") and not v:HasTag("structure") and v.components.combat ~= nil and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn")) then
-		
-	SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
-	--SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
-		local shocking = SpawnPrefab("musha_spin_fx")
-		shocking.Transform:SetPosition(v:GetPosition():Get())
-		if shocking then
-		local follower = shocking.entity:AddFollower()
-		follower:FollowSymbol(v.GUID, v.components.combat.hiteffectsymbol, 0, 0, 0.5 )
-		end
-		
-	if v.components.locomotor and not v:HasTag("ghost") then
-        v.components.locomotor:StopMoving()
-		if v:HasTag("spider") and not v:HasTag("spiderqueen") then
-			v.sg:GoToState("hit_stunlock")
+	inst:ListenForEvent("hungerdelta", shieldgo)
+
+	local shield = SkillDefs.GetActiveShieldLevel(inst.level)
+	SkillDefs.ForEachActiveShieldLevel(function(def)
+		inst[def.unlock_flag] = def == shield
+	end)
+
+	if inst.activec0 then
+		SkillDefs.ForEachActiveShieldLevel(function(def)
+			inst[def.unlock_flag] = false
+		end)
+		if inst.components.rider ~= nil and inst.components.rider:IsRiding() then
+			inst.sg:GoToState("repelled")
 		else
-			v.sg:GoToState("hit")
+			inst.sg:GoToState("mindcontrolled_pst")
+		end
+		if not SkillDefs.HasMana(inst, "active_shield") then
+			inst.components.talker:Say(STRINGS.MUSHA_TALK_NEED_SPELLPOWER.."\n("..SkillDefs.GetManaCost("active_shield")..")")
+		end
+		return
+	end
+
+	if not SkillDefs.HasMana(inst, "active_shield") then
+		inst.components.talker:Say(STRINGS.MUSHA_TALK_NEED_SPELLPOWER.."\n("..SkillDefs.GetManaCost("active_shield")..")")
+		return
+	end
+
+	if not inst.casting
+		and (inst.components.rider == nil or not inst.components.rider:IsRiding())
+		and not inst.sg:HasStateTag("moving")
+		and not inst.sg:HasStateTag("attack") then
+		inst.casting = true
+		inst.on_sparkshield = true
+	end
+
+	local shocking_self = SpawnPrefab("musha_spin_fx")
+	if shocking_self then
+		shocking_self.Transform:SetPosition(inst:GetPosition():Get())
+		local follower = shocking_self.entity:AddFollower()
+		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0.5)
+	end
+
+	local x, y, z = inst.Transform:GetWorldPosition()
+	local ents = TheSim:FindEntities(x, y, z, 10)
+	for k, v in pairs(ents) do
+		if inst.components.sanity
+			and v:IsValid()
+			and v.entity:IsVisible()
+			and v.components.health
+			and not v.components.health:IsDead()
+			and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly"))
+			and not v:HasTag("groundspike")
+			and not v:HasTag("player")
+			and not v:HasTag("companion")
+			and not v:HasTag("stalkerminion")
+			and not v:HasTag("structure")
+			and v.components.combat ~= nil
+			and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn")) then
+			SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
+			local shocking = SpawnPrefab("musha_spin_fx")
+			if shocking then
+				shocking.Transform:SetPosition(v:GetPosition():Get())
+				local follower = shocking.entity:AddFollower()
+				follower:FollowSymbol(v.GUID, v.components.combat.hiteffectsymbol, 0, 0, 0.5)
+			end
+
+			if v.components.locomotor and not v:HasTag("ghost") then
+				v.components.locomotor:StopMoving()
+				if v:HasTag("spider") and not v:HasTag("spiderqueen") then
+					v.sg:GoToState("hit_stunlock")
+				else
+					v.sg:GoToState("hit")
+				end
+			end
+			v.components.health:DoDelta(-20)
+
+			if v.components.combat and not v:HasTag("companion") then
+				v.components.combat:SuggestTarget(inst)
+			end
 		end
 	end
-		v.components.health:DoDelta(-20)
-		--v.components.combat:GetAttacked(inst, 10)
-	
-	if v.components.combat and not v:HasTag("companion") then
-        v.components.combat:SuggestTarget(inst)
-    end
-end
-end
-		
-elseif inst.activec0 or inst.components.spellpower.current < 30 then
-if inst.components.rider ~= nil and inst.components.rider:IsRiding() then
-inst.sg:GoToState("repelled")
-else
-inst.sg:GoToState("mindcontrolled_pst")
-end
-end
 
-if inst.level < 430 and not inst.activec0 and inst.components.spellpower.current >= 30 then
-
-shield_go(inst)
-	if inst.components.spellpower then
-	inst.components.spellpower:DoDelta(-30) 
-	end
-elseif inst.level >= 430 and inst.level < 1880 and not inst.activec0 and inst.components.spellpower.current >= 30 then
-
-shield_go(inst)
-	if inst.components.spellpower then
-	inst.components.spellpower:DoDelta(-30) 
-	end
-elseif inst.level >= 1880 and inst.level < 7000 and not inst.activec0 and inst.components.spellpower.current >= 30 then
-
-shield_go(inst)
-	if inst.components.spellpower then
-	inst.components.spellpower:DoDelta(-30) 
-	end
-elseif inst.level >= 7000 and not inst.activec0 and inst.components.spellpower.current >= 30 then
-
-shield_go(inst)
-	if inst.components.spellpower then
-	inst.components.spellpower:DoDelta(-30) 
-	end
-elseif inst.components.spellpower.current < 30 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_NEED_SPELLPOWER.."\n(30)")
---inst.components.talker:Say(STRINGS.MUSHA_TALK_NEED_SLEEPY)
-  
-elseif inst.activec0 then
-
-inst.shield_level1 = false
-inst.shield_level2 = false
-inst.shield_level3 = false
-inst.shield_level4 = false
-
-end
-----inst.components.talker.colour = Vector3(0.7, 0.85, 1, 1)
-elseif inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_OOOOH)
-end
-end
+	shield_go(inst)
+	SkillDefs.SpendMana(inst, "active_shield")
 end
  
 AddModRPCHandler("musha", "on_shield_act", on_shield_act)
@@ -2200,67 +2203,8 @@ end
 end
 
  function on_sleep(inst)
-	if inst.fberserk or inst.berserks and not inst:HasTag("playerghost") then
- 	inst.berserks = false
-	inst.fberserk = false
-SpawnPrefab("statue_transition").Transform:SetPosition(inst:GetPosition():Get())
-SpawnPrefab("statue_transition_2").Transform:SetPosition(inst:GetPosition():Get())
-   	if not inst:HasTag("playerghost") then
-	if inst.components.hunger.current >= 160 then
-		inst.strength = "full"  
-		if inst.visual_cos then
-	inst.AnimState:SetBuild("musha")
-		elseif not inst.visual_cos and not inst.change_visual then
-			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha")
-			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha")
-			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_full_k")
-			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_old")
-			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_full_sw2")
-		end
-		end
-	elseif inst.components.hunger.current < 160 then
-		inst.strength = "normal"   
-		if inst.visual_cos then
-	inst.AnimState:SetBuild("musha_normal")
-		elseif not inst.visual_cos and not inst.change_visual then
-			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha_normal")
-			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal")
-			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal_k")
-			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal_old")
-			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_normal_sw2")			
-		end
-		end
-	end	
-	end
-	end
-	 
-	inst:RemoveTag("notarget")
-	if inst.sneaka or inst.sneak_pang then
-	inst.components.colourtweener:StartTween({1,1,1,1}, 0)
-	end
-	inst.sneaka = false
-	inst.poison_sneaka = false
-	inst.sneak_pang = false	
-	if inst.wormlight == nil then
-	inst.AnimState:SetBloomEffectHandle( "" )
-	end
-	inst.switch = false
-	inst.active_valkyrie = false
-
-local weapon = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
-if weapon and weapon.components.weapon and weapon:HasTag("musha_items") then
-weapon.components.weapon.stimuli = nil 
-end
+	RestoreMushaBuildAfterBerserk(inst)
+	ClearMushaSkillStateForSleep(inst)
 inst.components.locomotor:Stop()
 --local bedroll = inst.sg:GoToState("bedroll2")
 --inst.sg:AddStateTag("sleeping")
@@ -2283,68 +2227,10 @@ end
 
  function on_tiny_sleep(inst)
 if inst.components.health and not inst.components.health:IsDead() then 
-	if inst.fberserk or inst.berserks and not inst:HasTag("playerghost") then
- 	inst.berserks = false
-	inst.fberserk = false
-SpawnPrefab("statue_transition").Transform:SetPosition(inst:GetPosition():Get())
-SpawnPrefab("statue_transition_2").Transform:SetPosition(inst:GetPosition():Get())
-   	if not inst:HasTag("playerghost") then
-	if inst.components.hunger.current >= 160 then
-		inst.strength = "full"  
-		if inst.visual_cos then
-	inst.AnimState:SetBuild("musha")
-		elseif not inst.visual_cos and not inst.change_visual then
-			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha")
-			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha")
-			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_full_k")
-			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_old")
-			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_full_sw2")
-		end
-		end
-	elseif inst.components.hunger.current < 160 then
-		inst.strength = "normal"   
-		if inst.visual_cos then
-	inst.AnimState:SetBuild("musha_normal")
-		elseif not inst.visual_cos and not inst.change_visual then
-			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha_normal")
-			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal")
-			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal_k")
-			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal_old")
-			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_normal_sw2")			
-		end
-		end
-	end	
-	end
-	end
-	 
-	inst:RemoveTag("notarget")
-	if inst.sneaka or inst.sneak_pang then
-	inst.components.colourtweener:StartTween({1,1,1,1}, 0)
-	end
-	inst.sneaka = false
-	inst.poison_sneaka = false
-	inst.sneak_pang = false	
-	if inst.wormlight == nil then
-	inst.AnimState:SetBloomEffectHandle( "" )
-	end
-	inst.switch = false
-	inst.active_valkyrie = false
+	RestoreMushaBuildAfterBerserk(inst)
+	ClearMushaSkillStateForSleep(inst)
 	inst.berserks = false
 	inst.fberserk = false
-local weapon = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
-if weapon and weapon.components.weapon and weapon:HasTag("musha_items") then
-weapon.components.weapon.stimuli = nil 
-end
 	if not inst:HasTag("playerghost") then
 	inst.sg:GoToState("knockout") inst.tiny_sleep = true
 	elseif inst:HasTag("playerghost") then
@@ -2360,66 +2246,24 @@ end
 if not inst.music_check and inst.sleep_on then
 inst.sleep_on = false
 inst.sg:GoToState("wakeup")
-inst.entity:AddLight()
-inst.Light:SetRadius(1)
-inst.Light:SetFalloff(.8)
-inst.Light:SetIntensity(.8)
-inst.Light:SetColour(150/255,150/255,150/255)
+EnableMushaWakeLight(inst)
 --inst.components.health:SetAbsorptionAmount(1)
 inst.music_armor = true
-inst.Light:Enable(true)
 inst:DoTaskInTime(1.5, function() inst.Light:Enable(false) inst.music_armor = false
 inst.musha_press = false 
-if inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-	if math.random() < 0.3 then
-		inst.AnimState:PushAnimation("mime1", false)
-		elseif math.random() < 0.3 then
-		inst.AnimState:PushAnimation("mime4", false)
-		else
-		inst.AnimState:PushAnimation("mime3", false)
-	end
-else
-	if inst.components.stamina_sleep.current < 99 then 
-	inst.AnimState:PlayAnimation("yawn")
-	elseif inst.components.stamina_sleep.current >= 99 then 
-		if math.random() < 0.3 then
-		inst.AnimState:PlayAnimation("yawn")
-		elseif math.random() < 0.3 then
-		inst.AnimState:PushAnimation("mime1", false)
-		elseif math.random() < 0.3 then
-		inst.AnimState:PushAnimation("mime4", false)
-		else
-		inst.AnimState:PushAnimation("mime3", false)
-		end
-	end
-end	
+PlayMushaWakeAnim(inst, true)
 end)
 elseif not inst.music_check and inst.tiny_sleep then
 inst.tiny_sleep = false
 inst.sg:GoToState("wakeup")
-inst.entity:AddLight()
-inst.Light:SetRadius(1)
-inst.Light:SetFalloff(.8)
-inst.Light:SetIntensity(.8)
-inst.Light:SetColour(150/255,150/255,150/255)
+EnableMushaWakeLight(inst)
 --inst.components.health:SetAbsorptionAmount(1)
 inst.music_armor = true
-inst.Light:Enable(true)
 inst:DoTaskInTime(3.1, function() inst.Light:Enable(false) inst.music_armor = false
 	--inst.sg:GoToState("yawn") 
 	inst.musha_press = false
 	
-if inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-	if math.random() < 0.3 then
-		inst.AnimState:PushAnimation("mime1", false)
-		elseif math.random() < 0.3 then
-		inst.AnimState:PushAnimation("mime4", false)
-		else
-		inst.AnimState:PushAnimation("mime3", false)
-	end
-else
-		inst.AnimState:PlayAnimation("yawn")
-end
+PlayMushaWakeAnim(inst, false)
 	
 	--inst.AnimState:PlayAnimation("yawn")
 	
@@ -2432,14 +2276,9 @@ inst.sleep_on = false
 inst.tiny_sleep = false
 --inst.sg.statemem.iswaking = true
 inst.sg:GoToState("wakeup")
-inst.entity:AddLight()
-inst.Light:SetRadius(1)
-inst.Light:SetFalloff(.8)
-inst.Light:SetIntensity(.8)
-inst.Light:SetColour(150/255,150/255,150/255)
+EnableMushaWakeLight(inst)
 --inst.components.health:SetAbsorptionAmount(1)
 --inst.music_armor = true
-inst.Light:Enable(true)
 if inst.wormlight == nil then
 	inst.AnimState:SetBloomEffectHandle( "" )
 	end
@@ -2527,26 +2366,17 @@ AddModRPCHandler("musha", "buff", on_buff_act)
  
  
   function on_sleeping(inst)
-inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end 
+inst.writing = IsNearWriteable(inst)
 if not inst.writing and not inst.components.health:IsDead() and not inst.sleep_on and not inst.components.health:IsDead() and not inst:HasTag("playerghost") and not (inst.sg:HasStateTag("moving") or inst.sg:HasStateTag("attack")) and inst.components.stamina_sleep.current >= 90 then
 if TheWorld.state.isday and not inst.tiny_sleep then 
 
-if math.random() < 0.2 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_NO_1)
-elseif math.random() < 0.2 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_NO_2)
-elseif math.random() < 0.2 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_NO_3)
-elseif math.random() < 0.2 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_NO_4)
-else
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_NO_5)
-end
+SayRandomLine(inst, {
+	STRINGS.MUSHA_TALK_SLEEP_NO_1,
+	STRINGS.MUSHA_TALK_SLEEP_NO_2,
+	STRINGS.MUSHA_TALK_SLEEP_NO_3,
+	STRINGS.MUSHA_TALK_SLEEP_NO_4,
+	STRINGS.MUSHA_TALK_SLEEP_NO_5,
+})
 
 elseif TheWorld.state.isday and inst.tiny_sleep and not inst.musha_press then 
 inst.musha_press = true
@@ -2587,20 +2417,14 @@ end
 inst:DoTaskInTime(1, function() on_tiny_sleep(inst) end)
 inst.sg:AddStateTag("busy")
 elseif TheWorld.state.isnight then
-local random1 = 0.2
-local last = 1
 if not inst.LightWatcher:IsInLight() then
-if math.random() < random1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_NEED_LIGHT_1)
-elseif math.random() < random1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_NEED_LIGHT_2)
-elseif math.random() < random1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_NEED_LIGHT_3)
-elseif math.random() < random1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_NEED_LIGHT_4)
-elseif math.random() <= last then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_NEED_LIGHT_5)
-end
+SayRandomLine(inst, {
+	STRINGS.MUSHA_TALK_SLEEP_NEED_LIGHT_1,
+	STRINGS.MUSHA_TALK_SLEEP_NEED_LIGHT_2,
+	STRINGS.MUSHA_TALK_SLEEP_NEED_LIGHT_3,
+	STRINGS.MUSHA_TALK_SLEEP_NEED_LIGHT_4,
+	STRINGS.MUSHA_TALK_SLEEP_NEED_LIGHT_5,
+})
 elseif inst.LightWatcher:IsInLight() then
 if inst.components.stamina_sleep.current >=40 and not (inst.warm_on or inst.warm_tent) then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_1)
@@ -2617,33 +2441,23 @@ end
 
 elseif not inst.components.health:IsDead() and not inst.sleep_on and not inst.components.health:IsDead() and not inst:HasTag("playerghost") and not (inst.sg:HasStateTag("moving") or inst.sg:HasStateTag("attack")) and not TheWorld.state.isday and not inst.sleep_on and not inst.tiny_sleep and not inst.nsleep and (inst.warm_on or inst.warm_tent) and not inst.sleep_no then 
 
-local random1 = 0.2
-if math.random() < random1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_GOOD_1)
-elseif math.random() < random1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_GOOD_2)
-elseif math.random() < random1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_GOOD_3)
-elseif math.random() < random1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_GOOD_4)
-else
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_GOOD)
-end
+SayRandomLine(inst, {
+	STRINGS.MUSHA_TALK_SLEEP_GOOD_1,
+	STRINGS.MUSHA_TALK_SLEEP_GOOD_2,
+	STRINGS.MUSHA_TALK_SLEEP_GOOD_3,
+	STRINGS.MUSHA_TALK_SLEEP_GOOD_4,
+	STRINGS.MUSHA_TALK_SLEEP_GOOD,
+})
 on_sleep(inst)
 
 elseif not TheWorld.state.isday	and not inst.sleep_on and not inst.tiny_sleep and not inst.nsleep and (inst.warm_on or inst.warm_tent) and  inst.sleep_no then 
-local random1 = 0.2
-if math.random() < random1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DANGER_1)
-elseif math.random() < random1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DANGER_2)
-elseif math.random() < random1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DANGER_3)
-elseif math.random() < random1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DANGER_4)
-elseif math.random() <= 1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DANGER_5)
-end
+SayRandomLine(inst, {
+	STRINGS.MUSHA_TALK_SLEEP_DANGER_1,
+	STRINGS.MUSHA_TALK_SLEEP_DANGER_2,
+	STRINGS.MUSHA_TALK_SLEEP_DANGER_3,
+	STRINGS.MUSHA_TALK_SLEEP_DANGER_4,
+	STRINGS.MUSHA_TALK_SLEEP_DANGER_5,
+})
 elseif not inst.components.health:IsDead() and (inst.sleep_on or inst.tiny_sleep) and not inst.nsleep and not inst:HasTag("playerghost") and not inst.musha_press then
 inst.musha_press = true
 on_wakeup(inst)
