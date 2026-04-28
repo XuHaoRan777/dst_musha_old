@@ -10,6 +10,7 @@ TECH = GLOBAL.TECH
 local IsServer = GLOBAL.TheNet:GetIsServer()
 local containers = require("containers")
 local CompanionStates = require("musha_companionstates")
+local SkillDefs = require("musha_skilldefs")
 
 ACTIONS.GIVE.priority = 2
 ACTIONS.ADDFUEL.priority = 4
@@ -657,7 +658,8 @@ local other = data.target
 if not other:HasTag("smashable") and not other:HasTag("shadowminion") and not other:HasTag("alignwall") then
 inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
 inst.lightning_spell_cost = false
-if other and other.components.health ~= nil and inst.level <=430  then
+local lightning = other and other.components.health ~= nil and SkillDefs.GetLightningLevel(inst.level) or nil
+if lightning ~= nil then
 if inst.loud_1 or inst.loud_2 or inst.loud_3 then
 SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
 end
@@ -667,7 +669,7 @@ SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
 local fx = SpawnPrefab("firering_fx")
 	  fx.Transform:SetScale(0.6, 0.6, 0.6)
   	  fx.Transform:SetPosition(other:GetPosition():Get())
-other.components.health:DoDelta(-40)
+other.components.health:DoDelta(-lightning.damage)
 --inst.components.sanity:DoDelta(-5)
 inst.components.combat:SetRange(2)
 other.burn = false
@@ -681,98 +683,11 @@ end
 inst.switch = false
 inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
 if inst.frost and other.components.freezable then
-other.components.freezable:AddColdness(1.5)
-other.components.health:DoDelta(-5)
+other.components.freezable:AddColdness(lightning.frost)
+other.components.health:DoDelta(-lightning.frost_damage)
 elseif inst.fire and other.components.burnable then
 other.components.burnable:Ignite()
-other.components.health:DoDelta(-15)
-end
-elseif other and other.components.health ~= nil and inst.level > 430 and inst.level <= 1880  then
-if inst.loud_1 or inst.loud_2 or inst.loud_3 then
-SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
-end
-SpawnPrefab("lightning2").Transform:SetPosition(other:GetPosition():Get())
-SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
-local fx = SpawnPrefab("firering_fx")
-	  fx.Transform:SetScale(0.6, 0.6, 0.6)
-  	  fx.Transform:SetPosition(other:GetPosition():Get())
-other.components.health:DoDelta(-60)
---inst.components.sanity:DoDelta(-5)
-inst.components.combat:SetRange(2)
-other.burn = false
-if inst.wormlight == nil then
-	inst.AnimState:SetBloomEffectHandle( "" )
-	end
-	if inst.in_shadow then
-	inst.components.colourtweener:StartTween({1,1,1,1}, 0)
-	inst.in_shadow = false
-	end
-inst.switch = false
-inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
-if inst.frost and other.components.freezable then
-other.components.freezable:AddColdness(2)
-other.components.health:DoDelta(-10)
-elseif inst.fire and other.components.burnable then
-other.components.burnable:Ignite()
-other.components.health:DoDelta(-30)
-end
-elseif other and other.components.health ~= nil and inst.level > 1880 and inst.level <= 6999  then
-if inst.loud_1 or inst.loud_2 or inst.loud_3 then
-SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
-end
-SpawnPrefab("lightning2").Transform:SetPosition(other:GetPosition():Get())
-SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
-local fx = SpawnPrefab("firering_fx")
-	  fx.Transform:SetScale(0.6, 0.6, 0.6)
-  	  fx.Transform:SetPosition(other:GetPosition():Get())
-other.components.health:DoDelta(-80)
---inst.components.sanity:DoDelta(-5)
-inst.components.combat:SetRange(2)
-other.burn = false
-if inst.wormlight == nil then
-	inst.AnimState:SetBloomEffectHandle( "" )
-	end
-	if inst.in_shadow then
-	inst.components.colourtweener:StartTween({1,1,1,1}, 0)
-	inst.in_shadow = false
-	end
-inst.switch = false  
-inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
-if inst.frost and other.components.freezable then
-other.components.freezable:AddColdness(2.5)
-other.components.health:DoDelta(-15)
-elseif inst.fire and other.components.burnable then
-other.components.burnable:Ignite()
-other.components.health:DoDelta(-45)
-end
-elseif other and other.components.health ~= nil and inst.level >= 7000  then
-if inst.loud_1 or inst.loud_2 or inst.loud_3 then
-SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
-end
-SpawnPrefab("lightning2").Transform:SetPosition(other:GetPosition():Get())
-SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
-local fx = SpawnPrefab("firering_fx")
-	  fx.Transform:SetScale(0.6, 0.6, 0.6)
-  	  fx.Transform:SetPosition(other:GetPosition():Get())
-other.components.health:DoDelta(-100)
---inst.components.sanity:DoDelta(-5)
-inst.components.combat:SetRange(2)
-other.burn = false
-if inst.wormlight == nil then
-	inst.AnimState:SetBloomEffectHandle( "" )
-	end
-	if inst.in_shadow then
-	inst.components.colourtweener:StartTween({1,1,1,1}, 0)
-	inst.in_shadow = false
-	end
-inst.switch = false  
-inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
-if inst.frost and other.components.freezable then
-other.components.freezable:AddColdness(3)
-other.components.health:DoDelta(-20)
-elseif inst.fire and other.components.burnable then
-other.components.burnable:Ignite()
-other.components.health:DoDelta(-60)
+other.components.health:DoDelta(-lightning.fire_damage)
 end
 end 
 
@@ -1485,7 +1400,7 @@ inst.switch = false
 inst.active_valkyrie = false
 --inst.components.sanity:DoDelta(4)
 end
-if inst.components.stamina_sleep.current  >= 20 and not inst.switch and inst.components.sanity.current > 0 and inst.level < 430  and not inst.components.health:IsDead() and not inst:HasTag("playerghost") and not ( inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst.vl7 or inst.vl8) and inst.valkyrie_on then
+if inst.components.stamina_sleep.current  >= 20 and not inst.switch and inst.components.sanity.current > 0 and not inst.components.health:IsDead() and not inst:HasTag("playerghost") and not ( inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst.vl7 or inst.vl8) and inst.valkyrie_on then
 	if inst.components.spellpower.current >=9 then
 	inst.components.spellpower:DoDelta(-9) inst.lightning_spell_cost = true
 inst.components.combat:SetRange(10,12)
@@ -1511,91 +1426,6 @@ local shocking = SpawnPrefab("musha_spin_fx")
 		end	
 --Call_lightining_on(inst)
 --inst.components.sanity:DoDelta(-2)
-elseif inst.components.stamina_sleep.current  >= 20 and not inst.switch and inst.components.sanity.current > 0 and inst.level >= 430 and inst.level < 1880  and not inst.components.health:IsDead() and not inst:HasTag("playerghost") and not ( inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst.vl7 or inst.vl8) and inst.valkyrie_on then
-	if inst.components.spellpower.current >=9 then
-	inst.components.spellpower:DoDelta(-9) inst.lightning_spell_cost = true
-inst.components.combat:SetRange(10,12)
-inst:ListenForEvent("onhitother", on_hitLightnings_9)
-
-inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-local fx = SpawnPrefab("groundpoundring_fx")
-	  fx.Transform:SetScale(0.3, 0.3, 0.3)
-  	  fx.Transform:SetPosition(inst:GetPosition():Get())
-	 	if not inst.sneak_pang then
-		inst:DoTaskInTime(2, function() if inst.switch then inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
-		end
-	end
-inst.switch = true
-
-local shocking = SpawnPrefab("musha_spin_fx")
-		shocking.Transform:SetPosition(inst:GetPosition():Get())
-		if shocking then
-		local follower = shocking.entity:AddFollower()
-		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0.5 )
-		
-		end	
---Call_lightining_on(inst)
---inst.components.sanity:DoDelta(-2)
-if not inst.berserk then
---inst.components.talker:Say("Valkyrie!") 
-end
-elseif inst.components.stamina_sleep.current  >= 20 and not inst.switch and inst.components.sanity.current > 0 and inst.level >= 1880 and inst.level < 7000  and not inst.components.health:IsDead() and not inst:HasTag("playerghost") and not ( inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst.vl7 or inst.vl8) and inst.valkyrie_on then
-	if inst.components.spellpower.current >=9 then
-	inst.components.spellpower:DoDelta(-9) inst.lightning_spell_cost = true
-inst.components.combat:SetRange(10,12)
-inst:ListenForEvent("onhitother", on_hitLightnings_9)
-
-inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-local fx = SpawnPrefab("groundpoundring_fx")
-	  fx.Transform:SetScale(0.3, 0.3, 0.3)
-  	  fx.Transform:SetPosition(inst:GetPosition():Get())
-		if not inst.sneak_pang then
-		inst:DoTaskInTime(2, function() if inst.switch then inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
-		end
-	end
-inst.switch = true
-
-local shocking = SpawnPrefab("musha_spin_fx")
-		shocking.Transform:SetPosition(inst:GetPosition():Get())
-		if shocking then
-		local follower = shocking.entity:AddFollower()
-		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0.5 )
-		
-		end	
---Call_lightining_on(inst)
---inst.components.sanity:DoDelta(-2)
-if not inst.berserk then
---inst.components.talker:Say("Valkyrie!") 
-end
-elseif inst.components.stamina_sleep.current  >= 20 and not inst.switch and inst.components.sanity.current > 0 and inst.level >= 7000 and not inst.components.health:IsDead() and not inst:HasTag("playerghost") and not ( inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst.vl7 or inst.vl8) and inst.valkyrie_on then
-	if inst.components.spellpower.current >=9 then
-	inst.components.spellpower:DoDelta(-9) inst.lightning_spell_cost = true
-inst.components.combat:SetRange(10,12)
-inst:ListenForEvent("onhitother", on_hitLightnings_9)
-
-inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-local fx = SpawnPrefab("groundpoundring_fx")
-	  fx.Transform:SetScale(0.3, 0.3, 0.3)
-  	  fx.Transform:SetPosition(inst:GetPosition():Get())
-		if not inst.sneak_pang then
-		inst:DoTaskInTime(2, function() if inst.switch then inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
-		end
-	end
-inst.switch = true
-
-local shocking = SpawnPrefab("musha_spin_fx")
-		shocking.Transform:SetPosition(inst:GetPosition():Get())
-		if shocking then
-		local follower = shocking.entity:AddFollower()
-		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0.5 )
-		
-		end	
---Call_lightining_on(inst)
---inst.components.sanity:DoDelta(-2)
-
 elseif not inst.switch and not inst.components.health:IsDead() and ( inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst.vl7 or inst.vl8) and inst.valkyrie_on then
 inst.components.combat:SetRange(2)
 inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
@@ -4701,6 +4531,7 @@ AddPrefabPostInit("musha", Difficulty_music)
 
 function Difficulty_mana(inst)
 if IsServer then
+ inst.musha_mana_regen = SkillDefs.GetManaRegenForConfig(Dmana)
   if Dmana == "dmana_veasy" then
  inst.dmana_veasy = true
   elseif Dmana == "dmana_easy" then

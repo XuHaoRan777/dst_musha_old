@@ -1,5 +1,6 @@
 local MakePlayerCharacter = require("prefabs/player_common")
 local MushaCommands = require("usercommands")
+local SkillDefs = require("musha_skilldefs")
 --local easing = require("easing")
 local assets = {
   Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
@@ -6475,19 +6476,7 @@ end
 	if inst.lightaura then
 		
 		if inst.components.spellpower ~= nil and inst.components.spellpower.current <100 then
-			if inst.dmana_veasy then
-			inst.components.spellpower:DoDelta(5)
-			elseif inst.dmana_easy then
-			inst.components.spellpower:DoDelta(3)
-			elseif inst.dmana_normal then
-			inst.components.spellpower:DoDelta(2)
-			elseif inst.dmana_hard then
-			inst.components.spellpower:DoDelta(1)
-			elseif inst.dmana_hardcore then
-			inst.components.spellpower:DoDelta(1)
-			else
-			inst.components.spellpower:DoDelta(1)
-			end			
+			inst.components.spellpower:DoDelta(SkillDefs.GetManaRegen(inst))
 		end
 		if inst.components.temperature ~= nil then
 		if  inst.components.temperature:GetCurrent() <= 0 then
