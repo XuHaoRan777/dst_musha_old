@@ -1,16 +1,17 @@
 local MakePlayerCharacter = require("prefabs/player_common")
 local MushaCommands = require("usercommands")
 local SkillDefs = require("musha_skilldefs")
+local MushaAnim = require("musha_animutils")
 --local easing = require("easing")
 local assets = {
   Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
         Asset( "ANIM", "anim/wilson_fx.zip" ),
         Asset( "ANIM", "anim/shadow_hands.zip" ),
-		
+
         Asset( "SOUND", "sound/sfx.fsb" ),
         Asset( "SOUND", "sound/wilson.fsb" ),
         Asset( "ANIM", "anim/beard.zip" ),
-		
+
         Asset( "ANIM", "anim/musha_battle.zip" ),
         Asset( "ANIM", "anim/musha.zip" ),
         Asset( "ANIM", "anim/musha_normal.zip" ),
@@ -24,9 +25,9 @@ local prefabs =
   --"book_gardening",
 }
 
-local start_inv = 
+local start_inv =
 {
- 	"glowdust",
+	"glowdust",
 	"glowdust",
 }
 
@@ -34,7 +35,7 @@ local start_inv =
 local function treasure_hunt(inst,data)
 local max_treasure = 100
 local treasure = math.min(inst.treasure, max_treasure)
- end	
+ end
  local function count_wil(inst,data)
 local max_count_w = 100
 local count_w = math.min(inst.count_w, max_count_w)
@@ -43,7 +44,7 @@ local count_w = math.min(inst.count_w, max_count_w)
 local function fullcharged_music(inst)
 local max_music = 100
 local music = math.min(inst.music, max_music)
-end 
+end
 
 local function OnNewSGState(inst)
 	if not inst.sg:HasStateTag("nomorph") then
@@ -145,13 +146,13 @@ else
 assasin.Transform:SetPosition(inst:GetPosition():Get())
 end
 pop.Transform:SetPosition(assasin:GetPosition():Get())
-SpawnPrefab("statue_transition_2").Transform:SetPosition(assasin:GetPosition():Get()) 
+SpawnPrefab("statue_transition_2").Transform:SetPosition(assasin:GetPosition():Get())
 	if inst.loud_3 then
 	SpawnPrefab("lightning").Transform:SetPosition(assasin:GetPosition():Get())
 	end
 SpawnPrefab("lightning_blue").Transform:SetPosition(assasin.Transform:GetWorldPosition())
 assasin.components.follower:SetLeader(inst)
- 	inst:DoTaskInTime(0.5, function()  SpawnPrefab("lightning2").Transform:SetPosition(assasin:GetPosition():Get())
+	inst:DoTaskInTime(0.5, function()  SpawnPrefab("lightning2").Transform:SetPosition(assasin:GetPosition():Get())
 	inst:DoTaskInTime(0.25, function() SpawnPrefab("lightning2").Transform:SetPosition(assasin:GetPosition():Get())  end) end)
 local random1 = 0.3
 
@@ -210,9 +211,9 @@ fx.kill_fx(fx)
 --inst.components.health:SetAbsorptionAmount(0)
 
 inst:DoTaskInTime(--[[Cooldown]] 600, function() inst.guard_on = false inst.guardian_pop = false end)
-end end) 
- end 
- 
+end end)
+ end
+
 local function guard(inst)
 if inst.components.drownable ~= nil and not inst.components.drownable:IsOverWater() then
 if not inst.no_bodyguard then
@@ -221,12 +222,12 @@ inst.count_w = inst.count_w + 1
 if not inst.berserk and not inst.guard_on and inst.components.health:GetPercent() < .3 and inst.count_w >=90 and math.random() < .1 then
 inst.guardian_pop = true
             guardian_proc(inst)
-    end end 
+    end end
 end
 end
-	
+
 local function summon_drake(inst, data)
- 
+
  -- moondrake
 if inst.moondrake_on then
 local drake = SpawnPrefab("moonnutdrake2")
@@ -242,10 +243,10 @@ local x,y,z = inst.Transform:GetWorldPosition()
 	drake.AnimState:PlayAnimation("enter")
 		if drake.components.combat then
 		drake.components.combat:SuggestTarget(drake.target)
-		end	
-	end	
+		end
+	end
 end
-end		
+end
 
 local function light_call(inst, data)
 
@@ -320,7 +321,7 @@ local BLOOM_CHOICES =
     ["musha_fern"] = 3,
 	["light_fern"] = 0.6,
     ["green_fern"] = 5.2,
-	
+
 }
 
 local function DoPlantBloom(inst)
@@ -406,9 +407,9 @@ if inst.small_light then
 	spore.Transform:SetPosition(inst:GetPosition():Get())
 	end
 end
-end	
-	
-	
+end
+
+
 local function consume_stamina(inst, data)
 
 
@@ -423,7 +424,7 @@ end]]
 	else
 	inst.riding_arong = false
 	end
-	
+
 if inst.components.fatigue_sleep.current < 0 then
 inst.components.fatigue_sleep:SetPercent(0)
 end
@@ -441,7 +442,7 @@ inst.components.fatigue_sleep:DoDelta(-0.5) end
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE)
 	elseif TheWorld.state.isnight or TheWorld.state.iscavenight then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_LARGE)
-end	
+end
 end
 
 local x,y,z = inst.Transform:GetWorldPosition()
@@ -449,17 +450,17 @@ local ents = TheSim:FindEntities(x,y,z, 15, {"moondrake2"})
 for k,v in pairs(ents) do
 if inst.moondrake_on then
 v.inst_in = false
-if v.components.follower and not v.components.follower.leader and not inst.components.leader:IsFollower(v) then 
+if v.components.follower and not v.components.follower.leader and not inst.components.leader:IsFollower(v) then
 inst.components.leader:AddFollower(v)
-end 
-elseif not inst.moondrake_on and not v.inst_in  and not v.slave and inst.components.leader:IsFollower(v) then 
+end
+elseif not inst.moondrake_on and not v.inst_in  and not v.slave and inst.components.leader:IsFollower(v) then
 v.inst_in = true
 v.sg:GoToState("exit")
 v.components.follower:SetLeader(nil)
-end 
+end
 end
 --sniff
-if inst.treasure <100 and inst.sg:HasStateTag("moving") then 
+if inst.treasure <100 and inst.sg:HasStateTag("moving") then
 	if inst.dsniff_easy then
  inst.treasure = inst.treasure + 0.1
 	elseif inst.dsniff_normal then
@@ -497,11 +498,11 @@ if not inst.sleep_on and not inst.tiny_sleep and not inst:HasTag("playerghost") 
 	if not inst.warm_on then
 	inst.components.stamina_sleep:DoDelta(-0.02)
 	end
-	end 
+	end
 end
 if not (inst.tiny_sleep or inst.sleep_on) and inst.components.fatigue_sleep.current <=100 and inst.sg:HasStateTag("attack") then
 	if inst.dtired_veasy then
-	inst.components.fatigue_sleep:DoDelta(0.05)	
+	inst.components.fatigue_sleep:DoDelta(0.05)
 	elseif inst.dtired_easy then
 	inst.components.fatigue_sleep:DoDelta(0.1)
 	elseif inst.dtired_normal then
@@ -514,7 +515,7 @@ if not (inst.tiny_sleep or inst.sleep_on) and inst.components.fatigue_sleep.curr
 end
 if not (inst.tiny_sleep or inst.sleep_on) and inst.components.fatigue_sleep.current <=100 and inst.sg:HasStateTag("moving") and not inst:HasTag("playerghost") then
 	if inst.dtired_veasy then
-	inst.components.fatigue_sleep:DoDelta(0.01)	
+	inst.components.fatigue_sleep:DoDelta(0.01)
 	elseif inst.dtired_easy then
 	inst.components.fatigue_sleep:DoDelta(0.025)
 	elseif inst.dtired_normal then
@@ -527,7 +528,7 @@ if not (inst.tiny_sleep or inst.sleep_on) and inst.components.fatigue_sleep.curr
 end
 if not (inst.tiny_sleep or inst.sleep_on) and inst.components.fatigue_sleep.current <=100 and ( inst.sg:HasStateTag("chopping") or inst.sg:HasStateTag("mining") or  inst.sg:HasStateTag("hammering") or inst.sg:HasStateTag("digging") or inst.sg:HasStateTag("netting") or inst.sg:HasStateTag("fishing") or inst.sg:HasStateTag("read")) and not inst:HasTag("playerghost") then
 	if inst.dtired_veasy then
-	inst.components.fatigue_sleep:DoDelta(0.05)	
+	inst.components.fatigue_sleep:DoDelta(0.05)
 	elseif inst.dtired_easy then
 	inst.components.fatigue_sleep:DoDelta(0.1)
 	elseif inst.dtired_normal then
@@ -537,23 +538,23 @@ if not (inst.tiny_sleep or inst.sleep_on) and inst.components.fatigue_sleep.curr
 	elseif inst.dtired_hardcore then
 	inst.components.fatigue_sleep:DoDelta(0.8)
 	end
-	if inst.sneak_pang then		
-		inst.components.talker:Say(STRINGS.MUSHA_TALK_SNEAK_UNHIDE)	
+	if inst.sneak_pang then
+		inst.components.talker:Say(STRINGS.MUSHA_TALK_SNEAK_UNHIDE)
 		inst.components.colourtweener:StartTween({1,1,1,1}, 0)
 local fx = SpawnPrefab("statue_transition_2")
       fx.entity:SetParent(inst.entity)
 	  fx.Transform:SetScale(1.2, 1.2, 1.2)
       fx.Transform:SetPosition(0, 0, 0)
 		inst.components.sanity:DoDelta(50)
-	inst.sneak_pang = false	
+	inst.sneak_pang = false
 	inst.sneaka = false
 	inst:RemoveTag("notarget")
 		end
-end 
+end
 
 if not (inst.tiny_sleep or inst.sleep_on) and inst.components.fatigue_sleep.current >30 and not inst.sg:HasStateTag("walking") and not inst.sg:HasStateTag("running") and not inst.sg:HasStateTag("moving") and not inst.sg:HasStateTag("attack") and not inst.sg:HasStateTag("chopping") and not inst.sg:HasStateTag("mining") and not  inst.sg:HasStateTag("hammering") and not inst.sg:HasStateTag("digging") and not inst.sg:HasStateTag("netting") and not inst.sg:HasStateTag("fishing") and not inst:HasTag("playerghost") then
 	if inst.dtired_veasy then
-	inst.components.fatigue_sleep:DoDelta(-0.2)	
+	inst.components.fatigue_sleep:DoDelta(-0.2)
 	elseif inst.dtired_easy then
 	inst.components.fatigue_sleep:DoDelta(-0.1)
 	elseif inst.dtired_normal then
@@ -566,7 +567,7 @@ if not (inst.tiny_sleep or inst.sleep_on) and inst.components.fatigue_sleep.curr
 end
 if not inst.tiny_sleep and not inst.sleep_on then
 	if inst.components.fatigue_sleep.current <25 then
-		inst.warnning_tired = false 
+		inst.warnning_tired = false
 	elseif inst.components.fatigue_sleep.current >=100 then
 		if not inst.warnning_tired then
 			if math.random() < 0.2 then
@@ -579,20 +580,20 @@ if not inst.tiny_sleep and not inst.sleep_on then
 			inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_4)
 			else
 			inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_2)
-			end 
-			inst.warnning_tired = true 
-			inst:DoTaskInTime(60, function() inst.warnning_tired = false end) 
+			end
+			inst.warnning_tired = true
+			inst:DoTaskInTime(60, function() inst.warnning_tired = false end)
 			end
 	end
-end	
+end
 
 --[[if inst.tiny_sleep and inst.components.stamina_sleep.current < 100 then
 if inst.dsleep_veasy then
 inst.components.stamina_sleep:DoDelta(2)
   elseif inst.dsleep_easy then
-inst.components.stamina_sleep:DoDelta(1)  
+inst.components.stamina_sleep:DoDelta(1)
   elseif inst.dsleep_normal then
-inst.components.stamina_sleep:DoDelta(0.5)  
+inst.components.stamina_sleep:DoDelta(0.5)
   elseif inst.dsleep_hard then
 inst.components.stamina_sleep:DoDelta(0.2)
   elseif inst.dsleep_hardcore then
@@ -602,7 +603,7 @@ end
 if inst.tiny_sleep and inst.components.fatigue_sleep.current > 0 then
 inst.components.fatigue_sleep:DoDelta(-1.5)
 end ]]
-end 
+end
 
 end
 
@@ -621,7 +622,7 @@ local function check_music(inst)
 			inst.time_perfomance:Cancel()
 			inst.time_perfomance = nil
 		end	end end)
-	end 
+	end
 
 local function TreasureSmelling(inst, data)
 if inst.components.playercontroller then
@@ -634,8 +635,8 @@ inst.components.locomotor:Stop()
 				MushaCommands.RunTextUserCommand(emote, inst, false)
 			end
 inst.components.talker:Say(STRINGS.MUSHA_TALK_TREASURE_SMELL.."\n[(X)]")
-inst:DoTaskInTime( 1, function() inst.components.playercontroller:Enable(true) inst.smelling = true 
-inst:DoTaskInTime( 2, function() --inst.components.health:SetInvincible(false) 
+inst:DoTaskInTime( 1, function() inst.components.playercontroller:Enable(true) inst.smelling = true
+inst:DoTaskInTime( 2, function() --inst.components.health:SetInvincible(false)
 end) end)
 end
 end
@@ -647,8 +648,8 @@ return ent.components.burnable and ent.components.burnable:IsBurning()
         end, {"campfire"})
 local yamche = FindEntity(inst, 6, function(ent)
 return ent.components.burnable and ent.components.burnable:IsBurning()
-        end, {"yamche"})		
-		
+        end, {"yamche"})
+
 if fire or yamche then
 inst.warm_on = true
 	end
@@ -657,19 +658,19 @@ inst.warm_on = false
 	end
 ---------------- ---------------- -------------
  if inst.sleep_on or inst.tiny_sleep and not inst:HasTag("playerghost") then
- 	if inst.fberserk or inst.berserks then
- 	inst.berserks = false
+	if inst.fberserk or inst.berserks then
+	inst.berserks = false
 	inst.fberserk = false
 SpawnPrefab("statue_transition").Transform:SetPosition(inst:GetPosition():Get())
 SpawnPrefab("statue_transition_2").Transform:SetPosition(inst:GetPosition():Get())
- 
+
 	end
-	
+
 	if inst.switch or inst.active_valkyrie or inst.berserks or inst.fberserk or inst.sneaka or inst.sneak_pang then
-	 
+
 	inst:RemoveTag("notarget")
 	inst.sneaka = false
-	inst.sneak_pang = false	
+	inst.sneak_pang = false
 	if inst.wormlight == nil then
 	inst.AnimState:SetBloomEffectHandle( "" )
 	end
@@ -680,7 +681,7 @@ SpawnPrefab("statue_transition_2").Transform:SetPosition(inst:GetPosition():Get(
 	inst.fberserk = false
 	end
 end
- 	
+
 
 if inst.sg:HasStateTag("moving") then
 	if inst.sleep_on or inst.tiny_sleep then
@@ -688,13 +689,13 @@ if inst.sg:HasStateTag("moving") then
 	inst.tiny_sleep = false
 	end
 end
-if inst.sleep_on then 
+if inst.sleep_on then
 inst.sleepcheck = true
 inst.active_valkyrie = false
 inst.components.combat:SetRange(2)
 inst.switch = false
-inst.vl1 = false inst.vl2 = false inst.vl3 = false inst.vl4 = false 
-inst.vl5 = false inst.vl6 = false inst.vl7 = false inst.vl8 = false 
+inst.vl1 = false inst.vl2 = false inst.vl3 = false inst.vl4 = false
+inst.vl5 = false inst.vl6 = false inst.vl7 = false inst.vl8 = false
 
 if inst.AnimState:AnimDone() then
 inst.sg:AddStateTag("sleeping")
@@ -702,15 +703,15 @@ inst.sg:AddStateTag("busy")
 if inst.warm_on or inst.warm_tent then
 
 inst.AnimState:PushAnimation("bedroll_sleep_loop", true)
-inst.AnimState:PlayAnimation("bedroll_sleep_loop", true)	
+inst.AnimState:PlayAnimation("bedroll_sleep_loop", true)
 
 elseif not inst.warm_on then
 	if inst.sg:HasStateTag("bedroll") then
-	
+
 	inst.AnimState:PushAnimation("bedroll_sleep_loop", true)
 	inst.AnimState:PlayAnimation("bedroll_sleep_loop", true)
 	else
-	
+
 	inst.AnimState:PushAnimation("sleep_loop", true)
 	inst.AnimState:PlayAnimation("sleep_loop", true)
 	end
@@ -723,9 +724,9 @@ end
 end
 if not inst.sleep_on and inst.sleepcheck then
 inst.sleepcheck = false
-end 
+end
 
- local danger = FindEntity(inst, 10, function(target) 
+ local danger = FindEntity(inst, 10, function(target)
                 return (target:HasTag("monster") and not target:HasTag("player") and not inst:HasTag("spiderwhisperer"))
                     or (target:HasTag("monster") and not target:HasTag("player") and inst:HasTag("spiderwhisperer") and not target:HasTag("spider"))
                     or (target:HasTag("pig") and not target:HasTag("player") and inst:HasTag("spiderwhisperer"))
@@ -733,7 +734,7 @@ end
 
             local hounded = TheWorld.components.hounded
 			if hounded ~= nil and (hounded:GetWarning() or hounded:GetAttacking()) then
-	
+
 				danger = true
 			end
 			if danger then
@@ -744,8 +745,8 @@ end
 			inst.danger = false
 			end
 
-  
-  
+
+
 if not inst.valkyrie and not inst.berserk and not inst.sleep_on and not inst.tiny_sleep then
 --and not inst.No_Sleep_Princess then
 --if inst.bowm then
@@ -754,120 +755,120 @@ if not inst.valkyrie and not inst.berserk and not inst.sleep_on and not inst.tin
 if inst.components.stamina_sleep.current >= 95 then
 inst.components.combat:SetAttackPeriod(0.005)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 1.15 )
-inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.2 )	
+inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.2 )
 
 elseif inst.components.stamina_sleep.current < 95 and inst.components.stamina_sleep.current >= 90 then
 inst.components.combat:SetAttackPeriod(0.01)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 1.12 )
-inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.15 )	
+inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.15 )
 
 elseif inst.components.stamina_sleep.current < 90 and inst.components.stamina_sleep.current >= 85 then
 inst.components.combat:SetAttackPeriod(0.05)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 1.1 )
-inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.1 )	
+inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.1 )
 
 elseif inst.components.stamina_sleep.current < 85 and inst.components.stamina_sleep.current >= 80 then
 inst.components.combat:SetAttackPeriod(0.1)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 1.05 )
-inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.05 )	
+inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.05 )
 
 elseif inst.components.stamina_sleep.current < 80 and inst.components.stamina_sleep.current >= 75 then
 inst.components.combat:SetAttackPeriod(0.15)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 1.0 )
-inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.0 )	
+inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.0 )
 
 elseif inst.components.stamina_sleep.current < 75 and inst.components.stamina_sleep.current >= 70 then
 inst.components.combat:SetAttackPeriod(0.2)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 1.0 )
-inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.0 )	
+inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.0 )
 
 elseif inst.components.stamina_sleep.current < 70 and inst.components.stamina_sleep.current >= 65 then
 inst.components.combat:SetAttackPeriod(0.25)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.98 )
-inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.98 )	
+inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.98 )
 
 elseif inst.components.stamina_sleep.current < 60 and inst.components.stamina_sleep.current >= 55 then
 inst.components.combat:SetAttackPeriod(0.3)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.96 )
-inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.96 )	
+inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.96 )
 
 elseif inst.components.stamina_sleep.current < 55 and inst.components.stamina_sleep.current >= 50 then
 inst.components.combat:SetAttackPeriod(0.35)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.94 )
-inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.94 )	
+inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.94 )
 
 elseif inst.components.stamina_sleep.current < 50 and inst.components.stamina_sleep.current >= 45 then
 inst.components.combat:SetAttackPeriod(0.4)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.92 )
-inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.92 )	
+inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.92 )
 
 elseif inst.components.stamina_sleep.current < 40 and inst.components.stamina_sleep.current >= 35 then
 inst.components.combat:SetAttackPeriod(0.45)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.9 )
-inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.9)	
+inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.9)
 
 elseif inst.components.stamina_sleep.current < 35 and inst.components.stamina_sleep.current >= 30 then
 inst.components.combat:SetAttackPeriod(0.5)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.6 )
-inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.6 )	
+inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.6 )
 
 elseif inst.components.stamina_sleep.current < 30 and inst.components.stamina_sleep.current >= 25 then
 inst.components.combat:SetAttackPeriod(0.55)
 --inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.8 )
---inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.8 )	
+--inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.8 )
 
 elseif inst.components.stamina_sleep.current < 25 and inst.components.stamina_sleep.current >= 20 then
 inst.components.combat:SetAttackPeriod(0.6)
 --inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.75 )
---inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.75 )	
+--inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.75 )
 
 elseif inst.components.stamina_sleep.current < 20 and inst.components.stamina_sleep.current >= 15 then
 inst.components.combat:SetAttackPeriod(0.65)
 --inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.7 )
---inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.7 )	
+--inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.7 )
 
 elseif inst.components.stamina_sleep.current < 15 and inst.components.stamina_sleep.current >= 10 then
 inst.components.combat:SetAttackPeriod(0.7)
 --inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.65 )
---inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.65 )	
+--inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.65 )
 
 elseif inst.components.stamina_sleep.current < 10 and inst.components.stamina_sleep.current >= 5 then
 inst.components.combat:SetAttackPeriod(0.75)
 --inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.6 )
---inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.6 )	
+--inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.6 )
 
 elseif inst.components.stamina_sleep.current < 5 and inst.components.stamina_sleep.current > 0 then
 inst.components.combat:SetAttackPeriod(0.8)
 --inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.55 )
---inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.55 )	
+--inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.55 )
 
 elseif inst.components.stamina_sleep.current <= 0 then
 inst.components.combat:SetAttackPeriod(0.9)
 --inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED *0.5 )
---inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.5 )	
-	 
+--inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.5 )
+
 end
 --end
 
---local sleep_walker = (inst.sg:HasStateTag("running") or inst.sg:HasStateTag("moving")) 
---local idle = (inst.sg:HasStateTag("idle")) 
+--local sleep_walker = (inst.sg:HasStateTag("running") or inst.sg:HasStateTag("moving"))
+--local idle = (inst.sg:HasStateTag("idle"))
 --[[if inst.components.stamina_sleep.current < 30 and inst.components.rider:IsRiding() then
 
 	if inst:HasTag("groggy") and sleep_walker and not idle then
 		inst:RemoveTag("groggy")
-		inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.85 )	
-		inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.85) 
-		
+		inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.85 )
+		inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.85)
+
 	end
 	if not inst:HasTag("groggy") and not sleep_walker and idle then
-		inst:AddTag("groggy")	
+		inst:AddTag("groggy")
 		inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.35 )
 		inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.35)
 	end
 
 else]]
 if inst.components.stamina_sleep.current < 30 and inst.components.stamina_sleep.current >= 10 and not inst.components.rider:IsRiding() then
-				
+
 	if not inst:HasTag("groggy") then
 	inst:AddTag("groggy")
 	inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.4 )
@@ -875,25 +876,25 @@ if inst.components.stamina_sleep.current < 30 and inst.components.stamina_sleep.
 	end
 	--[[if not danger then
 		if not inst:HasTag("groggy") then
-		inst:AddTag("groggy") 
+		inst:AddTag("groggy")
 		inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.35 )
 		inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.35)
 		end
-		
-	elseif danger then 
+
+	elseif danger then
 		if inst:HasTag("groggy") and sleep_walker and not idle then
 		inst:RemoveTag("groggy")
-		inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.85 )	
-		inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.85) 
+		inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.85 )
+		inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.85)
 		end
 		if not inst:HasTag("groggy") and not sleep_walker and idle then
-		inst:AddTag("groggy")	
+		inst:AddTag("groggy")
 		inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 0.35 )
 		inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 0.35)
 		end
 	end]]
-		
-			
+
+
 elseif inst.components.stamina_sleep.current < 10 and not inst.components.rider:IsRiding() then
 	if not inst:HasTag("groggy") then
 	inst:AddTag("groggy")
@@ -904,29 +905,29 @@ elseif inst.components.stamina_sleep.current < 10 and not inst.components.rider:
 else
 	if inst:HasTag("groggy") and not inst.groggy_remove then
 	inst.groggy_remove = true
-	inst:DoTaskInTime(8, function() 
+	inst:DoTaskInTime(8, function()
 		if inst.groggy_remove then
-		inst:RemoveTag("groggy") inst.groggy_remove = false 
-		end	
+		inst:RemoveTag("groggy") inst.groggy_remove = false
+		end
 	end)
 	end
 end
 end
-			
-			
+
+
 if inst.sleep_on then
 inst.charging_music = true
 elseif not inst.sleep_on then
 inst.charging_music = false
-end 
-if inst.charging_music and inst.music >= 100 then --and inst.sleep_on then	
-inst.music_check = true --inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) 
+end
+if inst.charging_music and inst.music >= 100 then --and inst.sleep_on then
+inst.music_check = true --inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" )
 elseif inst.music < 100 then
-inst.music_check = false 
-end 
+inst.music_check = false
+end
 
 --smell
-if inst.treasure >= 100 then 
+if inst.treasure >= 100 then
 inst.treasure_sniffs = true
 if not inst.smelling and not inst.smelltalking then
 inst.smelltalking = true
@@ -936,8 +937,8 @@ elseif inst.treasure < 100 then
 inst.treasure_sniffs = false
 inst.smelling = false
 inst.smelltalking = false
-end 
---[[if inst.treasure_sniffs and inst.treasure_sniff then 
+end
+--[[if inst.treasure_sniffs and inst.treasure_sniff then
 inst.treasure = inst.treasure *0
 inst.treasure_sniffs = false
 inst.treasure_sniff = false
@@ -946,9 +947,9 @@ end]]
 
 end
 
-	
+
  local function onsleepheal(inst)
- 
+
 	if inst.AnimState:IsCurrentAnimation("bedroll_sleep_loop") or inst.sg:HasStateTag("tent") then
 		if not inst.sleep_on then
 		inst.sleep_on = true
@@ -960,16 +961,16 @@ end
 		inst.musha_press = false
 		end
 	end
- 
- 
+
+
 		if inst.tiny_sleep then
- 		inst.components.sanity:DoDelta(1)
+		inst.components.sanity:DoDelta(1)
 		end
 		if inst.sleep_on then
 		     inst.components.sanity:DoDelta(2)
 			 inst.components.health:DoDelta(1)
-			 
-			 
+
+
 		if inst.components.temperature ~= nil then
 
         if inst.sleep_temp_min ~= nil and inst.components.temperature:GetCurrent() < inst.sleep_temp_min then
@@ -977,9 +978,9 @@ end
         elseif inst.sleep_temp_max ~= nil and inst.components.temperature:GetCurrent() > inst.sleep_temp_max then
             inst.components.temperature:SetTemperature(inst.components.temperature:GetCurrent() - 1)
         end
-		end	 
-			 
-			end 
+		end
+
+			end
 
 
 if TheWorld.state.isnight and (inst.sleep_on or inst.tiny_sleep) and inst.LightWatcher:IsInLight() and inst.components.hunger.current <=0 then
@@ -1028,9 +1029,9 @@ elseif math.random() < random1 then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DANGER_4)
 else
 inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DANGER_5)
-end 
-end 
-end 
+end
+end
+end
 end
 
 local function on_fatigue(inst, data)
@@ -1040,16 +1041,16 @@ inst.components.talker.fontsize = 28
 end]]
 if not inst.No_Sleep_Princess then
 if inst.sleep_no then
-inst:DoTaskInTime(10, function() inst.sleep_no = false end) 
+inst:DoTaskInTime(10, function() inst.sleep_no = false end)
 end
 --[[if inst.sleep_on and inst.components.stamina_sleep.current < 100 then
 
 if inst.dsleep_veasy then
 inst.components.stamina_sleep:DoDelta(3)
   elseif inst.dsleep_easy then
-inst.components.stamina_sleep:DoDelta(2)  
+inst.components.stamina_sleep:DoDelta(2)
   elseif inst.dsleep_normal then
-inst.components.stamina_sleep:DoDelta(1)  
+inst.components.stamina_sleep:DoDelta(1)
   elseif inst.dsleep_hard then
 inst.components.stamina_sleep:DoDelta(0.5)
   elseif inst.dsleep_hardcore then
@@ -1061,22 +1062,9 @@ if inst.sleep_on and inst.components.fatigue_sleep.current > 0 then
 inst.components.fatigue_sleep:DoDelta(-2.5)
 end]]
 
-if (inst.strength == "valkyrie" or inst.active_valkyrie) and not inst.sleep_on and not inst.tiny_sleep then 
- 	if inst.dtired_veasy then
-	inst.components.fatigue_sleep:DoDelta(0.1)	
-	elseif inst.dtired_easy then
-	inst.components.fatigue_sleep:DoDelta(0.2)
-	elseif inst.dtired_normal then
-	inst.components.fatigue_sleep:DoDelta(0.3)
-	elseif inst.dtired_hard then
-	inst.components.fatigue_sleep:DoDelta(0.6)
-	elseif inst.dtired_hardcore then
-	inst.components.fatigue_sleep:DoDelta(1.2)
-	end
-end	
-if (inst.strength == "berserk" or inst.berserk) and not inst.sleep_on and not inst.tiny_sleep then 
- 	if inst.dtired_veasy then
-	inst.components.fatigue_sleep:DoDelta(0.1)	
+if (inst.strength == "valkyrie" or inst.active_valkyrie) and not inst.sleep_on and not inst.tiny_sleep then
+	if inst.dtired_veasy then
+	inst.components.fatigue_sleep:DoDelta(0.1)
 	elseif inst.dtired_easy then
 	inst.components.fatigue_sleep:DoDelta(0.2)
 	elseif inst.dtired_normal then
@@ -1087,9 +1075,22 @@ if (inst.strength == "berserk" or inst.berserk) and not inst.sleep_on and not in
 	inst.components.fatigue_sleep:DoDelta(1.2)
 	end
 end
-if inst.sneak_pang then 
- 	if inst.dtired_veasy then
-	inst.components.fatigue_sleep:DoDelta(0.1)	
+if (inst.strength == "berserk" or inst.berserk) and not inst.sleep_on and not inst.tiny_sleep then
+	if inst.dtired_veasy then
+	inst.components.fatigue_sleep:DoDelta(0.1)
+	elseif inst.dtired_easy then
+	inst.components.fatigue_sleep:DoDelta(0.2)
+	elseif inst.dtired_normal then
+	inst.components.fatigue_sleep:DoDelta(0.3)
+	elseif inst.dtired_hard then
+	inst.components.fatigue_sleep:DoDelta(0.6)
+	elseif inst.dtired_hardcore then
+	inst.components.fatigue_sleep:DoDelta(1.2)
+	end
+end
+if inst.sneak_pang then
+	if inst.dtired_veasy then
+	inst.components.fatigue_sleep:DoDelta(0.1)
 	elseif inst.dtired_easy then
 	inst.components.fatigue_sleep:DoDelta(0.2)
 	elseif inst.dtired_normal then
@@ -1102,7 +1103,7 @@ if inst.sneak_pang then
 end
 if inst.on_sparkshield and inst.components.fatigue_sleep.current then
 	if inst.dtired_veasy then
-	inst.components.fatigue_sleep:DoDelta(0.2)	
+	inst.components.fatigue_sleep:DoDelta(0.2)
 	elseif inst.dtired_easy then
 	inst.components.fatigue_sleep:DoDelta(0.5)
 	elseif inst.dtired_normal then
@@ -1117,9 +1118,9 @@ if not (inst.sleep_on or inst.tiny_sleep) then
 --inst.components.sleeper:WakeUp()
 end
 
---dizzy 
+--dizzy
 local dizzy = 0.1
-if inst.components.stamina_sleep.current <= 0 and not inst.dizzy and math.random() < dizzy and not inst:HasTag("playerghost") and not inst.components.health:IsDead() and not (inst.sg:HasStateTag("moving") or inst.sg:HasStateTag("attack")) and not inst.sleep_on and not inst.tiny_sleep then 
+if inst.components.stamina_sleep.current <= 0 and not inst.dizzy and math.random() < dizzy and not inst:HasTag("playerghost") and not inst.components.health:IsDead() and not (inst.sg:HasStateTag("moving") or inst.sg:HasStateTag("attack")) and not inst.sleep_on and not inst.tiny_sleep then
 	inst.dizzy = true
 if math.random() < dizzy then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_0)
@@ -1130,16 +1131,16 @@ inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_3)
 elseif math.random() < dizzy then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_5)
 end
-	inst:DoTaskInTime( 0, function() 
-inst:DoTaskInTime(1, function() 
+	inst:DoTaskInTime( 0, function()
+inst:DoTaskInTime(1, function()
 		if not (inst.tiny_sleep or inst.sleep_on) then
-			inst.sg:GoToState("knockout") 
+			inst.sg:GoToState("knockout")
 		end
 	inst.tiny_sleep = true end)
 inst.sg:AddStateTag("busy")
 	inst:DoTaskInTime( 60, function() inst.dizzy = false end) end)
- end 
-if inst.components.stamina_sleep.current > 0 and inst.components.stamina_sleep.current <= 25 and not inst.dizzy2 and math.random() < dizzy and not inst:HasTag("playerghost") and not inst.components.health:IsDead() and not (inst.sg:HasStateTag("moving") or inst.sg:HasStateTag("attack")) then 
+ end
+if inst.components.stamina_sleep.current > 0 and inst.components.stamina_sleep.current <= 25 and not inst.dizzy2 and math.random() < dizzy and not inst:HasTag("playerghost") and not inst.components.health:IsDead() and not (inst.sg:HasStateTag("moving") or inst.sg:HasStateTag("attack")) then
 	inst.dizzy2 = true
 if math.random() < dizzy then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_1)
@@ -1150,19 +1151,19 @@ inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_5)
 elseif math.random() < dizzy then
 inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_6)
 end
-	inst:DoTaskInTime( 0, function() 
-inst:DoTaskInTime(1, function() 
+	inst:DoTaskInTime( 0, function()
+inst:DoTaskInTime(1, function()
 if not (inst.tiny_sleep or inst.sleep_on) then
 	if math.random() < 0.5 then
 	inst.sg:GoToState("yawn")
 	else
-	inst.sg:GoToState("powerdown") 
+	inst.sg:GoToState("powerdown")
 	end
 end
 end)
 inst.sg:AddStateTag("busy")
 	inst:DoTaskInTime( 150, function() inst.dizzy2 = false end) end)
- end 
+ end
  end
 end
 
@@ -1183,65 +1184,65 @@ local other = data.target
     if math.random() < hitcriticalchance2 and inst.components.hunger.current > 30 and not other:HasTag("structure") and not other:HasTag("stalkerminion") and not other:HasTag("smashable") and not other:HasTag("alignwall") and not other:HasTag("shadowminion") and other.components.health ~= nil and not other.components.health:IsDead()  then
     SpawnPrefab("explode_small").Transform:SetPosition(other:GetPosition():Get())
 	other.components.health:DoDelta(-12)
-			inst:RemoveEventCallback("onhitother", on_Critical_2) end end 
+			inst:RemoveEventCallback("onhitother", on_Critical_2) end end
 local function on_Critical_3(inst, data)
 local hitcriticalchance3 = 0.14
 local other = data.target
     if math.random() < hitcriticalchance3 and inst.components.hunger.current > 30 and not other:HasTag("structure") and not other:HasTag("stalkerminion") and not other:HasTag("smashable") and not other:HasTag("alignwall") and not other:HasTag("shadowminion") and other.components.health ~= nil and not other.components.health:IsDead()  then
     SpawnPrefab("explode_small").Transform:SetPosition(other:GetPosition():Get())
 	other.components.health:DoDelta(-16)
-			inst:RemoveEventCallback("onhitother", on_Critical_3) end end 
-local function on_Critical_4(inst, data)	
-local hitcriticalchance4 = 0.14		
+			inst:RemoveEventCallback("onhitother", on_Critical_3) end end
+local function on_Critical_4(inst, data)
+local hitcriticalchance4 = 0.14
 local other = data.target
     if math.random() < hitcriticalchance4 and inst.components.hunger.current > 30 and not other:HasTag("structure") and not other:HasTag("stalkerminion") and not other:HasTag("smashable") and not other:HasTag("alignwall") and not other:HasTag("shadowminion") and other.components.health ~= nil and not other.components.health:IsDead()  then
     SpawnPrefab("explode_small").Transform:SetPosition(other:GetPosition():Get())
 	other.components.health:DoDelta(-20)
-			inst:RemoveEventCallback("onhitother", on_Critical_4) end end 
-local function on_Critical_5(inst, data)	
-local hitcriticalchance5 = 0.16		
+			inst:RemoveEventCallback("onhitother", on_Critical_4) end end
+local function on_Critical_5(inst, data)
+local hitcriticalchance5 = 0.16
 local other = data.target
     if math.random() < hitcriticalchance5 and inst.components.hunger.current > 30 and not other:HasTag("structure") and not other:HasTag("stalkerminion") and not other:HasTag("smashable") and not other:HasTag("alignwall") and not other:HasTag("shadowminion") and other.components.health ~= nil and not other.components.health:IsDead()  then
     SpawnPrefab("explode_small").Transform:SetPosition(other:GetPosition():Get())
 	other.components.health:DoDelta(-24)
-			inst:RemoveEventCallback("onhitother", on_Critical_5) end end 
-local function on_Critical_6(inst, data)	
-local hitcriticalchance6 = 0.18		
+			inst:RemoveEventCallback("onhitother", on_Critical_5) end end
+local function on_Critical_6(inst, data)
+local hitcriticalchance6 = 0.18
 local other = data.target
     if math.random() < hitcriticalchance6 and inst.components.hunger.current > 30 and not other:HasTag("structure") and not other:HasTag("stalkerminion") and not other:HasTag("smashable") and not other:HasTag("alignwall") and not other:HasTag("shadowminion") and other.components.health ~= nil and not other.components.health:IsDead()  then
     SpawnPrefab("explode_small").Transform:SetPosition(other:GetPosition():Get())
 	other.components.health:DoDelta(-28)
 			inst:RemoveEventCallback("onhitother", on_Critical_6) end end
-local function on_Critical_7(inst, data)		
-local hitcriticalchance7 = 0.2	
+local function on_Critical_7(inst, data)
+local hitcriticalchance7 = 0.2
 local other = data.target
     if math.random() < hitcriticalchance7 and inst.components.hunger.current > 30 and not other:HasTag("structure") and not other:HasTag("stalkerminion") and not other:HasTag("smashable") and not other:HasTag("alignwall") and not other:HasTag("shadowminion") and other.components.health ~= nil and not other.components.health:IsDead()  then
     SpawnPrefab("explode_small").Transform:SetPosition(other:GetPosition():Get())
 	other.components.health:DoDelta(-32)
-			inst:RemoveEventCallback("onhitother", on_Critical_7) end end			
+			inst:RemoveEventCallback("onhitother", on_Critical_7) end end
 	local function Critical_level_1(inst)
 	if (inst.valkyrie or inst.berserk) then
-   	inst:ListenForEvent("onhitother", on_Critical_1) end end
+	inst:ListenForEvent("onhitother", on_Critical_1) end end
 	local function Critical_level_2(inst)
 	if (inst.valkyrie or inst.berserk) then
-   	inst:ListenForEvent("onhitother", on_Critical_2) end end
+	inst:ListenForEvent("onhitother", on_Critical_2) end end
 	local function Critical_level_3(inst)
 	if (inst.valkyrie or inst.berserk) then
-   	inst:ListenForEvent("onhitother", on_Critical_3) end end
+	inst:ListenForEvent("onhitother", on_Critical_3) end end
 	local function Critical_level_4(inst)
 	if (inst.valkyrie or inst.berserk) then
-   	inst:ListenForEvent("onhitother", on_Critical_4) end end
+	inst:ListenForEvent("onhitother", on_Critical_4) end end
 	local function Critical_level_5(inst)
 	if (inst.valkyrie or inst.berserk) then
-   	inst:ListenForEvent("onhitother", on_Critical_5) end end
+	inst:ListenForEvent("onhitother", on_Critical_5) end end
 	local function Critical_level_6(inst)
 	if (inst.valkyrie or inst.berserk) then
-   	inst:ListenForEvent("onhitother", on_Critical_6) end end
+	inst:ListenForEvent("onhitother", on_Critical_6) end end
 	local function Critical_level_7(inst)
 	if (inst.valkyrie or inst.berserk) then
-   	inst:ListenForEvent("onhitother", on_Critical_7) end end
-	
-	
+	inst:ListenForEvent("onhitother", on_Critical_7) end end
+
+
 	--Electric Shield (spellpower shield)
 local ELECTRIC_SHIELD_LEVELS =
 {
@@ -1323,46 +1324,46 @@ end
 local function Lshield_level_5(inst)
 	SetElectricShieldLevel(inst, 5)
 end
-	
-	
-	
+
+
+
 local function on_shard_shield(inst, attacked)
    if inst.f_attack and inst.components.health and not inst.components.health:IsDead() then
    --[[local prefab = "icespike_fx_"..math.random(1,4)
    local fx = SpawnPrefab(prefab)
    local shards = math.random(1.5,2)
- 	fx.Transform:SetScale(shards, shards, shards)
+	fx.Transform:SetScale(shards, shards, shards)
 	fx.Transform:SetPosition(inst:GetPosition():Get())]]
 	inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
-	
+
 	inst:ListenForEvent("attacked", on_shard_freeze)
-	
-	end	
-end 	
-	
+
+	end
+end
+
 
 function Call_lightining_on(inst)
 if (inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst.vl7 or inst.vl8) and not inst.call_lightining_on then
-local x,y,z = inst.Transform:GetWorldPosition()	
+local x,y,z = inst.Transform:GetWorldPosition()
 local ents = TheSim:FindEntities(x, y, z, 12)
-for k,v in pairs(ents) do	
-	if v:IsValid() and v.entity:IsVisible() and v.components.health ~= nil and not v.components.health:IsDead() and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly")) and not v:HasTag("groundspike") and not v:HasTag("player") and not v:HasTag("stalkerminion") and not inst.components.rider ~= nil and not inst.components.rider:IsRiding() and not inst.sg:HasStateTag("moving") and not inst.sg:HasStateTag("attack") and not v:HasTag("structure") and v.components.combat ~= nil and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn") or v:HasTag("werepig") or v:HasTag("frog")) then		
-	
+for k,v in pairs(ents) do
+	if v:IsValid() and v.entity:IsVisible() and v.components.health ~= nil and not v.components.health:IsDead() and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly")) and not v:HasTag("groundspike") and not v:HasTag("player") and not v:HasTag("stalkerminion") and not inst.components.rider ~= nil and not inst.components.rider:IsRiding() and not inst.sg:HasStateTag("moving") and not inst.sg:HasStateTag("attack") and not v:HasTag("structure") and v.components.combat ~= nil and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn") or v:HasTag("werepig") or v:HasTag("frog")) then
+
 inst.call_lightining_on = true
 inst:DoTaskInTime( 10, function() if inst.call_lightining_on then inst.call_lightining_on = false inst.cast_call_lightining = false end end)
-	
+
 if not inst.cast_call_lightining then
 inst.cast_call_lightining = true
 if inst.level < 430 then
 
-	
+
 	inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
 	if inst.loud_2 or inst.loud_3 then
 	SpawnPrefab("lightning").Transform:SetPosition(v:GetPosition():Get())
 	else
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
 	end
-	
+
 	if v.components.locomotor and not v:HasTag("ghost") then
         v.components.locomotor:StopMoving()
 		if v:HasTag("spider") and not v:HasTag("spiderqueen") then
@@ -1374,49 +1375,49 @@ if inst.level < 430 then
 	local fx_2 = SpawnPrefab("groundpoundring_fx")
 		fx_2.Transform:SetScale(0.4, 0.4, 0.4)
 		fx_2.Transform:SetPosition(inst:GetPosition():Get())
-	  
-	v:DoTaskInTime(0.3, function() SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())  
+
+	v:DoTaskInTime(0.3, function() SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
-	v:DoTaskInTime(0.4, function() SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get()) 
+	v:DoTaskInTime(0.4, function() SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	local fx_3 = SpawnPrefab("groundpoundring_fx")
 		fx_3.Transform:SetScale(0.3, 0.3, 0.3)
 		fx_3.Transform:SetPosition(v:GetPosition():Get())
 	  end)
 		if v:HasTag("burn") then
-			v.slow = true 
+			v.slow = true
 			if not v:HasTag("slow") then
-			v:AddTag("slow") 
+			v:AddTag("slow")
 			end
-		else	
+		else
 		v.components.health:DoDelta(-10)
 		--v.components.combat:GetAttacked(inst, 10)
-			
+
 		end
 	if v.components.combat ~= nil and not v:HasTag("companion") then
         v.components.combat:SuggestTarget(inst)
     end
-	v.burn = false v.bloom = false 
+	v.burn = false v.bloom = false
 	v:RemoveTag("burn")
 		if not v:HasTag("lightninggoat") then
-		v.AnimState:SetBloomEffectHandle( "" ) 
-		v.bloom = false 
+		v.AnimState:SetBloomEffectHandle( "" )
+		v.bloom = false
 		end
-	
 
-	
+
+
 	end)
-	
+
 elseif inst.level >= 430 and inst.level < 1880 then
 
-	
+
 	inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
 	if inst.loud_2 or inst.loud_3 then
-	
+
 	SpawnPrefab("lightning").Transform:SetPosition(v:GetPosition():Get())
 	else
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
 	end
-	
+
 	if v.components.locomotor and not v:HasTag("ghost") then
         v.components.locomotor:StopMoving()
 		if v:HasTag("spider") and not v:HasTag("spiderqueen") then
@@ -1428,49 +1429,49 @@ elseif inst.level >= 430 and inst.level < 1880 then
 	local fx_2 = SpawnPrefab("groundpoundring_fx")
 		fx_2.Transform:SetScale(0.4, 0.4, 0.4)
 		fx_2.Transform:SetPosition(inst:GetPosition():Get())
-	  
-	v:DoTaskInTime(0.3, function() SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())  
+
+	v:DoTaskInTime(0.3, function() SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
-	v:DoTaskInTime(0.4, function() SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())  
+	v:DoTaskInTime(0.4, function() SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	local fx_3 = SpawnPrefab("groundpoundring_fx")
 		fx_3.Transform:SetScale(0.3, 0.3, 0.3)
 		fx_3.Transform:SetPosition(v:GetPosition():Get())
 	  end)
 		if v:HasTag("burn") then
-			v.slow = true 
+			v.slow = true
 			if not v:HasTag("slow") then
-			v:AddTag("slow") 
+			v:AddTag("slow")
 			end
-		else	
-		
+		else
+
 		v.components.health:DoDelta(-15)
 		--v.components.combat:GetAttacked(inst, 15)
 		end
 	if v.components.combat ~= nil and not v:HasTag("companion") then
         v.components.combat:SuggestTarget(inst)
     end
-	v.burn = false v.bloom = false 
+	v.burn = false v.bloom = false
 	v:RemoveTag("burn")
 		if not v:HasTag("lightninggoat") then
-		v.AnimState:SetBloomEffectHandle( "" ) 
-		v.bloom = false 
+		v.AnimState:SetBloomEffectHandle( "" )
+		v.bloom = false
 		end
-	
 
-	
+
+
 	end)
-	
+
 elseif inst.level >= 1880 and inst.level < 7000 then
 
-	 
+
 	inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
 	if inst.loud_2 or inst.loud_3 then
-	
+
 	SpawnPrefab("lightning").Transform:SetPosition(v:GetPosition():Get())
 	else
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
 	end
-	
+
 	if v.components.locomotor and not v:HasTag("ghost") then
         v.components.locomotor:StopMoving()
 		if v:HasTag("spider") and not v:HasTag("spiderqueen") then
@@ -1482,50 +1483,50 @@ elseif inst.level >= 1880 and inst.level < 7000 then
 	local fx_2 = SpawnPrefab("groundpoundring_fx")
 		fx_2.Transform:SetScale(0.4, 0.4, 0.4)
 		fx_2.Transform:SetPosition(inst:GetPosition():Get())
-	  
-	v:DoTaskInTime(0.3, function() SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())  
+
+	v:DoTaskInTime(0.3, function() SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
-	v:DoTaskInTime(0.4, function() SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())  
+	v:DoTaskInTime(0.4, function() SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	local fx_3 = SpawnPrefab("groundpoundring_fx")
 		fx_3.Transform:SetScale(0.3, 0.3, 0.3)
 		fx_3.Transform:SetPosition(v:GetPosition():Get())
 	  end)
 		if v:HasTag("burn") then
-			v.slow = true 
+			v.slow = true
 			if not v:HasTag("slow") then
-			v:AddTag("slow") 
+			v:AddTag("slow")
 			end
-		else	
-		
+		else
+
 		v.components.health:DoDelta(-20)
 		--v.components.combat:GetAttacked(inst, 20)
 		end
 	if v.components.combat ~= nil and not v:HasTag("companion") then
         v.components.combat:SuggestTarget(inst)
     end
-	v.burn = false v.bloom = false 
+	v.burn = false v.bloom = false
 	v:RemoveTag("burn")
 		if not v:HasTag("lightninggoat") then
-		v.AnimState:SetBloomEffectHandle( "" ) 
-		v.bloom = false 
+		v.AnimState:SetBloomEffectHandle( "" )
+		v.bloom = false
 		end
-	
 
-	
+
+
 	end)
-	
+
 elseif inst.level >= 7000 then
 
-			
+
 
 	inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
 	if inst.loud_2 or inst.loud_3 then
-	
+
 	SpawnPrefab("lightning").Transform:SetPosition(v:GetPosition():Get())
 	else
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
 	end
-	
+
 	if v.components.locomotor and not v:HasTag("ghost") then
         v.components.locomotor:StopMoving()
 		if v:HasTag("spider") and not v:HasTag("spiderqueen") then
@@ -1537,44 +1538,44 @@ elseif inst.level >= 7000 then
 	local fx_2 = SpawnPrefab("groundpoundring_fx")
 		fx_2.Transform:SetScale(0.4, 0.4, 0.4)
 		fx_2.Transform:SetPosition(inst:GetPosition():Get())
-	  
-	v:DoTaskInTime(0.3, function() SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())  
+
+	v:DoTaskInTime(0.3, function() SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
-	v:DoTaskInTime(0.4, function() SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())  
+	v:DoTaskInTime(0.4, function() SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	local fx_3 = SpawnPrefab("groundpoundring_fx")
 		fx_3.Transform:SetScale(0.3, 0.3, 0.3)
 		fx_3.Transform:SetPosition(v:GetPosition():Get())
 	  end)
 		if v:HasTag("burn") then
-			v.slow = true 
+			v.slow = true
 			if not v:HasTag("slow") then
-			v:AddTag("slow") 
+			v:AddTag("slow")
 			end
-		else	
-		
+		else
+
 		v.components.health:DoDelta(-25)
 		--v.components.combat:GetAttacked(inst, 25)
 		end
 	if v.components.combat ~= nil and not v:HasTag("companion") then
         v.components.combat:SuggestTarget(inst)
     end
-	v.burn = false v.bloom = false 
+	v.burn = false v.bloom = false
 	v:RemoveTag("burn")
 		if not v:HasTag("lightninggoat") then
-		v.AnimState:SetBloomEffectHandle( "" ) 
-		v.bloom = false 
+		v.AnimState:SetBloomEffectHandle( "" )
+		v.bloom = false
 		end
-	
 
-	
+
+
 	end)
 	end
-		end 
+		end
 	end
-end	
 end
-end	
-	--auto shadow lightning strike 
+end
+end
+	--auto shadow lightning strike
 local function on_hitLightnings_1(inst, data)
 inst.vl1 = false
 	local other = data.target
@@ -1585,7 +1586,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			inst:DoTaskInTime( 0.5, function() if inst.loud_3 then
 			SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
 			end	end)
-        	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
+	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
 			if not other.components.health:IsDead() then
 			other.components.health:DoDelta(-5)
 			end
@@ -1595,10 +1596,10 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 		local follower = shocking.entity:AddFollower()
 		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
-			end	
+			end
 inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_1)
 	elseif other:HasTag("structure") and not other:HasTag("alignwall") then
             SpawnPrefab("lightning_blue").Transform:SetPosition(other:GetPosition():Get())
@@ -1612,7 +1613,7 @@ inst:RemoveEventCallback("onhitother", on_hitLightnings_1)
 			end
 inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_1)
 	end end end
 local function on_hitLightnings_2(inst, data)
@@ -1625,7 +1626,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			inst:DoTaskInTime( 0.5, function() if inst.loud_3 then
 			SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
 			end	end)
-        	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
+	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
 			if not other.components.health:IsDead() then
 			other.components.health:DoDelta(-10)
 			end
@@ -1635,10 +1636,10 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 		local follower = shocking.entity:AddFollower()
 		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
-		end	
+		end
 inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_2)
 	elseif other:HasTag("structure") and not other:HasTag("alignwall") then
             SpawnPrefab("lightning_blue").Transform:SetPosition(other:GetPosition():Get())
@@ -1650,7 +1651,7 @@ inst:RemoveEventCallback("onhitother", on_hitLightnings_2)
 		other.components.health:DoDelta(-10)
 inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_2)
 	end end end
 local function on_hitLightnings_3(inst, data)
@@ -1663,7 +1664,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			inst:DoTaskInTime( 0.5, function() if inst.loud_3 then
 			SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
 			end	end)
-        	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
+	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
 			if not other.components.health:IsDead() then
 			other.components.health:DoDelta(-15)
 			end
@@ -1673,10 +1674,10 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 		local follower = shocking.entity:AddFollower()
 		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
-		end	
+		end
 inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_3)
 	elseif other:HasTag("structure") and not other:HasTag("alignwall") then
             SpawnPrefab("lightning_blue").Transform:SetPosition(other:GetPosition():Get())
@@ -1690,7 +1691,7 @@ inst:RemoveEventCallback("onhitother", on_hitLightnings_3)
 			end
  inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_3)
 	end end end
 local function on_hitLightnings_4(inst, data)
@@ -1703,7 +1704,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			inst:DoTaskInTime( 0.5, function() if inst.loud_3 then
 			SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
 			end	end)
-        	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
+	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
 			if not other.components.health:IsDead() then
 			other.components.health:DoDelta(-20)
 			end
@@ -1713,10 +1714,10 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 		local follower = shocking.entity:AddFollower()
 		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
-		end	
+		end
 inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_4)
 	elseif other:HasTag("structure") and not other:HasTag("alignwall") then
             SpawnPrefab("lightning_blue").Transform:SetPosition(other:GetPosition():Get())
@@ -1730,7 +1731,7 @@ inst:RemoveEventCallback("onhitother", on_hitLightnings_4)
 			end
  inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_4)
 	end	end end
 local function on_hitLightnings_5(inst, data)
@@ -1743,7 +1744,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			inst:DoTaskInTime( 0.5, function() if inst.loud_3 then
 			SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
 			end	end)
-        	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
+	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
 			if not other.components.health:IsDead() then
 			other.components.health:DoDelta(-25)
 			end
@@ -1753,10 +1754,10 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 		local follower = shocking.entity:AddFollower()
 		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
-		end	
+		end
 inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_5)
 	elseif other:HasTag("structure") and not other:HasTag("alignwall") then
             SpawnPrefab("lightning_blue").Transform:SetPosition(other:GetPosition():Get())
@@ -1770,7 +1771,7 @@ inst:RemoveEventCallback("onhitother", on_hitLightnings_5)
 			end
  inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_5)
 	end end end
 local function on_hitLightnings_6(inst, data)
@@ -1783,7 +1784,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			inst:DoTaskInTime( 0.5, function() if inst.loud_3 then
 			SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
 			end	end)
-        	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
+	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
 			if not other.components.health:IsDead() then
 			other.components.health:DoDelta(-30)
 			end
@@ -1793,10 +1794,10 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 		local follower = shocking.entity:AddFollower()
 		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
-		end	
+		end
 inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_6)
 	elseif other:HasTag("structure") and not other:HasTag("alignwall") then
             SpawnPrefab("lightning_blue").Transform:SetPosition(other:GetPosition():Get())
@@ -1810,7 +1811,7 @@ inst:RemoveEventCallback("onhitother", on_hitLightnings_6)
 			end
  inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_6)
 	end end
 	end
@@ -1824,7 +1825,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			inst:DoTaskInTime( 0.5, function() if inst.loud_3 then
 			SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
 			end	end)
-        	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
+	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
 			if not other.components.health:IsDead() then
 			other.components.health:DoDelta(-35)
 			end
@@ -1834,10 +1835,10 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 		local follower = shocking.entity:AddFollower()
 		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
-		end	
+		end
 inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_7)
 	elseif other:HasTag("structure") and not other:HasTag("alignwall") then
             SpawnPrefab("lightning_blue").Transform:SetPosition(other:GetPosition():Get())
@@ -1851,7 +1852,7 @@ inst:RemoveEventCallback("onhitother", on_hitLightnings_7)
 			end
  inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_7)
 	end end
 	end
@@ -1865,7 +1866,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			inst:DoTaskInTime( 0.5, function() if inst.loud_3 then
 			SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
 			end	end)
-        	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
+	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
 			if not other.components.health:IsDead() then
 			other.components.health:DoDelta(-40)
 			end
@@ -1875,10 +1876,10 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 		local follower = shocking.entity:AddFollower()
 		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
-		end	
+		end
 inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_8)
 	elseif other:HasTag("structure") and not other:HasTag("alignwall") then
             SpawnPrefab("lightning_blue").Transform:SetPosition(other:GetPosition():Get())
@@ -1892,11 +1893,11 @@ inst:RemoveEventCallback("onhitother", on_hitLightnings_8)
 			end
  inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_8)
 	end end
 	end
-	
+
 local function on_hitLightnings_9(inst, data)
 	local other = data.target
 if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable") and not other:HasTag("alignwall") and not other:HasTag("shadowminion") and other.components.health then
@@ -1907,7 +1908,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			inst:DoTaskInTime( 0.5, function() if inst.loud_3 then
 			SpawnPrefab("lightning").Transform:SetPosition(other:GetPosition():Get())
 			end	end)
-        	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
+	SpawnPrefab("shock_fx").Transform:SetPosition(other:GetPosition():Get())
 			if not other.components.health:IsDead() then
 			other.components.health:DoDelta(-45)
 			end
@@ -1917,10 +1918,10 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 		local follower = shocking.entity:AddFollower()
 		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
-		end	
+		end
 inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
 	elseif other:HasTag("structure") and not other:HasTag("alignwall") then
             SpawnPrefab("lightning_blue").Transform:SetPosition(other:GetPosition():Get())
@@ -1934,11 +1935,11 @@ inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
 			end
  inst.components.combat:SetRange(2)
 
- 
+
 inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
 	end end
 	end
-	
+
   local function Lightnings_level_1(inst)
   local randomL = 0.05
 if SkillDefs.HasMana(inst, "valkyrie_passive_lightning") and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.on_hitLightnings and math.random() < randomL and not inst.sneaka then
@@ -1950,15 +1951,15 @@ SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 		if shocking then
 		local follower = shocking.entity:AddFollower()
 		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0 )
-		
-		end	
+
+		end
 	--if not inst.sneak_pang then
 --inst.components.colourtweener:StartTween({0.5,0.75,1,1}, 0) end
 inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-	inst:DoTaskInTime( 0, function() 
+	inst:DoTaskInTime( 0, function()
 	inst:ListenForEvent("onhitother", on_hitLightnings_1)
-	inst.components.combat:SetRange(9,11)  
+	inst.components.combat:SetRange(9,11)
 	inst:DoTaskInTime( 12, function() inst.on_hitLightnings = false end) end)
  end end
   local function Lightnings_level_2(inst)
@@ -1972,15 +1973,15 @@ SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 		if shocking then
 		local follower = shocking.entity:AddFollower()
 		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0 )
-		
-		end	
+
+		end
 	--if not inst.sneak_pang then
 --inst.components.colourtweener:StartTween({0.5,0.75,1,1}, 0) end
 inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-	inst:DoTaskInTime( 0, function() 
+	inst:DoTaskInTime( 0, function()
 	inst:ListenForEvent("onhitother", on_hitLightnings_2)
-	inst.components.combat:SetRange(9,11)  
+	inst.components.combat:SetRange(9,11)
 	inst:DoTaskInTime( 10, function() inst.on_hitLightnings = false end) end)
  end end
   local function Lightnings_level_3(inst)
@@ -1994,15 +1995,15 @@ SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 		if shocking then
 		local follower = shocking.entity:AddFollower()
 		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0 )
-		
-		end	
+
+		end
 	--if not inst.sneak_pang then
 --inst.components.colourtweener:StartTween({0.5,0.75,1,1}, 0) end
 inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-	inst:DoTaskInTime( 0, function() 
+	inst:DoTaskInTime( 0, function()
 	inst:ListenForEvent("onhitother", on_hitLightnings_3)
-	inst.components.combat:SetRange(9,11) 
+	inst.components.combat:SetRange(9,11)
 	inst:DoTaskInTime( 10, function() inst.on_hitLightnings = false end) end)
  end end
   local function Lightnings_level_4(inst)
@@ -2016,15 +2017,15 @@ SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 		if shocking then
 		local follower = shocking.entity:AddFollower()
 		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0 )
-		
-		end	
+
+		end
 	--if not inst.sneak_pang then
 --inst.components.colourtweener:StartTween({0.5,0.75,1,1}, 0) end
 inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-	inst:DoTaskInTime( 0, function() 
+	inst:DoTaskInTime( 0, function()
 	inst:ListenForEvent("onhitother", on_hitLightnings_4)
-	inst.components.combat:SetRange(9,11) 
+	inst.components.combat:SetRange(9,11)
 	inst:DoTaskInTime( 10, function() inst.on_hitLightnings = false end) end)
  end end
  local function Lightnings_level_5(inst)
@@ -2038,15 +2039,15 @@ SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 		if shocking then
 		local follower = shocking.entity:AddFollower()
 		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0 )
-		
-		end	
+
+		end
 	--if not inst.sneak_pang then
 --inst.components.colourtweener:StartTween({0.5,0.75,1,1}, 0) end
 inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-	inst:DoTaskInTime( 0, function() 
+	inst:DoTaskInTime( 0, function()
 	inst:ListenForEvent("onhitother", on_hitLightnings_5)
-	inst.components.combat:SetRange(9,11) 
+	inst.components.combat:SetRange(9,11)
 	inst:DoTaskInTime( 10, function() inst.on_hitLightnings = false end) end)
  end end
  local function Lightnings_level_6(inst)
@@ -2060,15 +2061,15 @@ SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 		if shocking then
 		local follower = shocking.entity:AddFollower()
 		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0 )
-		
-		end	
+
+		end
 	--if not inst.sneak_pang then
 --inst.components.colourtweener:StartTween({0.5,0.75,1,1}, 0) end
 inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())	
-	inst:DoTaskInTime( 0, function() 
+SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
+	inst:DoTaskInTime( 0, function()
 	inst:ListenForEvent("onhitother", on_hitLightnings_6)
-	inst.components.combat:SetRange(9,11) 
+	inst.components.combat:SetRange(9,11)
 	inst:DoTaskInTime( 10, function() inst.on_hitLightnings = false end) end)
  end end
  local function Lightnings_level_7(inst)
@@ -2082,15 +2083,15 @@ SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 		if shocking then
 		local follower = shocking.entity:AddFollower()
 		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0 )
-		
-		end	
+
+		end
 	--if not inst.sneak_pang then
 --inst.components.colourtweener:StartTween({0.5,0.75,1,1}, 0) end
 inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-	inst:DoTaskInTime( 0, function() 
+	inst:DoTaskInTime( 0, function()
 	inst:ListenForEvent("onhitother", on_hitLightnings_7)
-	inst.components.combat:SetRange(9,11)  
+	inst.components.combat:SetRange(9,11)
 	inst:DoTaskInTime( 10, function() inst.on_hitLightnings = false end) end)
  end end
  local function Lightnings_level_8(inst)
@@ -2104,15 +2105,15 @@ SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 		if shocking then
 		local follower = shocking.entity:AddFollower()
 		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0 )
-		
-		end	
+
+		end
 	--if not inst.sneak_pang then
 --inst.components.colourtweener:StartTween({0.5,0.75,1,1}, 0) end
 inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-	inst:DoTaskInTime( 0, function() 
+	inst:DoTaskInTime( 0, function()
 	inst:ListenForEvent("onhitother", on_hitLightnings_8)
-	inst.components.combat:SetRange(9,11) 
+	inst.components.combat:SetRange(9,11)
 	inst:DoTaskInTime( 10, function() inst.on_hitLightnings = false end) end)
  end end
  local function Lightnings_level_9(inst)
@@ -2126,20 +2127,20 @@ SkillDefs.SpendMana(inst, "valkyrie_passive_lightning")
 		if shocking then
 		local follower = shocking.entity:AddFollower()
 		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0 )
-		
-		end	
+
+		end
 	--if not inst.sneak_pang then
 --inst.components.colourtweener:StartTween({0.5,0.75,1,1}, 0) end
 inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
 SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-	inst:DoTaskInTime( 0, function() 
+	inst:DoTaskInTime( 0, function()
 	inst:ListenForEvent("onhitother", on_hitLightnings_9)
-	inst.components.combat:SetRange(9,11) 
+	inst.components.combat:SetRange(9,11)
 	inst:DoTaskInTime( 10, function() inst.on_hitLightnings = false end) end)
  end end
 --adds on shield
 
-local function Sparkshield_heal(inst, attacked, data) 
+local function Sparkshield_heal(inst, attacked, data)
 if not inst.components.health:IsDead() then
 if inst.level < 430  then
 inst.components.health:DoDelta(1)
@@ -2175,26 +2176,26 @@ if data.attacker and data.attacker.components.burnable and data.attacker.compone
             data.attacker.components.health:DoDelta(-20)
 SpawnPrefab("sparks").Transform:SetPosition(data.attacker:GetPosition():Get())
 end end
-		
+
 	local function active_sparkshield(inst)
-	
-	if inst.level < 430 and inst.on_sparkshield and not inst.shield_on then		
+
+	if inst.level < 430 and inst.on_sparkshield and not inst.shield_on then
 		inst:ListenForEvent("attacked", on_sparkshield_1)
 		inst:ListenForEvent("attacked", Sparkshield_heal)
 		inst.shield_on = true
-	elseif inst.level >= 430 and inst.level < 1880 and inst.on_sparkshield and not inst.shield_on then		
+	elseif inst.level >= 430 and inst.level < 1880 and inst.on_sparkshield and not inst.shield_on then
 		inst:ListenForEvent("attacked", on_sparkshield_2)
 		inst:ListenForEvent("attacked", Sparkshield_heal)
 		inst.shield_on = true
-	elseif inst.level >= 1880 and inst.level < 7000 and inst.on_sparkshield and not inst.shield_on then		
+	elseif inst.level >= 1880 and inst.level < 7000 and inst.on_sparkshield and not inst.shield_on then
 		inst:ListenForEvent("attacked", on_sparkshield_3)
 		inst:ListenForEvent("attacked", Sparkshield_heal)
 		inst.shield_on = true
-	elseif inst.level >= 7000 and inst.on_sparkshield then	
+	elseif inst.level >= 7000 and inst.on_sparkshield then
 		inst:ListenForEvent("attacked", on_sparkshield_4)
 		inst:ListenForEvent("attacked", Sparkshield_heal)
 		inst.shield_on = true
-	elseif not inst.on_sparkshield and inst.shield_on then	
+	elseif not inst.on_sparkshield and inst.shield_on then
 		inst.shield_on = false
 		inst:RemoveEventCallback("attacked", Sparkshield_heal)
 		inst:RemoveEventCallback("attacked", on_sparkshield_1)
@@ -2208,31 +2209,31 @@ check_music(inst)
 end
 
 --inst.tiny_sleep
-if inst.charging_music and inst.music >= 100 then --and inst.sleep_on then	
-inst.music_check = true --inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) 
+if inst.charging_music and inst.music >= 100 then --and inst.sleep_on then
+inst.music_check = true --inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" )
 elseif inst.music < 100 then
-inst.music_check = false 
+inst.music_check = false
 end ]]
 end
 
-		 
+
 local function Call_lightining_attack(inst, data)
 	 local other = data.target
 if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable") and not other:HasTag("alignwall") and not other:HasTag("shadowminion") and other.components.health then
 	 local hitcall = 0.06
-	 
+
 if other and math.random() < hitcall and other and other.components.health ~= nil and not other.components.health:IsDead() and not other:HasTag("burn") and not other:HasTag("structure") and not other:HasTag("groundspike") and not other:HasTag("stalkerminion") and other.components.locomotor and inst.components.sanity.current >= 10 then
 	other:AddTag("burn")
 	SpawnPrefab("sparks").Transform:SetPosition(other:GetPosition():Get())
 	end
 	end
-end 
+end
 
 local function Call_lightining_check(inst, data)
-if inst.level >= 10 then		
-    local x, y, z = inst.Transform:GetWorldPosition() 
+if inst.level >= 10 then
+    local x, y, z = inst.Transform:GetWorldPosition()
     local burn = TheSim:FindEntities(x, y, z, 40, { "burn" })
-for i, v in ipairs(burn) do	
+for i, v in ipairs(burn) do
 	if v.components.health ~= nil and not v.components.health:IsDead() then
 	if not v.bloom then
 		if not v.shocked then
@@ -2249,13 +2250,13 @@ for i, v in ipairs(burn) do
 		end
 		v:DoTaskInTime(7, function() debuff_0:Remove() v.shocked = false end)
 		end
-	
+
 		local shocking = SpawnPrefab("musha_spin_fx")
 		shocking.Transform:SetPosition(v:GetPosition():Get())
 		if shocking and not v.bloom then
 		local follower = shocking.entity:AddFollower()
 		follower:FollowSymbol(v.GUID, v.components.combat.hiteffectsymbol, 0, 0, 0 )
-		end	
+		end
 	v.bloom = true
 	--v:DoTaskInTime(1, function() if v.bloom then v.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" ) end end)
 	--v:DoTaskInTime(3, function() if v.bloom then v.AnimState:SetBloomEffectHandle( "" ) end end)
@@ -2269,11 +2270,11 @@ end
 
 
 local function Call_lightining_debuff(inst, data)
-    local x, y, z = inst.Transform:GetWorldPosition() 
+    local x, y, z = inst.Transform:GetWorldPosition()
     local slow = TheSim:FindEntities(x, y, z, 25, { "slow" })
-    for i, v in ipairs(slow) do	
+    for i, v in ipairs(slow) do
 	if v.bloom then
-	v.AnimState:SetBloomEffectHandle( "" ) 
+	v.AnimState:SetBloomEffectHandle( "" )
 	v.bloom = false
 	end
 	if v.components.health ~= nil and not v.components.health:IsDead() and v.components.locomotor and not v:HasTag("wet") then
@@ -2284,9 +2285,9 @@ local function Call_lightining_debuff(inst, data)
 	end
 	end
 end
-    local x, y, z = inst.Transform:GetWorldPosition() 
+    local x, y, z = inst.Transform:GetWorldPosition()
     local slow_poison = TheSim:FindEntities(x, y, z, 25, { "slow_poison" })
-    for i, v in ipairs(slow_poison) do	
+    for i, v in ipairs(slow_poison) do
 	if v.components.health ~= nil and not v.components.health:IsDead() and v.components.locomotor and not v:HasTag("wet") and not v:HasTag("slow") then
 	if v:HasTag("giant") or v:HasTag("epic") then
 	v.components.locomotor.groundspeedmultiplier = 0.45
@@ -2295,9 +2296,9 @@ end
 	end
 	end
 	end
-    local x, y, z = inst.Transform:GetWorldPosition() 
+    local x, y, z = inst.Transform:GetWorldPosition()
     local slow_frozen = TheSim:FindEntities(x, y, z, 15, { "slow_frozen" })
-for i, v in ipairs(slow_frozen) do	
+for i, v in ipairs(slow_frozen) do
 	if v.components.health ~= nil and not v.components.health:IsDead() and v.components.locomotor and not v:HasTag("wet") and not v:HasTag("slow") and not v:HasTag("slow_poison") then
 	if v:HasTag("giant") or v:HasTag("epic") then
 	v.components.locomotor.groundspeedmultiplier = 0.45
@@ -2305,15 +2306,15 @@ for i, v in ipairs(slow_frozen) do
 	v.components.locomotor.groundspeedmultiplier = 0.15
 	end
 	end
-end	
-	
+end
+
 end
 
 --[[
 local function Call_lightining_on(inst, data)
-   local x, y, z = inst.Transform:GetWorldPosition() 
+   local x, y, z = inst.Transform:GetWorldPosition()
     local ents = TheSim:FindEntities(x, y, z, 18, { "burn" })
-    for i, v in ipairs(ents) do	
+    for i, v in ipairs(ents) do
 if inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.components.health ~= nil and not v.components.health:IsDead() then
 	inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
 	TheWorld:PushEvent("screenflash", .9)
@@ -2322,7 +2323,7 @@ if inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.componen
 	v:DoTaskInTime(0.25, function() SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get()) SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get()) end)
 	SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	v.components.health:DoDelta(-20)
-	v:RemoveTag("burn") 
+	v:RemoveTag("burn")
 	v.burn = false
 		if v and v.components.burnable then
 	v.components.burnable:Ignite()
@@ -2332,14 +2333,14 @@ if inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.componen
 	end
 	end)
 	elseif inst.level >= 430 and inst.level < 1880 and inst.active_valkyrie and v:HasTag("burn") and v.components.health ~= nil and not v.components.health:IsDead() then
-  	inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
+	inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
 	TheWorld:PushEvent("screenflash", .9)
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
 	v:DoTaskInTime(0.5, function()  SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
 	v:DoTaskInTime(0.25, function() SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get()) SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get()) end)
 	SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	v.components.health:DoDelta(-25)
-	v:RemoveTag("burn") 
+	v:RemoveTag("burn")
 	v.burn = false
 		if v and v.components.burnable then
 	v.components.burnable:Ignite()
@@ -2349,14 +2350,14 @@ if inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.componen
 	end
 	end)
 	elseif inst.level >= 1880 and inst.level < 7000 and inst.active_valkyrie and v:HasTag("burn") and v.components.health ~= nil and not v.components.health:IsDead() then
-  	inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
+	inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
 	TheWorld:PushEvent("screenflash", .9)
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
 	v:DoTaskInTime(0.5, function()  SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
 	v:DoTaskInTime(0.25, function() SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get()) SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get()) end)
 	SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	v.components.health:DoDelta(-30)
-	v:RemoveTag("burn") 
+	v:RemoveTag("burn")
 	v.burn = false
 		if v and v.components.burnable then
 	v.components.burnable:Ignite()
@@ -2376,7 +2377,7 @@ if inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.componen
 	v:DoTaskInTime(0.25, function() SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get()) SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get()) end)
 	SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	v.components.health:DoDelta(-35)
-	v:RemoveTag("burn") 
+	v:RemoveTag("burn")
 	v.burn = false
 		if v and v.components.burnable then
 	v.components.burnable:Ignite()
@@ -2388,17 +2389,17 @@ if inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.componen
 	end end
 	end
 ]]
-	-- valkyrie armor 
+	-- valkyrie armor
 
-		------------------    
-	local function On_frameshield_1(attacked, data) -- 
+		------------------
+	local function On_frameshield_1(attacked, data) --
         if data.attacker and data.attacker.components.burnable and data.attacker.components.health ~= nil and data.attacker.components.burnable and not data.attacker:HasTag("thorny") and not data.attacker:HasTag("shadowcreature") and not data.attacker:HasTag("antlion") and not data.attacker.burn then
             data.attacker.components.health:DoDelta(-10)
             data.attacker.components.burnable:Ignite()
 		end
     if data.attacker and data.attacker.components.burnable and data.attacker.components.burnable:IsBurning() and not data.attacker:HasTag("buzzard") then
         data.attacker.components.burnable:Extinguish()
-        end 
+        end
 		 data.attacker.burn = true
 		end
 	local function On_frameshield_2(attacked, data)  --
@@ -2408,7 +2409,7 @@ if inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.componen
 		end
     if data.attacker and data.attacker.components.burnable and data.attacker.components.burnable:IsBurning() and not data.attacker:HasTag("buzzard") then
         data.attacker.components.burnable:Extinguish()
-        end 
+        end
 		 data.attacker.burn = true
 		end
 	local function On_frameshield_3(attacked, data)  --
@@ -2431,58 +2432,58 @@ if inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.componen
         end
 		 data.attacker.burn = true
 		end
-		
+
 	local function Off_frameshield(inst)
 			inst:RemoveEventCallback("attacked", On_frameshield_1)
 			inst:RemoveEventCallback("attacked", On_frameshield_2)
 			inst:RemoveEventCallback("attacked", On_frameshield_3)
 			inst:RemoveEventCallback("attacked", On_frameshield_4)
 			end
-		
---active flame shield and armor		
+
+--active flame shield and armor
 	   local function frameshield_1(inst)
 	if not inst.valkyrie_armor_1 then
 	inst.valkyrie_armor_1 =true
 	end
-	end	
+	end
 	   local function frameshield_2(inst)
 	if not inst.valkyrie_armor_2 then
 	inst.valkyrie_armor_1 =false
 	inst.valkyrie_armor_2 =true
 	end
-	end 
+	end
 	   local function frameshield_3(inst)
 	if not inst.valkyrie_armor_3 then
 	inst.valkyrie_armor_2 =false
 	inst.valkyrie_armor_3 =true
 	end
-	end 	
+	end
 	   local function frameshield_4(inst)
 	if not inst.valkyrie_armor_4 then
 	inst.valkyrie_armor_3 =false
 	inst.valkyrie_armor_4 =true
 	end
-	end 
+	end
 
-local function flameshield_active(inst)	
+local function flameshield_active(inst)
 	if inst.valkyrie_turn and inst.valkyrie_armor_1 then
 		inst:ListenForEvent("attacked", On_frameshield_1) end
-	if inst.valkyrie_turn and inst.valkyrie_armor_2 then		
+	if inst.valkyrie_turn and inst.valkyrie_armor_2 then
 		inst:ListenForEvent("attacked", On_frameshield_2) end
-	if inst.valkyrie_turn and inst.valkyrie_armor_3 then			
-		inst:ListenForEvent("attacked", On_frameshield_3) end	
-	if inst.valkyrie_turn and inst.valkyrie_armor_4 then	
+	if inst.valkyrie_turn and inst.valkyrie_armor_3 then
+		inst:ListenForEvent("attacked", On_frameshield_3) end
+	if inst.valkyrie_turn and inst.valkyrie_armor_4 then
 		inst:ListenForEvent("attacked", On_frameshield_4) end
-	
+
 	end
-	
-	
+
+
 	local Lightningo = .15
-	
-	
+
+
 local function on_Valkyrie_all(inst, attacked, data)
 	local weapon = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
-if inst.switch and weapon and weapon.components.weapon and inst.active_valkyrie then 
+if inst.switch and weapon and weapon.components.weapon and inst.active_valkyrie then
 weapon.components.weapon.stimuli = "electric"
 elseif not inst.switch and weapon and weapon.components.weapon and not weapon:HasTag("electric_weapon") and not inst.active_valkyrie then
 weapon.components.weapon.stimuli = nil
@@ -2492,130 +2493,130 @@ end
 
 Call_lightining_on(inst)
 
-		if inst.on_Valkyrie_1 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then	
-inst.valkyrie_turn = true 
+		if inst.on_Valkyrie_1 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
+inst.valkyrie_turn = true
 
-	
+
 	elseif inst.on_Valkyrie_2 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
 
 		inst:DoTaskInTime(7, function() Lightnings_level_1(inst) end)
-				
-inst.valkyrie_turn = true 
+
+inst.valkyrie_turn = true
 
 	elseif inst.on_Valkyrie_3 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
 
-	
+
 
 		inst:DoTaskInTime(7, function() Lightnings_level_1(inst) end)
 		frameshield_1(inst)
-		
-inst.valkyrie_turn = true 
+
+inst.valkyrie_turn = true
 
 	elseif inst.on_Valkyrie_4 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
 
-	
+
 
 		inst:DoTaskInTime(6, function() Lightnings_level_2(inst) end)
 		frameshield_1(inst)
-	
-inst.valkyrie_turn = true 
+
+inst.valkyrie_turn = true
 
 
 	elseif inst.on_Valkyrie_5 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
 
-	
+
 
 		inst:DoTaskInTime(6, function() Lightnings_level_2(inst) end)
 		frameshield_2(inst)
-		
-inst.valkyrie_turn = true 
-				 
+
+inst.valkyrie_turn = true
+
 
 
 	elseif inst.on_Valkyrie_6 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
 
-	
+
 
 		inst:DoTaskInTime(5, function() Lightnings_level_3(inst) end)
 		frameshield_2(inst)
-	
-inst.valkyrie_turn = true 
+
+inst.valkyrie_turn = true
 
 
 	elseif inst.on_Valkyrie_7 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
 
-	
+
 
 				inst:DoTaskInTime(5, function() Lightnings_level_3(inst) end)
 		frameshield_3(inst)
-	
-inst.valkyrie_turn = true 
+
+inst.valkyrie_turn = true
 
 	elseif inst.on_Valkyrie_8 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
 
-	
+
 
 		inst:DoTaskInTime(5, function() Lightnings_level_4(inst) end)
 		frameshield_3(inst)
-	
-inst.valkyrie_turn = true 
+
+inst.valkyrie_turn = true
 
 	elseif inst.on_Valkyrie_9 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
 
-		
+
 
 		inst:DoTaskInTime(5, function() Lightnings_level_4(inst) end)
 		frameshield_4(inst)
-		
-inst.valkyrie_turn = true 
+
+inst.valkyrie_turn = true
 
 	elseif inst.on_Valkyrie_10 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
 
-		
+
 
 		inst:DoTaskInTime(5, function() Lightnings_level_5(inst) end)
 		frameshield_4(inst)
-		
-inst.valkyrie_turn = true 
+
+inst.valkyrie_turn = true
 
 	elseif inst.on_Valkyrie_11 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
 
-		
+
 
 		inst:DoTaskInTime(4, function() Lightnings_level_6(inst) end)
 		frameshield_4(inst)
-	
-inst.valkyrie_turn = true 
+
+inst.valkyrie_turn = true
 
 	elseif inst.on_Valkyrie_12 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
 
-		
+
 
 		inst:DoTaskInTime(4, function() Lightnings_level_7(inst) end)
 		frameshield_4(inst)
-	
-inst.valkyrie_turn = true 
+
+inst.valkyrie_turn = true
 
 	elseif inst.on_Valkyrie_13 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
- 
-		
+
+
 
 		inst:DoTaskInTime(4, function() Lightnings_level_8(inst) end)
 		frameshield_4(inst)
-	
-inst.valkyrie_turn = true 
+
+inst.valkyrie_turn = true
 
 	elseif inst.on_Valkyrie_14 and inst.active_valkyrie and inst.components.stamina_sleep.current > 0 and not inst.components.health:IsDead() then
 
-		
+
 
 		inst:DoTaskInTime(3, function() Lightnings_level_9(inst) end)
 		frameshield_4(inst)
 
-inst.valkyrie_turn = true 
+inst.valkyrie_turn = true
 
-	end 
-if not inst.active_valkyrie then	
+	end
+if not inst.active_valkyrie then
 --[[inst:RemoveEventCallback("onhitother", on_hitLightnings_1)
 inst:RemoveEventCallback("onhitother", on_hitLightnings_2)
 inst:RemoveEventCallback("onhitother", on_hitLightnings_3)
@@ -2626,9 +2627,9 @@ inst:RemoveEventCallback("onhitother", on_hitLightnings_7)
 inst:RemoveEventCallback("onhitother", on_hitLightnings_8)
 inst:RemoveEventCallback("onhitother", on_hitLightnings_9)]]
 inst.switch = false
-inst.vl1 = false inst.vl2 = false inst.vl3 = false inst.vl4 = false 
-inst.vl5 = false inst.vl6 = false inst.vl7 = false inst.vl8 = false 
-end	
+inst.vl1 = false inst.vl2 = false inst.vl3 = false inst.vl4 = false
+inst.vl5 = false inst.vl6 = false inst.vl7 = false inst.vl8 = false
+end
 
 	if inst.components.stamina_sleep.current < 20 then
 		if inst.active_valkyrie then
@@ -2636,54 +2637,54 @@ end
 		inst.components.combat:SetRange(2)
 		end
 	inst.valkyrie_turn = false
-	end 
-	
-end 
-				 
+	end
+
+end
+
 		local function Valkyrie_level_1(inst)
 	inst.on_Valkyrie_1 = true
-		end 
+		end
 		local function Valkyrie_level_2(inst)
 	inst.on_Valkyrie_2 = true inst.on_Valkyrie_1 = false
-		end 	
+		end
 		local function Valkyrie_level_3(inst)
 	inst.on_Valkyrie_3 = true inst.on_Valkyrie_2 = false
-		end 	
+		end
 		   local function Valkyrie_level_4(inst)
 	inst.on_Valkyrie_4 = true inst.on_Valkyrie_3 = false
-		end 	
+		end
 		   local function Valkyrie_level_5(inst)
 	inst.on_Valkyrie_5 = true inst.on_Valkyrie_4 = false
-		end 	
+		end
 		   local function Valkyrie_level_6(inst)
 	inst.on_Valkyrie_6 = true inst.on_Valkyrie_5 = false
-		end 	
+		end
 		   local function Valkyrie_level_7(inst)
 	inst.on_Valkyrie_7 = true inst.on_Valkyrie_6 = false
-		end 	
+		end
 		   local function Valkyrie_level_8(inst)
 	inst.on_Valkyrie_8 = true  inst.on_Valkyrie_7 = false
-		end 	
+		end
 		   local function Valkyrie_level_9(inst)
 	inst.on_Valkyrie_9 = true  inst.on_Valkyrie_8 = false
-		end 	
+		end
 		   local function Valkyrie_level_10(inst)
 	inst.on_Valkyrie_10 = true  inst.on_Valkyrie_9 = false
-		end 	
+		end
 		   local function Valkyrie_level_11(inst)
 	inst.on_Valkyrie_11 = true  inst.on_Valkyrie_10 = false
-		end 	
+		end
 		   local function Valkyrie_level_12(inst)
 	inst.on_Valkyrie_12 = true  inst.on_Valkyrie_11 = false
-		end 	
+		end
 		   local function Valkyrie_level_13(inst)
 	inst.on_Valkyrie_13 = true  inst.on_Valkyrie_12 = false
-		end 	
+		end
 		   local function Valkyrie_level_14(inst)
 	inst.on_Valkyrie_14 = true  inst.on_Valkyrie_13 = false
-		end 	
-	
-	
+		end
+
+
 --berserk
 local function OnHitfreeze(inst, data)
 local hitfreeze = .1
@@ -2699,7 +2700,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 end
 end end
 end
-	
+
 local function berserk_hit(inst, data)
 if not inst.berserk then
 inst.components.combat:SetRange(2)
@@ -2723,128 +2724,128 @@ if not other:HasTag("smashable") and not other:HasTag("structure") and not other
 	----inst:RemoveEventCallback("onhitother", berserk_hit)
 	end end end
 end
-	
+
 local function moon_berserk(inst)
 	if not TheWorld.state.isfullmoon and not inst:HasTag("playerghost") then
 			if inst.fberserk or inst.berserks then
- 	inst.berserks = false
+	inst.berserks = false
 	inst.fberserk = false
 SpawnPrefab("statue_transition").Transform:SetPosition(inst:GetPosition():Get())
 SpawnPrefab("statue_transition_2").Transform:SetPosition(inst:GetPosition():Get())
-   	if not inst:HasTag("playerghost") then
+	if not inst:HasTag("playerghost") then
 	if inst.components.hunger.current >= 160 then
-		inst.strength = "full" 
-			
+		inst.strength = "full"
+
 		if inst.visual_cos then
-	inst.AnimState:SetBuild("musha")
+	MushaAnim.SetBuild(inst, "musha")
 		elseif not inst.visual_cos and not inst.change_visual then
 			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha")
+			MushaAnim.SetBuild(inst, "musha")
 			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha")
+			MushaAnim.SetBuild(inst, "musha")
 			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_full_k")
+			MushaAnim.SetBuild(inst, "musha_full_k")
 			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_old")
+			MushaAnim.SetBuild(inst, "musha_old")
 			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_full_sw2")
+			MushaAnim.SetBuild(inst, "musha_full_sw2")
 		end
 		end
 	elseif inst.components.hunger.current < 160 then
-		inst.strength = "normal"   
-		
+		inst.strength = "normal"
+
 		if inst.visual_cos then
-	inst.AnimState:SetBuild("musha_normal")
+	MushaAnim.SetBuild(inst, "musha_normal")
 		elseif not inst.visual_cos and not inst.change_visual then
 			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha_normal")
+			MushaAnim.SetBuild(inst, "musha_normal")
 			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal")
+			MushaAnim.SetBuild(inst, "musha_normal")
 			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal_k")
+			MushaAnim.SetBuild(inst, "musha_normal_k")
 			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal_old")
+			MushaAnim.SetBuild(inst, "musha_normal_old")
 			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_normal_sw2")			
+			MushaAnim.SetBuild(inst, "musha_normal_sw2")
 		end
 		end
-	end	
-	end	
 	end
-		
+	end
+	end
+
 		if inst.changed_moon then
 		inst.changed_moon = false
 		inst.components.locomotor:Stop()
 		--inst.components.health:SetInvincible(true)
-		inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_4)	
+		inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_4)
 		SpawnPrefab("statue_transition_2").Transform:SetPosition(inst:GetPosition():Get())
-			inst:DoTaskInTime(0.5, function() 
+			inst:DoTaskInTime(0.5, function()
 			if not (inst.tiny_sleep or inst.sleep_on) then
-			inst.sg:GoToState("knockout") 
+			inst.sg:GoToState("knockout")
 			end
-			inst.tiny_sleep = true 
-			inst:DoTaskInTime(3, function() 
+			inst.tiny_sleep = true
+			inst:DoTaskInTime(3, function()
 			--inst.components.health:SetInvincible(false)
 			end) end)
 		end
-		
+
 	elseif  TheWorld.state.isfullmoon and not inst.valkyrie and not inst.sleep_on and not inst.tiny_sleep then
 		if not inst.berserk then
 		inst.berserks = true
 		inst.strength = "berserk"
 		SpawnPrefab("statue_transition").Transform:SetPosition(inst:GetPosition():Get())
 		SpawnPrefab("statue_transition_2").Transform:SetPosition(inst:GetPosition():Get())
-	if not inst:HasTag("playerghost") then	
-		
+	if not inst:HasTag("playerghost") then
+
 		if inst.visual_cos then
-	inst.AnimState:SetBuild("musha_hunger")
+	MushaAnim.SetBuild(inst, "musha_hunger")
 	inst.soundsname = "wendy"
 		elseif not inst.visual_cos and not inst.change_visual then
 			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha_hunger")
+			MushaAnim.SetBuild(inst, "musha_hunger")
 			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_hunger")
+			MushaAnim.SetBuild(inst, "musha_hunger")
 			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_hunger_k")
+			MushaAnim.SetBuild(inst, "musha_hunger_k")
 			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_hunger_old")
+			MushaAnim.SetBuild(inst, "musha_hunger_old")
 			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_hunger_sw2")	
+			MushaAnim.SetBuild(inst, "musha_hunger_sw2")
 			end
 		end
 		end
 	end
 		if not inst.changed_moon then
-		inst.changed_moon = true 
+		inst.changed_moon = true
 		end
 	end
 end
-	
+
 local function berserk_countdown(inst)
-inst:DoTaskInTime(300, function() 
+inst:DoTaskInTime(300, function()
 if inst.fberserk then
 inst.fberserk = false
 if inst.changed then
 		inst.components.locomotor:Stop()
 		--inst.components.health:SetInvincible(true)
-		inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_4)	
+		inst.components.talker:Say(STRINGS.MUSHA_TALK_SLEEP_DIZZY_4)
 		SpawnPrefab("statue_transition_2").Transform:SetPosition(inst:GetPosition():Get())
-    	if inst.components.hunger.current >= 160 then
-		inst.strength = "full"  
+	if inst.components.hunger.current >= 160 then
+		inst.strength = "full"
 	elseif inst.components.hunger.current < 160 then
-		inst.strength = "normal"   
+		inst.strength = "normal"
 		end
-		inst:DoTaskInTime(0.5, function() 
+		inst:DoTaskInTime(0.5, function()
 			if not (inst.tiny_sleep or inst.sleep_on) then
-			inst.sg:GoToState("knockout") 
+			inst.sg:GoToState("knockout")
 			end
-		inst.tiny_sleep = true 
-		inst:DoTaskInTime(3, function() 
+		inst.tiny_sleep = true
+		inst:DoTaskInTime(3, function()
 		--inst.components.health:SetInvincible(false)
 		end) end)
 		inst.changed = false
 		end end end)
-end		
+end
 
 local function berserk_changer(inst)
 if TheWorld.state.isnight and TheWorld.state.isfullmoon and not inst.tiny_sleep and not inst.sleep_on then
@@ -2854,86 +2855,86 @@ if TheWorld.state.isnight and TheWorld.state.isfullmoon and not inst.tiny_sleep 
 		inst.fullmoon = true
 		inst.berserks = true
 		inst.strength = "berserk"
-	if not inst:HasTag("playerghost") then	
+	if not inst:HasTag("playerghost") then
 		inst.musha_full = false
 		inst.musha_normal = false
 		inst.musha_battle = false
 		--inst.musha_hunger = false
 		if inst.visual_cos and not inst.musha_hunger then
-	inst.AnimState:SetBuild("musha_hunger")
+	MushaAnim.SetBuild(inst, "musha_hunger")
 	inst.musha_hunger = true
 	inst.soundsname = "wendy"
 	elseif not inst.visual_cos and not inst.change_visual and not inst.musha_hunger then
 			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha_hunger")
+			MushaAnim.SetBuild(inst, "musha_hunger")
 			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_hunger")
+			MushaAnim.SetBuild(inst, "musha_hunger")
 			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_hunger_k")
+			MushaAnim.SetBuild(inst, "musha_hunger_k")
 			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_hunger_old")
+			MushaAnim.SetBuild(inst, "musha_hunger_old")
 			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_hunger_sw2")	
+			MushaAnim.SetBuild(inst, "musha_hunger_sw2")
 		end
 		inst.musha_hunger = true
 		end
-	end	
 	end
-	elseif not TheWorld.state.isnight or not TheWorld.state.isfullmoon then		
+	end
+	elseif not TheWorld.state.isnight or not TheWorld.state.isfullmoon then
 		if inst.berserk then
 		--inst.moon_berserks = false
-	inst:DoTaskInTime(2, function() 
+	inst:DoTaskInTime(2, function()
 		inst.fullmoon = false
-		inst.berserks = false 
-	if not inst:HasTag("playerghost") and not inst.fberserk then	
+		inst.berserks = false
+	if not inst:HasTag("playerghost") and not inst.fberserk then
 		if inst.components.hunger.current >= 160 then
-		inst.strength = "full"  
+		inst.strength = "full"
 		--inst.musha_full = false
 		inst.musha_normal = false
 		inst.musha_battle = false
 		inst.musha_hunger = false
 		if inst.visual_cos and not inst.musha_full then
-	inst.AnimState:SetBuild("musha")
+	MushaAnim.SetBuild(inst, "musha")
 	inst.musha_full = true
 		elseif not inst.visual_cos and not inst.change_visual and not inst.musha_full then
 			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha")
+			MushaAnim.SetBuild(inst, "musha")
 			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha")
+			MushaAnim.SetBuild(inst, "musha")
 			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_full_k")
+			MushaAnim.SetBuild(inst, "musha_full_k")
 			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_old")
+			MushaAnim.SetBuild(inst, "musha_old")
 			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_full_sw2")
+			MushaAnim.SetBuild(inst, "musha_full_sw2")
 		end
 		inst.musha_full = true
 		end
 	elseif inst.components.hunger.current < 160 then
-		inst.strength = "normal"   
+		inst.strength = "normal"
 		inst.musha_full = false
 		--inst.musha_normal = false
 		inst.musha_battle = false
 		inst.musha_hunger = false
 		if inst.visual_cos and not inst.musha_normal then
-	inst.AnimState:SetBuild("musha_normal")
+	MushaAnim.SetBuild(inst, "musha_normal")
 	inst.musha_normal = true
 		elseif not inst.visual_cos and not inst.change_visual and not inst.musha_normal then
 			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha_normal")
+			MushaAnim.SetBuild(inst, "musha_normal")
 			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal")
+			MushaAnim.SetBuild(inst, "musha_normal")
 			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal_k")
+			MushaAnim.SetBuild(inst, "musha_normal_k")
 			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal_old")
+			MushaAnim.SetBuild(inst, "musha_normal_old")
 			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_normal_sw2")			
+			MushaAnim.SetBuild(inst, "musha_normal_sw2")
 		end
 		inst.musha_normal = true
 		end
 		end
-	end	
+	end
 	end)
 	end
 end
@@ -2945,7 +2946,7 @@ berserk_countdown(inst)
 inst.strength = "berserk"
 end
 end
-	
+
     ---force berserk
 	   local function force_berserk(inst)
 	   if inst.berserk_on then
@@ -2968,7 +2969,7 @@ local function levelexp(inst,data)
 if inst.level <=7000 then
 inst.components.talker:Say(STRINGS.MUSHA_LEVEL_EXP.."\n".. (inst.level))
 end
---stat 
+--stat
 	--level 1
 	if inst.easyh then
 if inst.level <5 then
@@ -3465,7 +3466,7 @@ end
 	inst.components.sanity:SetPercent(sanity_percent)
 
 ----level and skill
---[[test]] 
+--[[test]]
 --[[
 if inst.level >= 0 then
 Critical_level_3(inst)  --max 7 (damage )
@@ -3487,7 +3488,7 @@ inst.SoundEmitter:PlaySound("dontstarve/wilson/equip_item_gold")
 --inst.components.talker:Say("Next :EXP[10]\n[EXP] + ".. (inst.level))
 	Lshield_level_1(inst)
 		elseif inst.level >9 and inst.level <= 10 then
-	inst.components.talker:Say(STRINGS.MUSHA_LEVEL_LEVEL.."3\n"..STRINGS.MUSHA_T_SKILL_UNLOCK..STRINGS.MUSHA_T_SKILL_V_POWER..": 1/4 \n"..STRINGS.MUSHA_T_SKILL_VALKYRIE..": 1/2")	
+	inst.components.talker:Say(STRINGS.MUSHA_LEVEL_LEVEL.."3\n"..STRINGS.MUSHA_T_SKILL_UNLOCK..STRINGS.MUSHA_T_SKILL_V_POWER..": 1/4 \n"..STRINGS.MUSHA_T_SKILL_VALKYRIE..": 1/2")
 inst.SoundEmitter:PlaySound("dontstarve/common/cookingpot_finish", "snd")
 inst.SoundEmitter:PlaySound("dontstarve/wilson/equip_item_gold")
 Lshield_level_1(inst)
@@ -3497,7 +3498,7 @@ Valkyrie_level_1(inst)
 Lshield_level_1(inst)
 Valkyrie_level_1(inst)
 		elseif inst.level >29 and inst.level <= 30 then
-		inst.components.talker:Say(STRINGS.MUSHA_LEVEL_LEVEL.."4\n"..STRINGS.MUSHA_T_SKILL_UNLOCK..STRINGS.MUSHA_T_SKILL_CRITICAL.."\nLV 1/7")	
+		inst.components.talker:Say(STRINGS.MUSHA_LEVEL_LEVEL.."4\n"..STRINGS.MUSHA_T_SKILL_UNLOCK..STRINGS.MUSHA_T_SKILL_CRITICAL.."\nLV 1/7")
 	inst.components.talker:Say(STRINGS.MUSHA_LEVEL_LEVEL.."4\n"..STRINGS.MUSHA_T_SKILL_UNLOCK..STRINGS.MUSHA_T_SKILL_V_POWER..": 1/4 \n"..STRINGS.MUSHA_T_SKILL_VALKYRIE..": 1/2")
 inst.SoundEmitter:PlaySound("dontstarve/common/cookingpot_finish", "snd")
 inst.SoundEmitter:PlaySound("dontstarve/wilson/equip_item_gold")
@@ -3531,7 +3532,7 @@ Valkyrie_level_2(inst)
 		elseif inst.level >80 and inst.level <=124  then
 Lshield_level_2(inst)
 Critical_level_1(inst)
-Valkyrie_level_2(inst)		
+Valkyrie_level_2(inst)
 		elseif inst.level >124 and inst.level <= 125 then
 	inst.components.talker:Say(STRINGS.MUSHA_LEVEL_LEVEL.."7\n"..STRINGS.MUSHA_T_SKILL_UNLOCK..STRINGS.MUSHA_T_SKILL_B_ARMOR.."\nLV 1/2")
 inst.SoundEmitter:PlaySound("dontstarve/common/cookingpot_finish", "snd")
@@ -3902,7 +3903,7 @@ local function onkilll(inst, data)
 			local delta = victim.components.combat.defaultdamage * 0.5
 			if math.random() < largechance then
 					inst.level = inst.level + 1
- 					--if victim:HasTag("monster1x") then
+					--if victim:HasTag("monster1x") then
 					--inst.level = inst.level + 1
 					if victim:HasTag("monster2x") then
 					--inst.level = inst.level + 1
@@ -3919,7 +3920,7 @@ local function onkilll(inst, data)
 						if math.random() < 0.05 then
 					SpawnPrefab("statue_transition_2").Transform:SetPosition(victim:GetPosition():Get())
 					SpawnPrefab("glowdust").Transform:SetPosition(victim:GetPosition():Get())
-					
+
 					end end
 					elseif victim:HasTag("monster4x") then
 					--inst.level = inst.level + 3
@@ -3933,50 +3934,50 @@ local function onkilll(inst, data)
 						end
 				--inst.components.health:DoDelta(delta, false, "battleborn")
 				inst.components.sanity:DoDelta(delta)
-				levelexp(inst)					
+				levelexp(inst)
             local time = victim.components.health.destroytime or 2
             local x, y, z = victim.Transform:GetWorldPosition()
             local scale = (victim:HasTag("smallcreature") and smallScale)
                         or (victim:HasTag("largecreature") and largeScale)
                         or medScale
 					inst:DoTaskInTime(time, spawnspirit, x, y, z, scale)
-					
-				 	   if not inst.berserk and math.random() < 0.3 and victim:HasTag("hound") then
+
+					   if not inst.berserk and math.random() < 0.3 and victim:HasTag("hound") then
 					   local hounds = SpawnPrefab("ghosthound2")
 					   --inst.components.talker:Say("Come to me! Ghost puppy")
 					     inst:DoTaskInTime(1, function() SpawnPrefab("statue_transition_2").Transform:SetPosition(victim:GetPosition():Get()) hounds.Transform:SetPosition(victim:GetPosition():Get()) end) hounds.followdog = true --[[hounds.components.follower:SetLeader(inst)]]
 						 end
-						 
-						if math.random() < 0.15 and (victim:HasTag("hound") or victim:HasTag("prey") or victim:HasTag("spider")) and victim.components.combat then 
-						
-					     inst:DoTaskInTime(1, function() SpawnPrefab("musha_spore").Transform:SetPosition(victim:GetPosition():Get()) end) 
-						end 
-			end					
-		
-		
-						--[[if math.random() < 0.15 and victim:HasTag("antlion") then 
-					     inst:DoTaskInTime(1, function() SpawnPrefab("musha_treasure2").Transform:SetPosition(inst:GetPosition():Get()) end) 
+
+						if math.random() < 0.15 and (victim:HasTag("hound") or victim:HasTag("prey") or victim:HasTag("spider")) and victim.components.combat then
+
+					     inst:DoTaskInTime(1, function() SpawnPrefab("musha_spore").Transform:SetPosition(victim:GetPosition():Get()) end)
+						end
+			end
+
+
+						--[[if math.random() < 0.15 and victim:HasTag("antlion") then
+					     inst:DoTaskInTime(1, function() SpawnPrefab("musha_treasure2").Transform:SetPosition(inst:GetPosition():Get()) end)
 						end]]
-						
+
 		  --[[if (victim:HasTag("prey") or victim:HasTag("insect") or victim:HasTag("frog")) and victim.components.combat then
     local delta = victim.components.combat.defaultdamage * 0.1
 		   if math.random() < smallllchance then
-    				inst.level = inst.level + 1
- 			inst.components.sanity:DoDelta(delta)
-			levelexp(inst)					
+				inst.level = inst.level + 1
+			inst.components.sanity:DoDelta(delta)
+			levelexp(inst)
             local time = victim.components.health.destroytime or 2
             local x, y, z = victim.Transform:GetWorldPosition()
             local scale = (victim:HasTag("smallcreature") and smallScale)
                         or (victim:HasTag("largecreature") and largeScale)
                         or medScale
 					inst:DoTaskInTime(time, spawnspirit, x, y, z, scale)
-			end 
+			end
 			end]]
-		 if (victim:HasTag("epic") or victim:HasTag("deerclops") or 
-			 victim:HasTag("bearger") or victim:HasTag("moose") or 
+		 if (victim:HasTag("epic") or victim:HasTag("deerclops") or
+			 victim:HasTag("bearger") or victim:HasTag("moose") or
 							  victim:HasTag("dragonfly") ) and victim.components.combat then
 			local delta = victim.components.combat.defaultdamage * 0.1
-		   			inst.components.sanity:DoDelta(delta)
+					inst.components.sanity:DoDelta(delta)
 					if victim:HasTag("small_giant1x") then
 					inst.level = inst.level + 5
 					inst.components.talker:Say(STRINGS.MUSHA_TALK_KILL_EPIC.."\n"..STRINGS.MUSHA_LEVEL_EXP.."+ 5 ")
@@ -4069,7 +4070,7 @@ local function onkilll(inst, data)
 					SpawnPrefab("goldnugget").Transform:SetPosition(victim:GetPosition():Get())
 						elseif math.random() < 0.3 then
 					SpawnPrefab("glowdust").Transform:SetPosition(victim:GetPosition():Get())
-					SpawnPrefab("greengem").Transform:SetPosition(victim:GetPosition():Get())		
+					SpawnPrefab("greengem").Transform:SetPosition(victim:GetPosition():Get())
 					SpawnPrefab("purplegem").Transform:SetPosition(victim:GetPosition():Get())
 					SpawnPrefab("goldnugget").Transform:SetPosition(victim:GetPosition():Get())
 						elseif math.random() < 0.2 then
@@ -4093,12 +4094,12 @@ local function onkilll(inst, data)
 					SpawnPrefab("glowdust").Transform:SetPosition(victim:GetPosition():Get())
 					SpawnPrefab("amulet").Transform:SetPosition(victim:GetPosition():Get())
 					SpawnPrefab("purplegem").Transform:SetPosition(victim:GetPosition():Get())
-					SpawnPrefab("greengem").Transform:SetPosition(victim:GetPosition():Get())	
-					SpawnPrefab("goldnugget").Transform:SetPosition(victim:GetPosition():Get())					
+					SpawnPrefab("greengem").Transform:SetPosition(victim:GetPosition():Get())
+					SpawnPrefab("goldnugget").Transform:SetPosition(victim:GetPosition():Get())
 						elseif math.random() < 0.6 then
 					SpawnPrefab("glowdust").Transform:SetPosition(victim:GetPosition():Get())
 					SpawnPrefab("purplegem").Transform:SetPosition(victim:GetPosition():Get())
-					SpawnPrefab("yellowgem").Transform:SetPosition(victim:GetPosition():Get())	
+					SpawnPrefab("yellowgem").Transform:SetPosition(victim:GetPosition():Get())
 					SpawnPrefab("goldnugget").Transform:SetPosition(victim:GetPosition():Get())
 						elseif math.random() < 0.5 then
 					SpawnPrefab("glowdust").Transform:SetPosition(victim:GetPosition():Get())
@@ -4107,27 +4108,27 @@ local function onkilll(inst, data)
 					SpawnPrefab("goldnugget").Transform:SetPosition(victim:GetPosition():Get())
 					end
 					end
-    				levelexp(inst)			
-					
+				levelexp(inst)
+
             local time = victim.components.health.destroytime or 2
             local x, y, z = victim.Transform:GetWorldPosition()
             local scale = (victim:HasTag("smallcreature") and smallScale)
                         or (victim:HasTag("largecreature") and largeScale)
                         or medScale
 					inst:DoTaskInTime(time, spawnspirit, x, y, z, scale)
-					end 
-					end 	
-	end			
-	
+					end
+					end
+	end
+
 local function expeat(inst, food)
---inst.components.fatigue_sleep:DoDelta(-1) 
+--inst.components.fatigue_sleep:DoDelta(-1)
 
 --if food.components.edible.healthvalue < 0 then
 
 --end
 
 if string.find(tostring(food),"coffe") then
-	
+
 	if math.random() < 0.3 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_COFFEE_1)
 	elseif math.random() < 0.5 then
@@ -4137,7 +4138,7 @@ if string.find(tostring(food),"coffe") then
 	end
 	inst.components.stamina_sleep:DoDelta(8)
 	inst.level = inst.level + 1
-	
+
 elseif not --[[food.prefab == "coffe"]] string.find(tostring(food),"coffe") then
 
 if food.prefab == "mandrakesoup" then
@@ -4151,8 +4152,8 @@ if food.prefab == "mandrakesoup" then
 
 elseif food.prefab == "wormlight" then
 	inst.components.spellpower:DoDelta(15)
-	
-elseif food.components.edible.hungervalue > 140 or food.components.edible.healthvalue > 35 then 
+
+elseif food.components.edible.hungervalue > 140 or food.components.edible.healthvalue > 35 then
 if not inst.No_Sleep_Princess and inst.components.fatigue_sleep.current >= 0 then
 inst.components.fatigue_sleep:DoDelta(-30)
 if inst.components.fatigue_sleep.current < 0 then
@@ -4165,7 +4166,7 @@ end
 	if inst.components.spellpower and inst.components.spellpower:GetPercent() <1 then
 		--inst.components.spellpower:DoDelta(5)
 	end
-elseif food.components.edible.hungervalue > 55 or food.components.edible.healthvalue > 29 or food.components.edible.sanityvalue > 19 then 
+elseif food.components.edible.hungervalue > 55 or food.components.edible.healthvalue > 29 or food.components.edible.sanityvalue > 19 then
 if not inst.No_Sleep_Princess and inst.components.fatigue_sleep.current >= 0 then
 inst.components.fatigue_sleep:DoDelta(-2)
 if inst.components.fatigue_sleep.current < 0 then
@@ -4178,9 +4179,9 @@ end
 	if inst.components.spellpower and inst.components.spellpower:GetPercent() <1 then
 		--inst.components.spellpower:DoDelta(2)
 	end
-elseif food.components.edible.hungervalue > 24 or food.components.edible.healthvalue > 19 or food.components.edible.sanityvalue > 14 then 
+elseif food.components.edible.hungervalue > 24 or food.components.edible.healthvalue > 19 or food.components.edible.sanityvalue > 14 then
 if not inst.No_Sleep_Princess and inst.components.fatigue_sleep.current >= 0 then
-inst.components.fatigue_sleep:DoDelta(-1) 
+inst.components.fatigue_sleep:DoDelta(-1)
 if inst.components.fatigue_sleep.current < 0 then
 
  end end
@@ -4191,12 +4192,12 @@ end
 	if inst.components.spellpower and inst.components.spellpower:GetPercent() <1 then
 		--inst.components.spellpower:DoDelta(1)
 	end
-else 
+else
 --[[if not inst.No_Sleep_Princess and inst.components.fatigue_sleep.current >= 0 then
-inst.components.fatigue_sleep:DoDelta(-1) 
+inst.components.fatigue_sleep:DoDelta(-1)
 if inst.components.fatigue_sleep.current < 0 then
 
- end 
+ end
  end]]
 if food.components.edible and math.random() < tynychance then
 	inst.level = inst.level + 1
@@ -4209,19 +4210,19 @@ end
 end
 
 --dislike food type
-	
+
 if inst.dis_meat_taste and not inst.berserk then
 	if food.components.edible and food.components.edible.foodtype == "MEAT" then
-	inst:DoTaskInTime(0.7, function() 
-	if math.random() < 0.2 then  
+	inst:DoTaskInTime(0.7, function()
+	if math.random() < 0.2 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BAD_1)
-	elseif math.random() < 0.25 then  
+	elseif math.random() < 0.25 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BAD_2)
-	elseif math.random() < 0.3 then  
+	elseif math.random() < 0.3 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BAD_3)
-	elseif math.random() < 0.3 then  
+	elseif math.random() < 0.3 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BAD_4)
-	elseif math.random() < 0.3 then  
+	elseif math.random() < 0.3 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BAD_MEAT)
 	else
 	inst.components.talker:Say(GetString(inst.prefab, "ANNOUNCE_HATEFOOD"))
@@ -4242,22 +4243,22 @@ if inst.dis_meat_taste and not inst.berserk then
 end
 if inst.dis_veggie_taste and not inst.berserk then
 	if food.components.edible and food.components.edible.foodtype == "VEGGIE" and not food:HasTag("green_fruit") and food.prefab ~= "butterflywings" and food.prefab ~= "glowdust" then
-	inst:DoTaskInTime(0.7, function() 
-	if math.random() < 0.2 then  
+	inst:DoTaskInTime(0.7, function()
+	if math.random() < 0.2 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BAD_1)
-	elseif math.random() < 0.25 then  
+	elseif math.random() < 0.25 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BAD_2)
-	elseif math.random() < 0.3 then  
+	elseif math.random() < 0.3 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BAD_3)
-	elseif math.random() < 0.35 then  
+	elseif math.random() < 0.35 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BAD_4)
-	elseif math.random() < 0.4 then  
+	elseif math.random() < 0.4 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BAD_VEGGIE)
 	else
 	inst.components.talker:Say(GetString(inst.prefab, "ANNOUNCE_HATEFOOD"))
 	end
 	inst.sg:GoToState("refuseeat")
-	inst.components.sanity:DoDelta(-20) 
+	inst.components.sanity:DoDelta(-20)
 	if inst.components.health.currenthealth > 5 then
 	inst.components.health:DoDelta(-3)
 	end
@@ -4274,28 +4275,28 @@ end
 -- basic taste
 if food.components.edible and not string.find(tostring(food),"monster") and not string.find(tostring(food),"human") and not inst.berserk then
 
-if inst.princess_taste then	
+if inst.princess_taste then
 	if food.components.edible and (food:HasTag("stale") or food:HasTag("spoiled")) and food.prefab ~= "butterflywings" then
-	inst:DoTaskInTime(0.7, function() 
-	if math.random() < 0.4 then  
+	inst:DoTaskInTime(0.7, function()
+	if math.random() < 0.4 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_OLD_1)
-	elseif math.random() < 0.5 then  
+	elseif math.random() < 0.5 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_OLD_2)
-	elseif math.random() < 0.8 then  
+	elseif math.random() < 0.8 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_OLD_3)
 	else
 	inst.components.talker:Say(GetString(inst.prefab, "ANNOUNCE_HATEFOOD"))
 	end
 	inst.sg:GoToState("refuseeat")
 	end)
-	
+
 	elseif food.components.edible and food.prefab == "butterflywings" then
-	inst:DoTaskInTime(0.5, function() 
-	if math.random() < 0.4 then  
+	inst:DoTaskInTime(0.5, function()
+	if math.random() < 0.4 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BUG_1)
-	elseif math.random() < 0.5 then  
+	elseif math.random() < 0.5 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BUG_2)
-	elseif math.random() < 0.8 then  
+	elseif math.random() < 0.8 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BUG_3)
 	else
 	inst.components.talker:Say(GetString(inst.prefab, "ANNOUNCE_HATEFOOD"))
@@ -4303,46 +4304,46 @@ if inst.princess_taste then
 	inst.sg:GoToState("refuseeat")
 	inst.components.sanity:DoDelta(-10) end)
 	end
-end	
+end
 
 end
 
 --force berserk
 	if food.components.edible and string.find(tostring(food),"monster") then
 	if inst.princess_taste then
-	inst:DoTaskInTime(0.7, function() 
-	if math.random() < 0.4 then  
+	inst:DoTaskInTime(0.7, function()
+	if math.random() < 0.4 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_BAD_2)
-	elseif math.random() < 0.5 then  
+	elseif math.random() < 0.5 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_MONSTER_1)
-	elseif math.random() < 0.8 then  
+	elseif math.random() < 0.8 then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_FOOD_MONSTER_2)
 	else
 	inst.components.talker:Say(GetString(inst.prefab, "ANNOUNCE_HATEFOOD"))
 	end
-	inst.sg:GoToState("refuseeat") 
-	inst.components.sanity:DoDelta(-5) 
+	inst.sg:GoToState("refuseeat")
+	inst.components.sanity:DoDelta(-5)
 	end)
 	end
- 
-		if math.random() < 0.5 then 
- 		 	force_berserk(inst)
-		end 
+
+		if math.random() < 0.5 then
+			force_berserk(inst)
+		end
 	end
-	
+
 	if food.components.edible and string.find(tostring(food),"human") then
-		if inst.princess_taste then 
-		inst:DoTaskInTime(1, function() inst.sg:AddStateTag("busy") inst.AnimState:PlayAnimation("refuseeat") 
+		if inst.princess_taste then
+		inst:DoTaskInTime(1, function() inst.sg:AddStateTag("busy") inst.AnimState:PlayAnimation("refuseeat")
 		inst.components.sanity:DoDelta(-5) end)
 		end
- 		 	force_berserk(inst)
-	end 
-	
-	
+		force_berserk(inst)
+	end
+
+
 end
 
 local function in_fire(inst)
-    local x, y, z = inst.Transform:GetWorldPosition() 
+    local x, y, z = inst.Transform:GetWorldPosition()
     local delta = 0
     local max_rad = 10
     local ents = TheSim:FindEntities(x, y, z, max_rad, { "fire" })
@@ -4354,37 +4355,37 @@ local function in_fire(inst)
             -- shift the value so that a distance of 3 is the minimum
             delta = delta + sz / math.max(1, distsq)
         end
- 
+
     end
     return delta
 end
 
   local function onsanitydelta(inst, data)
-    
+
     inst.components.temperature:SetModifier("sanity",
         (data.newpercent < TUNING.WILLOW_CHILL_END and TUNING.WILLOW_SANITY_CHILLING) or
-        (data.newpercent < TUNING.WILLOW_CHILL_START 
-        and easing.outQuad(data.newpercent - TUNING.WILLOW_CHILL_END, 
-        TUNING.WILLOW_SANITY_CHILLING, -TUNING.WILLOW_SANITY_CHILLING, 
-        TUNING.WILLOW_CHILL_START - TUNING.WILLOW_CHILL_END)) 
+        (data.newpercent < TUNING.WILLOW_CHILL_START
+        and easing.outQuad(data.newpercent - TUNING.WILLOW_CHILL_END,
+        TUNING.WILLOW_SANITY_CHILLING, -TUNING.WILLOW_SANITY_CHILLING,
+        TUNING.WILLOW_CHILL_START - TUNING.WILLOW_CHILL_END))
         or 0)
 end
 
 local function hungrycheck(inst, data)
-if inst.No_Sleep_Princess then 
+if inst.No_Sleep_Princess then
 inst.components.stamina_sleep:SetPercent(1)
 inst.components.fatigue_sleep:SetPercent(0)
 
-end	
-if inst.strength == "full" then			
+end
+if inst.strength == "full" then
 			inst.components.hunger:SetRate(TUNING.WILSON_HUNGER_RATE * 1.1)
-elseif inst.strength == "normal" then			
-			inst.components.hunger:SetRate(TUNING.WILSON_HUNGER_RATE * 1.0)			
-elseif inst.strength == "valkyrie" then			
-			inst.components.hunger:SetRate(TUNING.WILSON_HUNGER_RATE * 1.4)		
-elseif inst.strength == "hunger" then			
+elseif inst.strength == "normal" then
+			inst.components.hunger:SetRate(TUNING.WILSON_HUNGER_RATE * 1.0)
+elseif inst.strength == "valkyrie" then
 			inst.components.hunger:SetRate(TUNING.WILSON_HUNGER_RATE * 1.4)
-			
+elseif inst.strength == "hunger" then
+			inst.components.hunger:SetRate(TUNING.WILSON_HUNGER_RATE * 1.4)
+
 end
 end
 
@@ -4398,7 +4399,7 @@ inst.berserk = false
 inst.crazy = false
 end
 ----------------
-	
+
 ---- damage ----
 local weapon = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
 if weapon and (weapon:HasTag("range_weapon") or weapon:HasTag("bowm") or weapon:HasTag("blowdart") or weapon:HasTag("ranged") or weapon:HasTag("projectile") or weapon:HasTag("thrown")) then
@@ -4433,8 +4434,8 @@ inst.components.combat.damagemultiplier = 0.55
 inst.components.combat.damagemultiplier = 0.4
   elseif inst.hardcored then
 inst.components.combat.damagemultiplier = 0.25
-		end 
-		inst.damage_set_melee = true	
+		end
+		inst.damage_set_melee = true
 	elseif inst.x2damage and not inst.damage_set2_melee then
 		if inst.newbied then
 inst.components.combat.damagemultiplier = 3
@@ -4450,8 +4451,8 @@ inst.components.combat.damagemultiplier = 1.1
 inst.components.combat.damagemultiplier = 0.8
   elseif inst.hardcored then
 inst.components.combat.damagemultiplier = 0.5
-		end 
-		inst.damage_set2_melee = true			
+		end
+		inst.damage_set2_melee = true
 	end
 else
 inst.components.combat.damagemultiplier = 0.5
@@ -4465,54 +4466,54 @@ if inst.sg:HasStateTag("nomorph") or
           inst:HasTag("playerghost") or
           inst.components.health:IsDead() then
           return
-  end  
+  end
 --phase change
 if inst.level >= 10 then
 inst.valkyrie_on = true
 end
-if inst.level >= 125 then 
+if inst.level >= 125 then
 inst.berserk_on = true end
 if inst.active_valkyrie and inst.components.stamina_sleep.current >= 20 and not inst.berserks and not inst.fberserk then
     inst.strength = "valkyrie"
 elseif not inst.active_valkyrie and inst.components.stamina_sleep.current >= 20 and not inst.berserks and not inst.fberserk then
-    	if inst.components.hunger.current >= 160 then
-  inst.strength = "full"  
-  inst.active_valkyrie = false
-  inst.switch = false  
-	elseif inst.components.hunger.current < 160 then
-  inst.strength = "normal"   
+	if inst.components.hunger.current >= 160 then
+  inst.strength = "full"
   inst.active_valkyrie = false
   inst.switch = false
-		end	
+	elseif inst.components.hunger.current < 160 then
+  inst.strength = "normal"
+  inst.active_valkyrie = false
+  inst.switch = false
+		end
 elseif inst.components.hunger.current >= 160 and not inst.active_valkyrie and not inst.berserks and not inst.fberserk then
-    inst.strength = "full" 
+    inst.strength = "full"
 elseif inst.components.hunger.current >= 160 and not inst.active_valkyrie and not inst.berserks and not inst.fberserk then
-    inst.strength = "normal" 	
+    inst.strength = "normal"
 elseif inst.strength == "valkyrie" and (inst.berserks or inst.fberserk) then
-	inst.strength = "berserk" 
+	inst.strength = "berserk"
 	inst.active_valkyrie = false
 	inst.switch = false
-elseif inst.components.stamina_sleep.current < 20 and not inst.berserks and not inst.fberserk then 
+elseif inst.components.stamina_sleep.current < 20 and not inst.berserks and not inst.fberserk then
 		if inst.components.hunger.current >= 160 then
-  inst.strength = "full"   
+  inst.strength = "full"
   inst.components.combat:SetRange(2)
 	elseif inst.components.hunger.current < 160 then
-  inst.strength = "normal"   
+  inst.strength = "normal"
   inst.components.combat:SetRange(2)
 		end
 elseif inst.berserks or inst.fberserk then
-  inst.strength = "berserk" 
+  inst.strength = "berserk"
   inst.active_valkyrie = false
   inst.switch = false
 elseif inst.strength == "berserk" and not inst.berserks and not inst.fberserk then
 		if inst.components.hunger.current >= 160 then
-  inst.strength = "full"   
+  inst.strength = "full"
 	elseif inst.components.hunger.current < 160 then
-  inst.strength = "normal"   
+  inst.strength = "normal"
 		end
  end
 
- 
+
 	if inst.strength == "full" then
 			inst.soundsname = "willow"
 			if weapon and weapon:HasTag("frost_hammer") and not weapon.boost then
@@ -4522,7 +4523,7 @@ elseif inst.strength == "berserk" and not inst.berserks and not inst.fberserk th
 			end
 			--inst.components.health:StartRegen(0, 0)
 			--inst:RemoveEventCallback("onhitother", berserk_hit)
-			--inst:RemoveEventCallback("attacked", On_freeze)		
+			--inst:RemoveEventCallback("attacked", On_freeze)
 			--inst.components.hunger:SetRate(TUNING.WILSON_HUNGER_RATE * 1.2)
 			inst.components.health.fire_damage_scale = .75
 			inst.berserk = false
@@ -4557,7 +4558,7 @@ if inst.newbies then
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (0)
 	end end
-	
+
 elseif inst.easys then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	if inst.warm_on then
@@ -4576,8 +4577,8 @@ elseif inst.easys then
 	inst.components.sanity.dapperness = (0)
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (-TUNING.DAPPERNESS_TINY)
-	end	end	
-	
+	end	end
+
 elseif inst.normals then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	if inst.warm_on then
@@ -4596,8 +4597,8 @@ elseif inst.normals then
 	inst.components.sanity.dapperness = (0)
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (-TUNING.DAPPERNESS_SMALL)
-	end	end		
-	
+	end	end
+
 elseif inst.hards then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	if inst.warm_on then
@@ -4616,7 +4617,7 @@ elseif inst.hards then
 	inst.components.sanity.dapperness = (0)
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (-TUNING.DAPPERNESS_MED)
-	end	end	
+	end	end
 
 elseif inst.hardscores then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
@@ -4637,30 +4638,30 @@ elseif inst.hardscores then
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (-TUNING.DAPPERNESS_MED)
 	end	end
-	
-	end 
+
+	end
 	end
 		--inst.musha_full = false
 		inst.musha_normal = false
 		inst.musha_battle = false
 		inst.musha_hunger = false
 		if inst.visual_cos and not inst.musha_full then
-		inst.AnimState:SetBuild("musha")
+		MushaAnim.SetBuild(inst, "musha")
 		inst.musha_full = true
 		elseif not inst.visual_cos and not inst.change_visual and not inst.musha_full then
 			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha")
+			MushaAnim.SetBuild(inst, "musha")
 			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha")
+			MushaAnim.SetBuild(inst, "musha")
 			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_full_k")
+			MushaAnim.SetBuild(inst, "musha_full_k")
 			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_old")
+			MushaAnim.SetBuild(inst, "musha_old")
 			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_full_sw2")
+			MushaAnim.SetBuild(inst, "musha_full_sw2")
 			end
 		inst.musha_full = true
-		end 
+		end
 			end
 	if inst.strength == "normal" then
 			inst.soundsname = "willow"
@@ -4671,7 +4672,7 @@ elseif inst.hardscores then
 			end
 			--inst.components.health:StartRegen(0, 0)
 			--inst:RemoveEventCallback("onhitother", berserk_hit)
-			--inst:RemoveEventCallback("attacked", On_freeze)					
+			--inst:RemoveEventCallback("attacked", On_freeze)
 			--inst.components.hunger:SetRate(TUNING.WILSON_HUNGER_RATE)
 			inst.components.health.fire_damage_scale = .75
 			inst.berserk = false
@@ -4681,13 +4682,13 @@ elseif inst.hardscores then
 			inst:RemoveEventCallback("attacked", On_frameshield_2)
 			inst:RemoveEventCallback("attacked", On_frameshield_3)
 			inst:RemoveEventCallback("attacked", On_frameshield_4)
-			inst.valkyrie_turn = false	
+			inst.valkyrie_turn = false
 			inst.switch = false
 			inst.berserk_armor_1 = false
 			inst.berserk_armor_2 = false
-			inst.berserk_armor_3 = false		
-	if not inst.lightaura then		
-	
+			inst.berserk_armor_3 = false
+	if not inst.lightaura then
+
 if inst.newbies then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	if inst.warm_on then
@@ -4707,7 +4708,7 @@ if inst.newbies then
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (-TUNING.DAPPERNESS_TINY)
 	end end
-	
+
 elseif inst.easys then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	if inst.warm_on then
@@ -4726,7 +4727,7 @@ elseif inst.easys then
 	inst.components.sanity.dapperness = (0)
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (-TUNING.DAPPERNESS_SMALL)
-	end end	
+	end end
 
 elseif inst.normals then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
@@ -4746,7 +4747,7 @@ elseif inst.normals then
 	inst.components.sanity.dapperness = (-TUNING.SANITYAURA_TINY)
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (-TUNING.DAPPERNESS_MED)
-	end end	
+	end end
 
 elseif inst.hards then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
@@ -4766,7 +4767,7 @@ elseif inst.hards then
 	inst.components.sanity.dapperness = (-TUNING.SANITYAURA_TINY)
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (-TUNING.DAPPERNESS_MED_LARGE)
-	end end	
+	end end
 
 elseif inst.hardscores then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
@@ -4786,7 +4787,7 @@ elseif inst.hardscores then
 	inst.components.sanity.dapperness = (-TUNING.SANITYAURA_TINY)
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (-TUNING.DAPPERNESS_LARGE)
-	end end		
+	end end
 	end
 	end
 		inst.musha_full = false
@@ -4794,23 +4795,23 @@ elseif inst.hardscores then
 		inst.musha_battle = false
 		inst.musha_hunger = false
 		if inst.visual_cos and not inst.musha_normal then
-	inst.AnimState:SetBuild("musha_normal")
+	MushaAnim.SetBuild(inst, "musha_normal")
 	inst.musha_normal = true
 	elseif not inst.visual_cos and not inst.change_visual and not inst.musha_normal then
 			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha_normal")
+			MushaAnim.SetBuild(inst, "musha_normal")
 			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal")
+			MushaAnim.SetBuild(inst, "musha_normal")
 			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal_k")
+			MushaAnim.SetBuild(inst, "musha_normal_k")
 			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_normal_old")
+			MushaAnim.SetBuild(inst, "musha_normal_old")
 			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_normal_sw2")			
+			MushaAnim.SetBuild(inst, "musha_normal_sw2")
 		end
 		inst.musha_normal = true
 		end
-		end		
+		end
 	if inst.strength == "valkyrie" then
 			inst.soundsname = "willow"
 			if weapon and weapon:HasTag("frost_hammer") and not weapon.boost then
@@ -4820,7 +4821,7 @@ elseif inst.hardscores then
 			end
 			--inst.components.sanity.dapperness = (0)
 			--inst:RemoveEventCallback("onhitother", berserk_hit)
-			--inst:RemoveEventCallback("attacked", On_freeze)										
+			--inst:RemoveEventCallback("attacked", On_freeze)
 			--inst.components.hunger:SetRate(TUNING.WILSON_HUNGER_RATE * 1.5)
 			inst.components.health.fire_damage_scale = 0
 			inst.berserk = false
@@ -4828,14 +4829,14 @@ elseif inst.hardscores then
 			inst.normal =  false
 inst.components.combat:SetAttackPeriod(0.005)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 1.3 )
---inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.3 )		
+--inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.3 )
 			inst.berserk_armor_1 = false
 			inst.berserk_armor_2 = false
 			inst.berserk_armor_3 = false
-	if not inst.lightaura then		
+	if not inst.lightaura then
 if inst.newbies then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
- 	if inst.warm_on then
+	if inst.warm_on then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_MED_LARGE)
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_MED_LARGE)
@@ -4852,8 +4853,8 @@ if inst.newbies then
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_MED)
 	end end
- elseif inst.easys then	
- 	if TheWorld.state.isday or TheWorld.state.iscaveday then
+ elseif inst.easys then
+	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	if inst.warm_on then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_MED)
 	elseif not inst.warm_on then
@@ -4870,9 +4871,9 @@ if inst.newbies then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_MED)
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_TINY)
-	end end	
- elseif inst.normals then	
- 	if TheWorld.state.isday or TheWorld.state.iscaveday then
+	end end
+ elseif inst.normals then
+	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	if inst.warm_on then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_MED)
 	elseif not inst.warm_on then
@@ -4889,9 +4890,9 @@ if inst.newbies then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_MED)
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_TINY)
-	end end		
- elseif inst.hards then	
- 	if TheWorld.state.isday or TheWorld.state.iscaveday then
+	end end
+ elseif inst.hards then
+	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	if inst.warm_on then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_TINY)
 	elseif not inst.warm_on then
@@ -4908,10 +4909,10 @@ if inst.newbies then
 	inst.components.sanity.dapperness = (0)
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (0)
-	end end 
+	end end
 
-elseif inst.hardscores then	
- 	if TheWorld.state.isday or TheWorld.state.iscaveday then
+elseif inst.hardscores then
+	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	if inst.warm_on then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_TINY)
 	elseif not inst.warm_on then
@@ -4928,7 +4929,7 @@ elseif inst.hardscores then
 	inst.components.sanity.dapperness = (0)
 	elseif not inst.warm_on then
 	inst.components.sanity.dapperness = (-TUNING.DAPPERNESS_TINY)
-	end end 	
+	end end
 	end
 	end
 		inst.musha_full = false
@@ -4936,23 +4937,23 @@ elseif inst.hardscores then
 		--inst.musha_battle = false
 		inst.musha_hunger = false
 			if inst.visual_cos and not inst.musha_battle then
-	inst.AnimState:SetBuild("musha_battle")
+	MushaAnim.SetBuild(inst, "musha_battle")
 	inst.musha_battle = true
 	elseif not inst.visual_cos and not inst.change_visual and not inst.musha_battle then
 			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha_battle")
+			MushaAnim.SetBuild(inst, "musha_battle")
 			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_battle")
+			MushaAnim.SetBuild(inst, "musha_battle")
 			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_battle_k")
+			MushaAnim.SetBuild(inst, "musha_battle_k")
 			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_battle_old")
+			MushaAnim.SetBuild(inst, "musha_battle_old")
 			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_battle_sw2")			
+			MushaAnim.SetBuild(inst, "musha_battle_sw2")
 		end
 		inst.musha_battle = true
-			end	
-			end		
+			end
+			end
 	if inst.strength == "berserk" then
 			inst.soundsname = "wendy"
 			if weapon and weapon:HasTag("frost_hammer") and not weapon.boost then
@@ -4978,8 +4979,8 @@ elseif inst.hardscores then
 			inst.valkyrie_turn = false
 			inst.components.combat:SetAttackPeriod(0.001)
 inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 1.2 )
---inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.2 )	
- 			if inst.berserk_a_1 then
+--inst.components.locomotor.runspeed = (TUNING.WILSON_RUN_SPEED * 1.2 )
+			if inst.berserk_a_1 then
 			inst.berserk_armor_1 = true
 			elseif inst.berserk_a_2 then
 			inst.berserk_a_1 = false
@@ -4988,40 +4989,40 @@ inst.components.locomotor.walkspeed = (TUNING.WILSON_WALK_SPEED * 1.2 )
 			inst.berserk_a_2 = false
 			inst.berserk_armor_3 = true
 			end
-	if not inst.lightaura then		
-if inst.newbies then	
+	if not inst.lightaura then
+if inst.newbies then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE*1.5)
 	elseif TheWorld.state.isdusk or TheWorld.state.iscavedusk then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE*1.5)
 	elseif TheWorld.state.isnight or TheWorld.state.iscavenight then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE*1.5)
-	end 
-elseif inst.easys then	
+	end
+elseif inst.easys then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE*1.3)
 	elseif TheWorld.state.isdusk or TheWorld.state.iscavedusk then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE*1.3)
 	elseif TheWorld.state.isnight or TheWorld.state.iscavenight then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE*1.3)
-	end 
-elseif inst.normals then	
+	end
+elseif inst.normals then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE*1.1)
 	elseif TheWorld.state.isdusk or TheWorld.state.iscavedusk then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE*1.1)
 	elseif TheWorld.state.isnight or TheWorld.state.iscavenight then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE*1.1)
-	end 	
-elseif inst.hards then	
+	end
+elseif inst.hards then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE)
 	elseif TheWorld.state.isdusk or TheWorld.state.iscavedusk then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE)
 	elseif TheWorld.state.isnight or TheWorld.state.iscavenight then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_HUGE)
-	end 			
-elseif inst.hardscores then	
+	end
+elseif inst.hardscores then
 	if TheWorld.state.isday or TheWorld.state.iscaveday then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_LARGE)
 	elseif TheWorld.state.isdusk or TheWorld.state.iscavedusk then
@@ -5029,7 +5030,7 @@ elseif inst.hardscores then
 	elseif TheWorld.state.isnight or TheWorld.state.iscavenight then
 	inst.components.sanity.dapperness = (TUNING.DAPPERNESS_LARGE)
 	end
-	
+
 	end
 	end
 		inst.musha_full = false
@@ -5037,25 +5038,25 @@ elseif inst.hardscores then
 		inst.musha_battle = false
 		--inst.musha_hunger = false
 	if inst.visual_cos and not inst.musha_hunger then
-	inst.AnimState:SetBuild("musha_hunger")
+	MushaAnim.SetBuild(inst, "musha_hunger")
 	inst.soundsname = "wendy"
 	inst.musha_hunger = true
 	elseif not inst.visual_cos and not inst.change_visual and not inst.musha_hunger then
 			if not inst.set_on and not inst.visual_hold and not inst.visual_hold2 and not inst.visual_hold3 and not inst.visual_hold4 then
-			inst.AnimState:SetBuild("musha_hunger")
+			MushaAnim.SetBuild(inst, "musha_hunger")
 			elseif inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_hunger")
+			MushaAnim.SetBuild(inst, "musha_hunger")
 			elseif inst.set_on and inst.visual_hold2 and not (inst.visual_hold and inst.visual_hold3 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_hunger_k")
+			MushaAnim.SetBuild(inst, "musha_hunger_k")
 			elseif inst.set_on and inst.visual_hold3 and not (inst.visual_hold and inst.visual_hold2 and inst.visual_hold4) then
-			inst.AnimState:SetBuild("musha_hunger_old")
+			MushaAnim.SetBuild(inst, "musha_hunger_old")
 			elseif inst.set_on and inst.visual_hold4 and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 then
-			inst.AnimState:SetBuild("musha_hunger_sw2")	
+			MushaAnim.SetBuild(inst, "musha_hunger_sw2")
 			end
 			inst.musha_hunger = true
 	end
   end
-  
+
 
 if (inst.tiny_sleep or inst.sleep_on) then
 inst.music_armor = true
@@ -5067,7 +5068,7 @@ elseif not (inst.tiny_sleep or inst.sleep_on) and not inst.nsleep then
 inst.music_armor = false
 end
 
---Armor 
+--Armor
 
 	if inst.berserk or inst.fberserk then
 		if SkillDefs.HasMana(inst, "forcefield") then
@@ -5075,9 +5076,9 @@ end
 		else
 		inst.forcefields = false
 		end
-	--else	
-		
-		
+	--else
+
+
 	end
 
 
@@ -5099,7 +5100,7 @@ elseif not inst.sg.currentstate.name ~= "eat" and not inst.sg.currentstate.name 
 		elseif not inst.on_sparkshield and not inst.music_armor and not inst.pet_shield and not inst.active_skill and not inst.forcefields then
 		--inst.components.health.externalabsorbmodifiers:RemoveModifier(inst)
 		inst.remove_shield = true
-		
+
 		end
 	elseif inst.components.hunger ~= nil and inst.components.hunger.current <= 0 then
 	inst.forcefields = false
@@ -5124,33 +5125,33 @@ end
 --[[
 if inst.music_armor or inst.on_sparkshield or inst.light_shield then
 	inst.components.health:SetAbsorptionAmount(1)
-	if inst.sg:HasStateTag("moving") then 
+	if inst.sg:HasStateTag("moving") then
 	inst.music_armor = false
 	end
 elseif not inst.on_sparkshield and not inst.berserk and not inst.valkyrie and not inst.music_armor and not inst.light_shield and not inst.f_attack then
 	inst.components.health:SetAbsorptionAmount(0)
 elseif not inst.on_sparkshield and not inst.berserk and not inst.valkyrie and not inst.music_armor and not inst.light_shield and inst.f_attack then
 	inst.components.health:SetAbsorptionAmount(0.5)
-end 
+end
 
 if not (inst.sleep_on or inst.tiny_sleep) then
 if not inst.on_sparkshield and not inst.light_shield and not inst.f_attack then
 	if inst.berserk and inst.berserk_armor_1 and not inst.music_armor then
 	inst.components.health:SetAbsorptionAmount(0.15)
 elseif inst.berserk and inst.berserk_armor_2 and not inst.music_armor then
-	inst.components.health:SetAbsorptionAmount(0.3)	
+	inst.components.health:SetAbsorptionAmount(0.3)
 elseif inst.berserk and inst.berserk_armor_3 and not inst.music_armor then
 	inst.components.health:SetAbsorptionAmount(0.45)
-	end	
-	
+	end
+
 if inst.valkyrie and not (inst.valkyrie_armor_1 or inst.valkyrie_armor_2 or inst.valkyrie_armor_3 or inst.valkyrie_armor_4) and not inst.music_armor then
 	inst.components.health:SetAbsorptionAmount(0.1)
 elseif inst.valkyrie and inst.valkyrie_armor_1 and not inst.music_armor then
 	inst.components.health:SetAbsorptionAmount(0.1)
 elseif inst.valkyrie and inst.valkyrie_armor_2 and not inst.music_armor then
-	inst.components.health:SetAbsorptionAmount(0.2)	
+	inst.components.health:SetAbsorptionAmount(0.2)
 elseif inst.valkyrie and inst.valkyrie_armor_3 and not inst.music_armor then
-	inst.components.health:SetAbsorptionAmount(0.25)	
+	inst.components.health:SetAbsorptionAmount(0.25)
 elseif inst.valkyrie and inst.valkyrie_armor_4 and not inst.music_armor then
 	inst.components.health:SetAbsorptionAmount(0.3)
 end
@@ -5187,7 +5188,7 @@ local stalker = "dontstarve/music/music_epicfight_stalker"
 local stalker2 = "dontstarve/music/music_epicfight_stalker_b"
 local default = "dontstarve/music/music_epicfight_ruins"
 
-	
+
 if math.random() < 0.15 then
 inst.SoundEmitter:PlaySound("dontstarve/music/music_hoedown","mushamusic")
 inst.components.talker:Say(STRINGS.MUSHA_MUSIC_DYNAMIC.." 1")
@@ -5338,176 +5339,176 @@ if inst.level >0 and inst.level <5 then
 	inst.level = inst.level - 1
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -1") end)
 	levelexp(inst)
-	
+
 	--level 2
 elseif inst.level >=5 and inst.level <10  then
 	inst.level = inst.level - 3
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -3 ") end)
 	levelexp(inst)
-	
+
 	--level 3
 elseif inst.level >=10 and inst.level <30  then
 	inst.level = inst.level - 6
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -6 ") end)
 	levelexp(inst)
-	
+
 	--level 4
 elseif inst.level >=30 and inst.level <50  then
 	inst.level = inst.level - 9
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -9 ") end)
 
 	levelexp(inst)
-	
+
 	--level 5
 elseif inst.level >=50 and inst.level <80  then
 	inst.level = inst.level - 12
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -12 ") end)
 	levelexp(inst)
-	
+
 	--level 6
 elseif inst.level >=80 and inst.level <125  then
 	inst.level = inst.level - 16
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -16 ") end)
 	levelexp(inst)
-		
+
 	--level 7
 elseif inst.level >=125 and inst.level <200  then
 	inst.level = inst.level - 20
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -20 ") end)
 	levelexp(inst)
-	
+
 	--level 8
 elseif inst.level >=200 and inst.level <340  then
 	inst.level = inst.level - 24
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -24 ") end)
 	levelexp(inst)
-		
+
 	--level 9
 elseif inst.level >=340 and inst.level <430  then
 	inst.level = inst.level - 28
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -28 ") end)
 	levelexp(inst)
-	
+
 	--level 10
 elseif inst.level >=430 and inst.level <530  then
 	inst.level = inst.level - 32
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -32 ") end)
 	levelexp(inst)
-	
+
 	--level 11
 elseif inst.level >=530 and inst.level <640  then
 	inst.level = inst.level - 37
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -37 ") end)
 	levelexp(inst)
-	
+
 	--level 12
 elseif inst.level >=640 and inst.level <760  then
 	inst.level = inst.level - 42
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -42 ") end)
 	levelexp(inst)
-	
+
 	--level 13
 elseif inst.level >=760 and inst.level <890  then
 	inst.level = inst.level - 47
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -47 ") end)
 	levelexp(inst)
-	
+
 	--level 14
 elseif inst.level >=890 and inst.level <1030  then
 	inst.level = inst.level - 52
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -52 ") end)
 	levelexp(inst)
-	
+
 	--level 15
 elseif inst.level >=1030 and inst.level <1180  then
 	inst.level = inst.level - 57
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -57 ") end)
 	levelexp(inst)
-	
+
 	--level 16
 elseif inst.level >=1180 and inst.level <1340  then
 	inst.level = inst.level - 63
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -63 ") end)
 	levelexp(inst)
-	
+
 	--level 17
 elseif inst.level >=1340 and inst.level <1510  then
 	inst.level = inst.level - 69
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -69 ") end)
 	levelexp(inst)
-	
+
 	--level 18
 elseif inst.level >=1510 and inst.level <1690  then
 	inst.level = inst.level - 75
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -75 ") end)
 	levelexp(inst)
-	
+
 	--level 19
 elseif inst.level >=1690 and inst.level <1880  then
 	inst.level = inst.level - 81
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -81 ") end)
 	levelexp(inst)
-	
+
 	--level 20
 elseif inst.level >=1880 and inst.level <2080  then
 	inst.level = inst.level - 87
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -87 ") end)
 	levelexp(inst)
-	
+
 	--level 21
 elseif inst.level >=2080 and inst.level <2290  then
 	inst.level = inst.level - 94
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -94 ") end)
 	levelexp(inst)
-	
+
 	--level 22
 elseif inst.level >=2290 and inst.level <2500  then
 	inst.level = inst.level - 111
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -111 ") end)
 	levelexp(inst)
-	
+
 	--level 23
 elseif inst.level >=2500 and inst.level <2850  then
 	inst.level = inst.level - 118
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -118 ") end)
 	levelexp(inst)
-	
+
 	--level 24
 elseif inst.level >=2850 and inst.level <3200  then
 	inst.level = inst.level - 125
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -125 ") end)
 	levelexp(inst)
-	
+
 	--level 25
 elseif inst.level >=3200 and inst.level <3700  then
 	inst.level = inst.level - 132
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -132 ") end)
 	levelexp(inst)
-	
+
 	--level 26
 elseif inst.level >=3700 and inst.level <4200  then
 	inst.level = inst.level - 140
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -140 ") end)
 	levelexp(inst)
-	
+
 	--level 27
 elseif inst.level >=4200 and inst.level <4700  then
 	inst.level = inst.level - 150
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -150 ") end)
 	levelexp(inst)
-	
+
 	--level 28
 elseif inst.level >=4700 and inst.level <5500 then
 	inst.level = inst.level - 160
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -160 ") end)
 	levelexp(inst)
-	
+
 	--level 29
 elseif inst.level >=5500 and inst.level <7000 then
 	inst.level = inst.level - 170
 	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -170 ") end)
 	levelexp(inst)
-	
+
 	-- level 30
 elseif inst.level >=7000  then
 	inst.level = inst.level - 200
@@ -5549,7 +5550,7 @@ local function onbecameghost(inst)
 end
 
 local function onload(inst)
-	
+
     inst:ListenForEvent("ms_respawnedfromghost", onbecamehuman)
     inst:ListenForEvent("ms_becameghost", onbecameghost)
 
@@ -5581,7 +5582,7 @@ function onpreload(inst, data)
 			inst.music = data.music
 			fullcharged_music(inst)
 				end
-	
+
 				if data.level ~= nil then
 			inst.level = data.level
 			levelexp(inst)
@@ -5590,16 +5591,16 @@ function onpreload(inst, data)
 			inst.components.health:DoDelta(0)
 			inst.components.sanity:DoDelta(0)
 				end
-			
+
 	end
-end  
- 
+end
+
 function onsave(inst, data)
-	
-	if data ~= nil and data.level then 
-	data.level = inst.level:GetSaveRecord() 
+
+	if data ~= nil and data.level then
+	data.level = inst.level:GetSaveRecord()
 	end
-	
+
 	data.level = inst.level > 0 and inst.level or nil
 	data.music = inst.music or nil
 	data.count_w = inst.count_w or nil
@@ -5626,7 +5627,7 @@ local function musha_taste(inst)
 		inst.components.eater:SetDiet({ FOODGROUP.OMNI }, { FOODTYPE.VEGGIE, FOODTYPE.GOODIES })
 		end
 		end
-	inst.zero_hungry = false	
+	inst.zero_hungry = false
 	elseif not inst.normal_state and inst.components.hunger.current <= 180 and inst.components.hunger.current > 0 then
 	inst.full_state = false
 	inst.normal_state = true
@@ -5661,59 +5662,59 @@ local function visual_hold(inst)
 ----------------------------------------------
 if inst.change_visual and inst.willow and not inst.wigfred then
 inst.components.talker:Say("[Visual] : Willow \nCancel(O)key")
-inst.AnimState:SetBuild("Willow")
+MushaAnim.SetBuild(inst, "willow")
 elseif inst.change_visual and inst.willow and inst.wigfred then
 inst.components.talker:Say("[Visual] : Wigfred \nCancel(O)key")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("wathgrithr") end)
+MushaAnim.SetBuildLater(inst, "wathgrithr", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and not inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Full]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha") end)
+MushaAnim.SetBuildLater(inst, "musha", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and not inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Normal]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_normal") end)
+MushaAnim.SetBuildLater(inst, "musha_normal", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and not inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Valkyrie]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_battle") end)
+MushaAnim.SetBuildLater(inst, "musha_battle", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Berserk]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_hunger") end)
+MushaAnim.SetBuildLater(inst, "musha_hunger", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Change Appearance 1]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_old") end)
+MushaAnim.SetBuildLater(inst, "musha_old", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Change Appearance 2]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_normal_old") end)
+MushaAnim.SetBuildLater(inst, "musha_normal_old", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Change Appearance 3]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_battle_old") end)
+MushaAnim.SetBuildLater(inst, "musha_battle_old", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Change Appearance 4]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_hunger_old") end)
+MushaAnim.SetBuildLater(inst, "musha_hunger_old", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Change Appearance 5]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_full_sw2") end)
+MushaAnim.SetBuildLater(inst, "musha_full_sw2", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Change Appearance 6]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_normal_sw2") end)
+MushaAnim.SetBuildLater(inst, "musha_normal_sw2", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Change Appearance 7]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_battle_sw2") end)
+MushaAnim.SetBuildLater(inst, "musha_battle_sw2", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Change Appearance 8]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_hunger_sw2") end)
+MushaAnim.SetBuildLater(inst, "musha_hunger_sw2", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Change Appearance 9]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_full_k") end)
+MushaAnim.SetBuildLater(inst, "musha_full_k", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Change Appearance 10]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_normal_k") end)
+MushaAnim.SetBuildLater(inst, "musha_normal_k", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Change Appearance 11]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_battle_k") end)
+MushaAnim.SetBuildLater(inst, "musha_battle_k", 3)
 elseif not inst.change_visual and inst.willow and inst.wigfred and inst.set_on and inst.visual_hold and inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4 and inst.full_hold and inst.normal_hold and inst.valkyrie_hold and inst.berserk_hold and inst.hold_old1 and inst.hold_old2 and inst.hold_old3 and inst.hold_old4 and inst.hold_old5 and inst.hold_old6 and inst.hold_old7 and inst.hold_old8 and inst.full_k_hold and inst.normal_k_hold and inst.valkyrie_k_hold and inst.berserk_k_hold then
 inst.components.talker:Say("Change Appearance\nCancel(O)key \nVisual:[Change Appearance 12]")
-inst:DoTaskInTime( 3, function() inst.AnimState:SetBuild("musha_hunger_k") end)
-end 
+MushaAnim.SetBuildLater(inst, "musha_hunger_k", 3)
+end
 end
 --------------------------------------------------------------------------
 local function ClientFatigue_sleepPercentChange(inst)
@@ -5723,8 +5724,8 @@ local function ClientFatigue_sleepPercentChange(inst)
 			if oldperc == nil then oldperc = 0 end
 			inst._clientcurrentfatigue_sleepperc = inst._currentfatigue_sleepperc:value()
 			inst.fatigue_sleepbadge:SetPercent(inst._clientcurrentfatigue_sleepperc, inst._clientfatigue_sleepmax)
-		
-			local down = (inst:HasTag("sleeping") or inst.sleep_on or inst.tiny_sleep or inst.lightaura) 
+
+			local down = (inst:HasTag("sleeping") or inst.sleep_on or inst.tiny_sleep or inst.lightaura)
 			local anim = down and "arrow_loop_decrease" or "neutral"
 			if inst.arrowdir ~= anim then
 				inst.arrowdir = anim
@@ -5739,7 +5740,7 @@ local function ClientSetFatigue_sleepMax(inst)
 		if inst._clientfatigue_sleepmax ~= inst._fatigue_sleepmax:value() then
 			inst._clientfatigue_sleepmax = inst._fatigue_sleepmax:value()
 		end
-	end	
+	end
 end
 --------------------------------------------------------------------------
 local function ClientStamina_sleepPercentChange(inst)
@@ -5749,8 +5750,8 @@ local function ClientStamina_sleepPercentChange(inst)
 			if oldperc == nil then oldperc = 0 end
 			inst._clientcurrentstamina_sleepperc = inst._currentstamina_sleepperc:value()
 			inst.stamina_sleepbadge:SetPercent(inst._clientcurrentstamina_sleepperc, inst._clientstamina_sleepmax)
-		
-			local up = (inst:HasTag("sleeping") or inst.sleep_on or inst.tiny_sleep or inst.lightaura) 
+
+			local up = (inst:HasTag("sleeping") or inst.sleep_on or inst.tiny_sleep or inst.lightaura)
 			local anim = up and "arrow_loop_increase" or "neutral"
 			if inst.arrowdir ~= anim then
 				inst.arrowdir = anim
@@ -5765,14 +5766,14 @@ local function ClientSetStamina_sleepMax(inst)
 		if inst._clientstamina_sleepmax ~= inst._stamina_sleepmax:value() then
 			inst._clientstamina_sleepmax = inst._stamina_sleepmax:value()
 		end
-	end	
+	end
 end
 
 --[[local function temp_bad_cold(inst)
 return inst.components.temperature:IsFreezing()
 end
 local function temp_bad_hot(inst)
-return inst.components.temperature:IsOverheating() 
+return inst.components.temperature:IsOverheating()
 end]]
 
 local function temp_bad_cold(inst)
@@ -5792,23 +5793,23 @@ local function ClientSpellpowerPercentChange(inst)
 			if oldperc == nil then oldperc = 0 end
 			inst._clientcurrentspellpowerperc = inst._currentspellpowerperc:value()
 			inst.spellpowerbadge:SetPercent(inst._clientcurrentspellpowerperc, inst._clientspellpowermax)
-		
-			local up = (inst:HasTag("sleeping") or inst.sleep_on or inst.tiny_sleep or inst.active_valkyrie) 
+
+			local up = (inst:HasTag("sleeping") or inst.sleep_on or inst.tiny_sleep or inst.active_valkyrie)
 			local anim_up = up and "arrow_loop_increase" or "neutral"
-				
+
 			local down = inst.unstable_mana
 			local anim_down = down and "arrow_loop_decrease" or "neutral"
-	
-			
+
+
 			if inst.arrowdir ~= anim_down then
 				inst.arrowdir = anim_down
 				inst.spellpowerarrow:GetAnimState():PlayAnimation(anim_down, true)
-			
+
 			elseif inst.arrowdir ~= anim_up then
 				inst.arrowdir = anim_up
-				inst.spellpowerarrow:GetAnimState():PlayAnimation(anim_up, true)	
+				inst.spellpowerarrow:GetAnimState():PlayAnimation(anim_up, true)
 			end
-			
+
 		end
 	end
 end
@@ -5818,13 +5819,13 @@ local function ClientSetSpellpowerMax(inst)
 		if inst._clientspellpowermax ~= inst._spellpowermax:value() then
 			inst._clientspellpowermax = inst._spellpowermax:value()
 		end
-	end	
+	end
 end
 -- This initializes for both clients and the host
 --[[local function checkaura(inst, observer)
 	if observer:HasTag("musha") then
 		return TUNING.SANITYAURA_HUGE
-	end	
+	end
 end]]
 
 
@@ -5842,7 +5843,7 @@ local function ForceFields_on(inst, data)
 	end
 end
 
-local function common_postinit (inst) 
+local function common_postinit (inst)
 	inst.customidleanim = "idle_warly"
 	inst.soundsname = "willow"
 	inst.MiniMapEntity:SetIcon( "musha_mapicon.tex" )
@@ -5856,12 +5857,11 @@ local function common_postinit (inst)
 	inst:AddTag("masterchef")
     inst:AddTag("professionalchef")
     inst:AddTag("expertchef")
-	inst.AnimState:AddOverrideBuild("player_idles_warly")
+	MushaAnim.AddOverrideBuilds(inst, { "player_idles_warly", "player_idles_wes" })
 	--wendy
 	--inst:AddTag("ghostlyfriend")
 	--wes
 	--inst:AddTag("balloonomancer")
-	inst.AnimState:AddOverrideBuild("player_idles_wes")
 	--wormwood
 	inst:AddComponent("bloomness")
 	inst.components.bloomness:SetDurations(TUNING.WORMWOOD_BLOOM_STAGE_DURATION, TUNING.WORMWOOD_BLOOM_FULL_DURATION)
@@ -5869,7 +5869,7 @@ local function common_postinit (inst)
 	inst.components.bloomness.calcratefn = CalcBloomRateFn
 	inst.components.bloomness.calcfullbloomdurationfn = CalcFullBloomDurationFn
 
-	
+
     inst.entity:AddLight()
 	inst.Light:SetRadius(2.5)
     inst.Light:SetFalloff(.8)
@@ -5893,21 +5893,21 @@ local function common_postinit (inst)
 	inst.components.keyhandler:AddActionListener("musha", TUNING.MUSHA.KEY13, "arong")
 	inst.components.keyhandler:AddActionListener("musha", TUNING.MUSHA.KEY14, "dall")
 	--inst.components.keyhandler:AddActionListener("musha", TUNING.MUSHA.KEY16, "critter")
-	
+
 	--inst:AddComponent("sanityaura")
 	--inst.components.sanityaura.aura = (TUNING.SANITYAURA_HUGE)
 	--inst.components.sanityaura.aurafn = checkaura
 	--inst:AddComponent("colourtweener")
-	
+
 	--inst._spellpowermax = 100
 	--inst._currentspellpowerperc = 50
-	
+
 	inst._fatigue_sleepmax = net_float(inst.GUID, "_fatigue_sleepmax", "clientsetfatigue_sleepmax")
-	inst._currentfatigue_sleepperc = net_float(inst.GUID, "_currentfatigue_sleepperc", "clientfatigue_sleeppercentchange")	
+	inst._currentfatigue_sleepperc = net_float(inst.GUID, "_currentfatigue_sleepperc", "clientfatigue_sleeppercentchange")
 	inst._stamina_sleepmax = net_float(inst.GUID, "_stamina_sleepmax", "clientsetstamina_sleepmax")
-	inst._currentstamina_sleepperc = net_float(inst.GUID, "_currentstamina_sleepperc", "clientstamina_sleeppercentchange")	
+	inst._currentstamina_sleepperc = net_float(inst.GUID, "_currentstamina_sleepperc", "clientstamina_sleeppercentchange")
 	inst._spellpowermax = net_float(inst.GUID, "_spellpowermax", "clientsetspellpowermax")
-	inst._currentspellpowerperc = net_float(inst.GUID, "_currentspellpowerperc", "clientspellpowerpercentchange")	
+	inst._currentspellpowerperc = net_float(inst.GUID, "_currentspellpowerperc", "clientspellpowerpercentchange")
 	if not TheWorld.ismastersim then
 		inst:ListenForEvent("clientspellpowerpercentchange", ClientSpellpowerPercentChange)
 		inst:ListenForEvent("clientsetspellpowermax", ClientSetSpellpowerMax)
@@ -5915,8 +5915,8 @@ local function common_postinit (inst)
 		inst:ListenForEvent("clientsetfatigue_sleepmax", ClientSetFatigue_sleepMax)
 		inst:ListenForEvent("clientstamina_sleeppercentchange", ClientStamina_sleepPercentChange)
 		inst:ListenForEvent("clientsetstamina_sleepmax", ClientSetStamina_sleepMax)
-	end			
-	
+	end
+
 	--visual_hold(inst)
 end
 
@@ -5940,7 +5940,7 @@ if inst.components.petleash ~= nil then
     inst.components.petleash:SetOnDespawnFn(OnDespawnPet)
 
     inst._onpetlost = function(pet) inst.components.sanity:RemoveSanityPenalty(pet) end
-   
+
 -----------
 	--warly
 	--[[inst:AddComponent("foodmemory")
@@ -5963,18 +5963,18 @@ if inst.components.petleash ~= nil then
 	inst:ListenForEvent("player_despawn", function(inst)
 		inst.musha_is_despawning = true
 	end)
-	
+
 	inst.components.temperature.hurtrate = 0.5
-	
+
 	inst.components.eater:SetOnEatFn(expeat)
-	
+
 	if inst.components.eater ~= nil then
         inst.components.eater.stale_hunger = TUNING.WICKERBOTTOM_STALE_FOOD_HUNGER
         inst.components.eater.stale_health = TUNING.WICKERBOTTOM_STALE_FOOD_HEALTH
         inst.components.eater.spoiled_hunger = TUNING.WICKERBOTTOM_SPOILED_FOOD_HUNGER
         inst.components.eater.spoiled_health = TUNING.WICKERBOTTOM_SPOILED_FOOD_HEALTH
     end
-		
+
 	inst:ListenForEvent("hungerdelta", musha_taste)
 	inst:ListenForEvent("killed", onkilll)
 	inst:ListenForEvent("death", ondeath)
@@ -5996,13 +5996,13 @@ if inst.components.petleash ~= nil then
 inst.forcefields = true
 inst.sleep_on = false
 inst.tiny_sleep = false
-phasechange(inst)	
+phasechange(inst)
 --[[
 inst:WatchWorldState("daytime", function(inst) phasechange(inst) end , TheWorld)
 inst:WatchWorldState("dusktime", function(inst) phasechange(inst) end , TheWorld)
 inst:WatchWorldState("nighttime", function(inst) phasechange(inst) end , TheWorld)
 ]]
-	
+
 --inst:ListenForEvent("attacked", on_shard_shield)
 inst.sleep_test = inst:DoPeriodicTask(0, sleep_test)
 inst.consume_sleep1 = inst:DoPeriodicTask(1, consume_stamina)
@@ -6022,10 +6022,10 @@ inst.manashield = inst:DoPeriodicTask(20,function(inst)
 			field_check.entity:SetParent(inst.entity)
 			field_check.Follower:FollowSymbol(inst.GUID, "headbase", -5, -300, -0.5)
 			end
-		inst.forcefields = true 
+		inst.forcefields = true
 		end
-		end) 
-		
+		end)
+
 
 
 inst.Call_lightining_defense = function(attacked, data)
@@ -6038,49 +6038,49 @@ local hitcall = 0.5
 		inst.forcefields = false
 		end]]
 	end
-	
+
 		--[[if not inst.active_sparkshield and not inst.berserk and not inst.fberserk and not inst.pet_shield then
 		inst.components.spellpower:DoDelta(-5)
 		end]]
-	
+
 
 	inst.forcefields = false
 	inst.active_skill = false
 	inst.music_armor = false
 
-		
-		if inst.field_check and not inst.field_check_on then 
+
+		if inst.field_check and not inst.field_check_on then
 			inst.field_check_on = true
 			inst:DoTaskInTime(5,function(inst)
 			if inst.field_check_on then
 			inst.field_check_on = false
-			end	
+			end
 			end)
 		end
-		
-		
+
+
 			inst.field_check = true
 
 		--[[if not inst.forcefields then
 		inst:DoTaskInTime(20,function(inst)
-		inst.forcefields = true 
-		
+		inst.forcefields = true
+
 		if inst.forcefields and inst.field_check then
 			inst.field_check = false
 			local field_check = SpawnPrefab("field_check")
 			field_check.entity:SetParent(inst.entity)
 			field_check.Follower:FollowSymbol(inst.GUID, "headbase", -5, -300, -0.5)
 		end
-		end) 
+		end)
 		end]]
 
 
 if inst.LightWatcher:IsInLight() and data and data.attacker --[[and data.attacker.components.burnable]] and not inst.fberserk and not inst.berserks and data.attacker.components.health ~= nil and not data.attacker.components.health:IsDead() and not data.attacker:HasTag("thorny") and not data.attacker:HasTag("shadowcreature") and not data.attacker:HasTag("burn") and not data.attacker:HasTag("groundspike") and data.attacker.components.locomotor and inst.components.sanity.current >= 10 then
-		data.attacker:AddTag("burn") 
+		data.attacker:AddTag("burn")
 		SpawnPrefab("sparks").Transform:SetPosition(data.attacker:GetPosition():Get())
 		-- data.attacker.burn = true
-end	
-end 
+end
+end
 inst:ListenForEvent( "attacked", inst.Call_lightining_defense,inst)
 inst:ListenForEvent( "onhitother", Call_lightining_attack)
 inst.Call_lightining_check = inst:DoPeriodicTask(0.5,Call_lightining_check)
@@ -6091,16 +6091,16 @@ inst:DoPeriodicTask(2, function()
 local x,y,z = inst.Transform:GetWorldPosition()
 local yamche = TheSim:FindEntities(x,y,z, 20, {"yamche"})
 for k,v in pairs(yamche) do
-if v.components.follower and v.components.follower.leader and  inst.components.leader:IsFollower(v) then 
+if v.components.follower and v.components.follower.leader and  inst.components.leader:IsFollower(v) then
 	if inst.berserks or inst.fberserk then
 		if not v.crazyness then
 		v.crazyness = true
-		end	
+		end
 	elseif not inst.berserks and not inst.fberserk and not v.peace then
 		if v.crazyness then
 		v.crazyness = false
-		end 
-	end 
+		end
+	end
 end
 end
 end)
@@ -6112,7 +6112,7 @@ if data and data.attacker and (inst.sleep_on or inst.tiny_sleep) and data.attack
 	inst.sg:GoToState("wakeup")
 	inst.musha_press = false
 	inst:DoTaskInTime( 1, function() inst.music_armor = false end)
-  end 
+  end
 end
 inst:ListenForEvent("attacked", inst.wakefn, inst)
 
@@ -6120,21 +6120,21 @@ if not inst.no_bodyguard then
 inst.guardianfn = function() guard(inst) end
         inst:ListenForEvent("attacked", inst.guardianfn)
 end
-		
+
 inst:DoPeriodicTask(3,function()
 		if TheWorld.state.isfullmoon and TheWorld.state.isnight then
 		inst.components.sanity:DoDelta(1)
-		end 
-		
+		end
+
 end)
-	
+
 inst.time_perfomance = inst:DoPeriodicTask(1.5,function()
 	if inst.charging_music and inst.music < 100 then
-	
+
 	if inst.dmusic_veasy then
 inst.music = inst.music + 1
   elseif inst.dmusic_easy then
-inst.music = inst.music + 0.75 
+inst.music = inst.music + 0.75
   elseif inst.dmusic_normal then
 inst.music = inst.music + 0.5
   elseif inst.dmusic_hard then
@@ -6144,8 +6144,8 @@ inst.music = inst.music + 0.1
 	end
 
 		fullcharged_music(inst)
-	
-	end	
+
+	end
 	end)
 
 inst.check_sleeping = inst:DoPeriodicTask(2, function()
@@ -6167,17 +6167,17 @@ end
 	if (inst.sleep_on or inst.tiny_sleep) and not inst.sg:HasStateTag("tent") then
 
 	local max_music = 100
-	local min_music = 0	
+	local min_music = 0
 	local mxx=math.floor(max_music-min_music)
 	local curr=math.floor(inst.music-min_music)
 	local musics = ""..math.floor(curr*100/mxx).."%"
-	inst.components.talker:StopIgnoringAll("sleeping")	
+	inst.components.talker:StopIgnoringAll("sleeping")
     inst.components.talker.fontsize = 22
   --  inst.components.talker.colour = Vector3(0.75, 0.85, 1, 1)
 inst.components.talker:Say("["..STRINGS.MUSHA_LEVEL_MUSIC.."]: "..(musics))
-	end	
+	end
 	end)
-	
+
 --icon badge
 
 inst.check_status_sleep = inst:DoPeriodicTask(2, function()
@@ -6190,13 +6190,13 @@ if inst.sleepbadge_off then
 		inst.sleep_debuff_30 = false]]
 else
 if (inst.sleep_on or inst.tiny_sleep) or inst:HasTag("playerghost") then
-	
+
 		--[[inst.sleep_debuff_reset = true
 		inst.sleep_debuff_90 = false
 		inst.sleep_debuff_70 = false
 		inst.sleep_debuff_50 = false
 		inst.sleep_debuff_30 = false]]
-		
+
 		inst.tired_debuff_reset = true
 		inst.tired_debuff_90 = false
 		inst.tired_debuff_70 = false
@@ -6205,15 +6205,15 @@ if (inst.sleep_on or inst.tiny_sleep) or inst:HasTag("playerghost") then
 
 elseif not (inst.sleep_on and inst.tiny_sleep) and inst.components.health and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
 
-	
-	
+
+
 	--[[if inst.components.stamina_sleep.current >70 then
 		inst.sleep_debuff_reset = true
 		inst.sleep_debuff_90 = false
 		inst.sleep_debuff_70 = false
 		inst.sleep_debuff_50 = false
 		inst.sleep_debuff_30 = false
-		
+
 	elseif inst.components.stamina_sleep.current <=70 and inst.components.stamina_sleep.current >60 then
 		inst.sleep_debuff_reset = false
 		inst.sleep_debuff_70 = false
@@ -6227,8 +6227,8 @@ elseif not (inst.sleep_on and inst.tiny_sleep) and inst.components.health and no
 			sleep_debuff_90.Follower:FollowSymbol(inst.GUID, "headbase", -5, -255, -0.5)
 			end
 		end
-	
-		
+
+
 	elseif inst.components.stamina_sleep.current <=60 and inst.components.stamina_sleep.current >40 then
 		inst.sleep_debuff_reset = false
 		inst.sleep_debuff_90 = false
@@ -6243,7 +6243,7 @@ elseif not (inst.sleep_on and inst.tiny_sleep) and inst.components.health and no
 			end
 		end
 
-		
+
 	elseif inst.components.stamina_sleep.current <=40 and inst.components.stamina_sleep.current >20 then
 		inst.sleep_debuff_reset = false
 		inst.sleep_debuff_90 = false
@@ -6258,7 +6258,7 @@ elseif not (inst.sleep_on and inst.tiny_sleep) and inst.components.health and no
 			end
 		end
 
-		
+
 	elseif inst.components.stamina_sleep.current <=20 then
 		inst.sleep_debuff_reset = false
 		inst.sleep_debuff_90 = false
@@ -6273,7 +6273,7 @@ elseif not (inst.sleep_on and inst.tiny_sleep) and inst.components.health and no
 			end
 		end
 	end]]
-	
+
 	--tired
 	if not inst.active_valkyrie then
 		inst.tired_debuff_reset = true
@@ -6281,7 +6281,7 @@ elseif not (inst.sleep_on and inst.tiny_sleep) and inst.components.health and no
 		inst.tired_debuff_70 = false
 		inst.tired_debuff_50 = false
 		inst.tired_debuff_30 = false
-		
+
 	elseif inst.active_valkyrie then
 	if inst.components.fatigue_sleep.current <=0 then
 		inst.tired_debuff_reset = true
@@ -6289,7 +6289,7 @@ elseif not (inst.sleep_on and inst.tiny_sleep) and inst.components.health and no
 		inst.tired_debuff_70 = false
 		inst.tired_debuff_50 = false
 		inst.tired_debuff_30 = false
-	
+
 	elseif inst.components.fatigue_sleep.current >0 and inst.components.fatigue_sleep.current <=30 then
 		inst.tired_debuff_reset = false
 		inst.tired_debuff_70 = false
@@ -6303,7 +6303,7 @@ elseif not (inst.sleep_on and inst.tiny_sleep) and inst.components.health and no
 		tired_debuff_90.Follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, -10, 40, -0.5)
 		end
 		end
-				
+
 	elseif inst.components.fatigue_sleep.current >30 and inst.components.fatigue_sleep.current <=60 then
 		inst.tired_debuff_reset = false
 		inst.tired_debuff_90 = false
@@ -6317,8 +6317,8 @@ elseif not (inst.sleep_on and inst.tiny_sleep) and inst.components.health and no
 		tired_debuff_70.Follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, -10, 40, -0.5)
 		end
 		end
-		
-		
+
+
 	elseif inst.components.fatigue_sleep.current >60 and inst.components.fatigue_sleep.current <=80 then
 		inst.tired_debuff_reset = false
 		inst.tired_debuff_90 = false
@@ -6332,9 +6332,9 @@ elseif not (inst.sleep_on and inst.tiny_sleep) and inst.components.health and no
 		tired_debuff_50.Follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, -10, 40, -0.5)
 		end
 		end
-		
+
 	elseif inst.components.fatigue_sleep.current >80 then
-	
+
 		inst.tired_debuff_reset = false
 		inst.tired_debuff_90 = false
 		inst.tired_debuff_70 = false
@@ -6349,13 +6349,13 @@ elseif not (inst.sleep_on and inst.tiny_sleep) and inst.components.health and no
 		end
 	end
 	end
-	
-	
+
+
 end
 end
 end	)
-	
-	
+
+
 inst.Valkyrie_all = inst:DoPeriodicTask(0, on_Valkyrie_all)
 inst.phasechange = inst:DoPeriodicTask(0, phasechange)
 inst:DoPeriodicTask(1, function() active_sparkshield(inst) end)
@@ -6372,7 +6372,7 @@ if inst.berserk and data.attacker and data.attacker.components.freezable and not
 	        data.attacker.components.freezable:AddColdness(0.5)
             data.attacker.components.freezable:SpawnShatterFX()
 			data.attacker.freezy = true
-  end 
+  end
 end
 inst:ListenForEvent("attacked", inst.On_freeze, inst)
 
@@ -6385,19 +6385,19 @@ if weapon and weapon:HasTag("frost_hammer") then
 	local prefab = "icespike_fx_"..math.random(1,4)
     local fx = SpawnPrefab(prefab)
     local shards = math.random(0.75,1.25)
- 	fx.Transform:SetScale(shards, shards, shards)
+	fx.Transform:SetScale(shards, shards, shards)
 	fx.Transform:SetPosition(data.attacker:GetPosition():Get())
-	
+
             data.attacker.components.freezable:AddColdness(0.4)
             data.attacker.components.freezable:SpawnShatterFX()
-    end 
-end	
+    end
+end
 	if data.attacker.components.burnable and data.attacker.components.burnable:IsBurning() and not data.attacker:HasTag("buzzard") then
         data.attacker.components.burnable:Extinguish()
     end
-end		
 end
-	
+end
+
 inst:ListenForEvent("attacked", inst.on_shard_freeze, inst)
 
 moon_berserk(inst)
@@ -6418,7 +6418,7 @@ inst:WatchWorldState("isfullmoon", moon_berserk)
     inst.OnEntityWake = ForestOnEntityWake
     inst.OnEntitySleep = ForestOnEntitySleep
     --StartBlooming(inst)
-	
+
 	inst.shield_aura = inst:DoPeriodicTask(3, function()
 if inst.on_sparkshield then
 		local shocking = SpawnPrefab("musha_spin_fx")
@@ -6430,17 +6430,17 @@ if inst.on_sparkshield then
 		--local fx_2 = SpawnPrefab("groundpoundring_fx")
 			--fx_2.Transform:SetScale(0.4, 0.4, 0.4)
 			--fx_2.Transform:SetPosition(inst:GetPosition():Get())
-			
-	local x,y,z = inst.Transform:GetWorldPosition()	
+
+	local x,y,z = inst.Transform:GetWorldPosition()
 	local ents = TheSim:FindEntities(x, y, z, 10)
-for k,v in pairs(ents) do	
+for k,v in pairs(ents) do
 if v:IsValid() and v.entity:IsVisible() and v.components.health ~= nil and not v.components.health:IsDead() and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly")) and not v:HasTag("groundspike") and not v:HasTag("player") and not v:HasTag("companion") and not v:HasTag("stalkerminion") and not v:HasTag("structure") and v.components.combat ~= nil and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn")) then
-	
+
 	if inst.level then --< 430 then
 
 	SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	--SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
-	
+
 	if v.components.locomotor and not v:HasTag("ghost") then
         v.components.locomotor:StopMoving()
 		if v:HasTag("spider") and not v:HasTag("spiderqueen") then
@@ -6455,25 +6455,25 @@ if v:IsValid() and v.entity:IsVisible() and v.components.health ~= nil and not v
 	if v.components.combat ~= nil and not v:HasTag("companion") then
         v.components.combat:SuggestTarget(inst)
     end
-	
-	
+
+
 end
 end
 end
 	end)
 
-	inst.check_aura = inst:DoPeriodicTask(2, function()	
-	
+	inst.check_aura = inst:DoPeriodicTask(2, function()
+
 	if inst:HasTag("playerghost") and not inst.ghost then
 	inst.ghost = true
-	inst.AnimState:SetBuild("ghost_musha_build") 
+	MushaAnim.SetBuild(inst, "ghost_musha_build")
 	elseif not inst:HasTag("playerghost") and inst.ghost then
 	inst.ghost = false
 	end
-	
-	
+
+
 	if inst.lightaura then
-		
+
 		if inst.components.spellpower ~= nil and inst.components.spellpower.current <100 then
 			inst.components.spellpower:DoDelta(SkillDefs.GetManaRegen(inst))
 		end
@@ -6484,32 +6484,32 @@ end
             inst.components.temperature:SetTemperature(inst.components.temperature:GetCurrent() - 1)
         end
 		end
-		
+
 		StartBlooming(inst)
-		
+
 		if not inst.music_q then
 		inst.SoundEmitter:KillSound("mushamusic")
 		inst.music_q = true
         --TheWorld:PushEvent("enabledynamicmusic", false)
 		music_start(inst)
-   
+
 		end
-     
+
     else
 		StopBlooming(inst)
 		if inst.music_q then
 		inst.music_q = false
 		--TheWorld:PushEvent("enabledynamicmusic", true)
-		inst.keep_check = true	
+		inst.keep_check = true
 		inst.components.talker:Say(STRINGS.MUSHA_MUSIC_DYNAMIC_OFF)
 		inst.SoundEmitter:KillSound("mushamusic")
 			inst:DoTaskInTime( 0.5, function() if inst.keep_check then
 			inst.keep_check = false end end)
 		end
 	end
-	end)	
+	end)
 -------------
-inst.normal_health_regen = inst:DoPeriodicTask(0.5, function() 
+inst.normal_health_regen = inst:DoPeriodicTask(0.5, function()
 
 if inst.on_sparkshield and not inst.sleepbuff and not inst.components.health:IsDead() then
 	if not inst.shr then
@@ -6540,12 +6540,12 @@ inst.vhr = false
 	inst.components.health:StartRegen(1, 5)
 	elseif inst.tiny_sleep then
 	inst.components.health:StartRegen(1, 12)
-	end	
+	end
 	end
 
-	
+
 elseif not inst.on_sparkshield and not inst.sleepbuff and not inst.components.health:IsDead() then
-	if inst.normal and not inst.valkyrie and not inst.berserk then 
+	if inst.normal and not inst.valkyrie and not inst.berserk then
 	if not inst.nhr then
 	inst.regen_switch = false
 	end
@@ -6558,8 +6558,8 @@ inst.vhr = false
 	inst.regen_switch = true
 	inst.components.health:StartRegen(0, 0)
 	end
-	
-	elseif not inst.normal and inst.valkyrie and not inst.berserk then 
+
+	elseif not inst.normal and inst.valkyrie and not inst.berserk then
 	if not inst.vhr then
 	inst.regen_switch = false
 	end
@@ -6599,11 +6599,11 @@ inst.components.health:StartRegen(1, 5)
 elseif inst.on_Valkyrie_14 then
 inst.components.health:StartRegen(1, 4)
 	else
-inst.components.health:StartRegen(1, 8)	
-	end	
+inst.components.health:StartRegen(1, 8)
 	end
-	
-	elseif not inst.normal and not inst.valkyrie and inst.berserk then 
+	end
+
+	elseif not inst.normal and not inst.valkyrie and inst.berserk then
 	if not inst.bhr then
 	inst.regen_switch = false
 	end
@@ -6624,16 +6624,16 @@ inst.vhr = false
 	inst.components.health:StartRegen(1, 3)
 	end
 	end
-	
+
 	end
 end
 end)
 
 	levelexp(inst)
-	
+
 	inst.OnLoad = onload
     inst.OnNewSpawn = onload
-	
+
 	inst.OnSave = onsave
 	inst.OnPreLoad = onpreload
 

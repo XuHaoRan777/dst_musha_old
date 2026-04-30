@@ -7,8 +7,8 @@ end
 name = T("[DST]Musha：重构维护版", "[DST]Musha: Refined Edition")
 version = "T 14.2.4"
 description = T(
-    "[ 独立维护版 | 版本 : T 14.2.4 ]\n-------------------------\n基于 Musha 的重构维护版本，保留原玩法逻辑，整理配置结构并改善兼容性。\n配置页面会根据客户端语言自动显示中文或英文。\n\n[ 信息 ]\n状态-(L)   技能-(K)   外观-(O,F5)\n[ 主动技能 ]\n闪电/女武神-(R)   暗影-(G)   护盾-(C)\n音乐/嗅探-(X)   睡眠/醒来-(T)\n[ Yamche ] 跟随-(Z)   战斗-(V)   采集-(B)\n[ Arong ] 跟随-(F1)   [ Dall ] 跟随-(F2)\n\n原作者: eunmanaz@naver.com",
-    "[ Maintained Fork | Version : T 14.2.4 ]\n-------------------------\nA refined maintenance edition of Musha. Original gameplay logic is preserved while configuration structure and compatibility are cleaned up.\nThe config page follows the client language automatically.\n\n[ Information ]\nStat-(L)   Skill-(K)   Visual-(O,F5)\n[ Active Skills ]\nLightning/Valkyrie-(R)   Shadow-(G)   Shield-(C)\nMusic/Sniff-(X)   Sleep/Wakeup-(T)\n[ Yamche ] Follow-(Z)   Battle-(V)   Gather-(B)\n[ Arong ] Follow-(F1)   [ Dall ] Follow-(F2)\n\nOriginal author: eunmanaz@naver.com"
+    "[ 独立维护版 | 版本 : T 14.2.4 ]\n-------------------------\n基于 Musha 的重构维护版本，保留原玩法逻辑，整理配置结构并改善兼容性。\n配置页面会根据客户端语言自动显示中文或英文。\n\n[ 信息 ]\n状态-(L)   技能-(K)   外观切换-(F5)   外观重置-(O)\n[ 主动技能 ]\n闪电/女武神-(R)   暗影-(G)   护盾-(C)\n音乐/嗅探-(X)   睡眠/醒来-(T)\n[ Yamche ] 跟随-(Z)   战斗-(V)   采集-(B)\n[ Arong ] 跟随-(F1)   [ Dall ] 跟随-(F2)\n\n原作者: eunmanaz@naver.com",
+    "[ Maintained Fork | Version : T 14.2.4 ]\n-------------------------\nA refined maintenance edition of Musha. Original gameplay logic is preserved while configuration structure and compatibility are cleaned up.\nThe config page follows the client language automatically.\n\n[ Information ]\nStat-(L)   Skill-(K)   Visual Cycle-(F5)   Visual Reset-(O)\n[ Active Skills ]\nLightning/Valkyrie-(R)   Shadow-(G)   Shield-(C)\nMusic/Sniff-(X)   Sleep/Wakeup-(T)\n[ Yamche ] Follow-(Z)   Battle-(V)   Gather-(B)\n[ Arong ] Follow-(F1)   [ Dall ] Follow-(F2)\n\nOriginal author: eunmanaz@naver.com"
 )
 author = "Sunnyyyyholic / Maintained Fork"
 --version_compatible = ""
