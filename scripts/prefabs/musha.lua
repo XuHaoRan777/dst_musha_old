@@ -2,6 +2,7 @@ local MakePlayerCharacter = require("prefabs/player_common")
 local MushaCommands = require("usercommands")
 local SkillDefs = require("musha_skilldefs")
 local MushaAnim = require("musha_animutils")
+local MushaTasks = require("musha_taskutils")
 --local easing = require("easing")
 local assets = {
   Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
@@ -5532,8 +5533,8 @@ local function onbecamehuman(inst)
         inst._wasnomorph = inst.sg:HasStateTag("nomorph")
         inst.talksoundoverride = nil
         inst.hurtsoundoverride = nil
-        inst:ListenForEvent("hungerdelta", phasechange)
-        inst:ListenForEvent("newstate", onnewstate)
+        MushaTasks.Listen(inst, "phasechange_hunger", "hungerdelta", phasechange)
+        MushaTasks.Listen(inst, "phasechange_newstate", "newstate", onnewstate)
         phasechange(inst, nil, true)
     end
 end
@@ -5544,15 +5545,15 @@ local function onbecameghost(inst)
         inst._wasnomorph = nil
         inst.talksoundoverride = nil
         inst.hurtsoundoverride = nil
-        inst:RemoveEventCallback("hungerdelta", phasechange)
-        inst:RemoveEventCallback("newstate", onnewstate)
+        MushaTasks.RemoveListener(inst, "phasechange_hunger")
+        MushaTasks.RemoveListener(inst, "phasechange_newstate")
     end
 end
 
 local function onload(inst)
 
-    inst:ListenForEvent("ms_respawnedfromghost", onbecamehuman)
-    inst:ListenForEvent("ms_becameghost", onbecameghost)
+    MushaTasks.Listen(inst, "became_human", "ms_respawnedfromghost", onbecamehuman)
+    MushaTasks.Listen(inst, "became_ghost", "ms_becameghost", onbecameghost)
 
     if inst:HasTag("playerghost") then
         onbecameghost(inst)
@@ -5909,12 +5910,12 @@ local function common_postinit (inst)
 	inst._spellpowermax = net_float(inst.GUID, "_spellpowermax", "clientsetspellpowermax")
 	inst._currentspellpowerperc = net_float(inst.GUID, "_currentspellpowerperc", "clientspellpowerpercentchange")
 	if not TheWorld.ismastersim then
-		inst:ListenForEvent("clientspellpowerpercentchange", ClientSpellpowerPercentChange)
-		inst:ListenForEvent("clientsetspellpowermax", ClientSetSpellpowerMax)
-		inst:ListenForEvent("clientfatigue_sleeppercentchange", ClientFatigue_sleepPercentChange)
-		inst:ListenForEvent("clientsetfatigue_sleepmax", ClientSetFatigue_sleepMax)
-		inst:ListenForEvent("clientstamina_sleeppercentchange", ClientStamina_sleepPercentChange)
-		inst:ListenForEvent("clientsetstamina_sleepmax", ClientSetStamina_sleepMax)
+		MushaTasks.Listen(inst, "client_spellpower_percent", "clientspellpowerpercentchange", ClientSpellpowerPercentChange)
+		MushaTasks.Listen(inst, "client_spellpower_max", "clientsetspellpowermax", ClientSetSpellpowerMax)
+		MushaTasks.Listen(inst, "client_fatigue_sleep_percent", "clientfatigue_sleeppercentchange", ClientFatigue_sleepPercentChange)
+		MushaTasks.Listen(inst, "client_fatigue_sleep_max", "clientsetfatigue_sleepmax", ClientSetFatigue_sleepMax)
+		MushaTasks.Listen(inst, "client_stamina_sleep_percent", "clientstamina_sleeppercentchange", ClientStamina_sleepPercentChange)
+		MushaTasks.Listen(inst, "client_stamina_sleep_max", "clientsetstamina_sleepmax", ClientSetStamina_sleepMax)
 	end
 
 	--visual_hold(inst)
@@ -5960,7 +5961,7 @@ if inst.components.petleash ~= nil then
 	inst.components.health:SetMaxHealth(80)
 	inst.components.sanity:SetMax(80)
 	inst.components.hunger:SetMax(200)
-	inst:ListenForEvent("player_despawn", function(inst)
+	MushaTasks.Listen(inst, "player_despawn", "player_despawn", function(inst)
 		inst.musha_is_despawning = true
 	end)
 
@@ -5975,10 +5976,10 @@ if inst.components.petleash ~= nil then
         inst.components.eater.spoiled_health = TUNING.WICKERBOTTOM_SPOILED_FOOD_HEALTH
     end
 
-	inst:ListenForEvent("hungerdelta", musha_taste)
-	inst:ListenForEvent("killed", onkilll)
-	inst:ListenForEvent("death", ondeath)
-	inst:ListenForEvent("levelup", levelexp)
+	MushaTasks.Listen(inst, "taste_hungerdelta", "hungerdelta", musha_taste)
+	MushaTasks.Listen(inst, "kill_exp", "killed", onkilll)
+	MushaTasks.Listen(inst, "death_penalty", "death", ondeath)
+	MushaTasks.Listen(inst, "level_exp", "levelup", levelexp)
 
 	--inst.Transform:SetScale(0.95,0.95,0.95)
 
@@ -6004,17 +6005,17 @@ inst:WatchWorldState("nighttime", function(inst) phasechange(inst) end , TheWorl
 ]]
 
 --inst:ListenForEvent("attacked", on_shard_shield)
-inst.sleep_test = inst:DoPeriodicTask(0, sleep_test)
-inst.consume_sleep1 = inst:DoPeriodicTask(1, consume_stamina)
-inst.on_fatigue = inst:DoPeriodicTask(1, on_fatigue)
+inst.sleep_test = MushaTasks.Periodic(inst, "sleep_test", 0, sleep_test)
+inst.consume_sleep1 = MushaTasks.Periodic(inst, "consume_sleep1", 1, consume_stamina)
+inst.on_fatigue = MushaTasks.Periodic(inst, "on_fatigue", 1, on_fatigue)
 inst.sleep_temp_min = TUNING.SLEEP_TARGET_TEMP_BEDROLL_FURRY
 inst.sleep_temp_max = TUNING.SLEEP_TARGET_TEMP_BEDROLL_FURRY * 1.5
-inst.sleepheal = inst:DoPeriodicTask(5,onsleepheal)
-inst.summon_drake = inst:DoPeriodicTask(6,summon_drake)
-inst.light_call = inst:DoPeriodicTask(0,light_call)
-inst.summon_lighting = inst:DoPeriodicTask(15,summon_lighting)
+inst.sleepheal = MushaTasks.Periodic(inst, "sleepheal", 5, onsleepheal)
+inst.summon_drake = MushaTasks.Periodic(inst, "summon_drake", 6, summon_drake)
+inst.light_call = MushaTasks.Periodic(inst, "light_call", 0, light_call)
+inst.summon_lighting = MushaTasks.Periodic(inst, "summon_lighting", 15, summon_lighting)
 
-inst.manashield = inst:DoPeriodicTask(20,function(inst)
+inst.manashield = MushaTasks.Periodic(inst, "manashield", 20, function(inst)
 		if not inst.forcefields then
 			if inst.field_check then
 			inst.field_check = false
@@ -6081,13 +6082,13 @@ if inst.LightWatcher:IsInLight() and data and data.attacker --[[and data.attacke
 		-- data.attacker.burn = true
 end
 end
-inst:ListenForEvent( "attacked", inst.Call_lightining_defense,inst)
-inst:ListenForEvent( "onhitother", Call_lightining_attack)
-inst.Call_lightining_check = inst:DoPeriodicTask(0.5,Call_lightining_check)
-inst.Call_lightining_debuff = inst:DoPeriodicTask(0,Call_lightining_debuff)
-inst.berserk_changer = inst:DoPeriodicTask(1,berserk_changer)
+MushaTasks.Listen(inst, "lightning_defense", "attacked", inst.Call_lightining_defense, inst)
+MushaTasks.Listen(inst, "lightning_attack", "onhitother", Call_lightining_attack)
+inst.Call_lightining_check = MushaTasks.Periodic(inst, "Call_lightining_check", 0.5, Call_lightining_check)
+inst.Call_lightining_debuff = MushaTasks.Periodic(inst, "Call_lightining_debuff", 0, Call_lightining_debuff)
+inst.berserk_changer = MushaTasks.Periodic(inst, "berserk_changer", 1, berserk_changer)
 
-inst:DoPeriodicTask(2, function()
+inst.yamche_berserk_sync = MushaTasks.Periodic(inst, "yamche_berserk_sync", 2, function()
 local x,y,z = inst.Transform:GetWorldPosition()
 local yamche = TheSim:FindEntities(x,y,z, 20, {"yamche"})
 for k,v in pairs(yamche) do
@@ -6114,21 +6115,21 @@ if data and data.attacker and (inst.sleep_on or inst.tiny_sleep) and data.attack
 	inst:DoTaskInTime( 1, function() inst.music_armor = false end)
   end
 end
-inst:ListenForEvent("attacked", inst.wakefn, inst)
+MushaTasks.Listen(inst, "wake_on_attacked", "attacked", inst.wakefn, inst)
 
 if not inst.no_bodyguard then
 inst.guardianfn = function() guard(inst) end
-        inst:ListenForEvent("attacked", inst.guardianfn)
+        MushaTasks.Listen(inst, "guardian_attacked", "attacked", inst.guardianfn)
 end
 
-inst:DoPeriodicTask(3,function()
+inst.fullmoon_sanity = MushaTasks.Periodic(inst, "fullmoon_sanity", 3, function()
 		if TheWorld.state.isfullmoon and TheWorld.state.isnight then
 		inst.components.sanity:DoDelta(1)
 		end
 
 end)
 
-inst.time_perfomance = inst:DoPeriodicTask(1.5,function()
+inst.time_perfomance = MushaTasks.Periodic(inst, "time_perfomance", 1.5, function()
 	if inst.charging_music and inst.music < 100 then
 
 	if inst.dmusic_veasy then
@@ -6148,7 +6149,7 @@ inst.music = inst.music + 0.1
 	end
 	end)
 
-inst.check_sleeping = inst:DoPeriodicTask(2, function()
+inst.check_sleeping = MushaTasks.Periodic(inst, "check_sleeping", 2, function()
 
 if inst.components.poisonable ~= nil and inst.components.poisonable.poisonfx ~= nil then
 inst.unstable_mana = true
@@ -6180,7 +6181,7 @@ inst.components.talker:Say("["..STRINGS.MUSHA_LEVEL_MUSIC.."]: "..(musics))
 
 --icon badge
 
-inst.check_status_sleep = inst:DoPeriodicTask(2, function()
+inst.check_status_sleep = MushaTasks.Periodic(inst, "check_status_sleep", 2, function()
 
 if inst.sleepbadge_off then
 		--[[inst.sleep_debuff_reset = true
@@ -6356,15 +6357,15 @@ end
 end	)
 
 
-inst.Valkyrie_all = inst:DoPeriodicTask(0, on_Valkyrie_all)
-inst.phasechange = inst:DoPeriodicTask(0, phasechange)
-inst:DoPeriodicTask(1, function() active_sparkshield(inst) end)
-inst:ListenForEvent("hungerdelta", hungrycheck)
+inst.Valkyrie_all = MushaTasks.Periodic(inst, "Valkyrie_all", 0, on_Valkyrie_all)
+inst.phasechange = MushaTasks.Periodic(inst, "phasechange", 0, phasechange)
+inst.active_sparkshield_task = MushaTasks.Periodic(inst, "active_sparkshield", 1, function() active_sparkshield(inst) end)
+MushaTasks.Listen(inst, "hungrycheck", "hungerdelta", hungrycheck)
 --inst:ListenForEvent("hungerdelta", active_sparkshield)
-inst:ListenForEvent("hungerdelta", flameshield_active)
+MushaTasks.Listen(inst, "flameshield_active", "hungerdelta", flameshield_active)
 
 	---berserk passive skill
-inst:ListenForEvent("onhitother", berserk_hit)
+MushaTasks.Listen(inst, "berserk_hit", "onhitother", berserk_hit)
 
 inst.On_freeze = function(attacked, data)
 --local attacker = data.attacker
@@ -6374,7 +6375,7 @@ if inst.berserk and data.attacker and data.attacker.components.freezable and not
 			data.attacker.freezy = true
   end
 end
-inst:ListenForEvent("attacked", inst.On_freeze, inst)
+MushaTasks.Listen(inst, "freeze_on_attacked", "attacked", inst.On_freeze, inst)
 
 inst.on_shard_freeze = function(attacked, data)
 --local attacker = data.attacker
@@ -6398,10 +6399,10 @@ end
 end
 end
 
-inst:ListenForEvent("attacked", inst.on_shard_freeze, inst)
+MushaTasks.Listen(inst, "shard_freeze_on_attacked", "attacked", inst.on_shard_freeze, inst)
 
 moon_berserk(inst)
-inst:WatchWorldState("isfullmoon", moon_berserk)
+MushaTasks.WatchWorldState(inst, "moon_berserk", "isfullmoon", moon_berserk)
 
 -------------
 
@@ -6419,7 +6420,7 @@ inst:WatchWorldState("isfullmoon", moon_berserk)
     inst.OnEntitySleep = ForestOnEntitySleep
     --StartBlooming(inst)
 
-	inst.shield_aura = inst:DoPeriodicTask(3, function()
+	inst.shield_aura = MushaTasks.Periodic(inst, "shield_aura", 3, function()
 if inst.on_sparkshield then
 		local shocking = SpawnPrefab("musha_spin_fx")
 		shocking.Transform:SetPosition(inst:GetPosition():Get())
@@ -6462,7 +6463,7 @@ end
 end
 	end)
 
-	inst.check_aura = inst:DoPeriodicTask(2, function()
+	inst.check_aura = MushaTasks.Periodic(inst, "check_aura", 2, function()
 
 	if inst:HasTag("playerghost") and not inst.ghost then
 	inst.ghost = true
@@ -6509,7 +6510,7 @@ end
 	end
 	end)
 -------------
-inst.normal_health_regen = inst:DoPeriodicTask(0.5, function()
+inst.normal_health_regen = MushaTasks.Periodic(inst, "normal_health_regen", 0.5, function()
 
 if inst.on_sparkshield and not inst.sleepbuff and not inst.components.health:IsDead() then
 	if not inst.shr then

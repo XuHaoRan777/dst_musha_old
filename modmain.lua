@@ -64,6 +64,12 @@ local function ApplyMushaCurrentFormBuild(inst)
 	end
 end
 
+local function IsMushaSleeping(inst)
+	return inst.sleep_on
+		or inst.tiny_sleep
+		or (inst.sg ~= nil and (inst.sg:HasStateTag("sleeping") or inst.sg:HasStateTag("bedroll")))
+end
+
 local function RestoreMushaBuildAfterBerserk(inst)
 	if not (inst.fberserk or (inst.berserks and not inst:HasTag("playerghost"))) then
 		return
@@ -99,6 +105,9 @@ local function ClearMushaSkillStateForSleep(inst)
 	end
 	inst.switch = false
 	inst.active_valkyrie = false
+	inst.valkyrie_turn = false
+	inst.lightning_spell_cost = false
+	inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
 
 	local weapon = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
 	if weapon and weapon.components.weapon and weapon:HasTag("musha_items") then
@@ -1333,6 +1342,15 @@ local x,y,z = inst.Transform:GetWorldPosition()
 local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
 for k,v in pairs(ents) do
 inst.writing = true
+end
+if not inst.writing and IsMushaSleeping(inst) and not inst:HasTag("playerghost") then
+	inst.components.talker:Say(STRINGS.MUSHA_TALK_NEED_SLEEPY)
+	inst.components.combat:SetRange(2)
+	inst:RemoveEventCallback("onhitother", on_hitLightnings_9)
+	inst.switch = false
+	inst.active_valkyrie = false
+	inst.valkyrie_turn = false
+	return
 end
 if inst.sneaka then
 --inst.components.talker:Say("Be quiet..")
