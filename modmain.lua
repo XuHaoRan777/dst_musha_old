@@ -163,6 +163,7 @@ local avisual_Pirate_Armor = GetModConfigData("avisual_pirate_armor")
 local butterfly_shield = GetModConfigData("on_butterfly_shield")
 local moontree_stop = GetModConfigData("stop_spawning")
 local frostblade3rd = GetModConfigData("frostblade3rd")
+TUNING.MUSHA_PIRATEBACK_SLOT = GetModConfigData("pirateback_slot") or "auto"
 --local extra_backpack = GetModConfigData("extrabackpack")
 --local Smart = GetModConfigData("smartmusha")
 local Diet = GetModConfigData("dietmusha")

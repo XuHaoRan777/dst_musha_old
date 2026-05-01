@@ -1,3 +1,5 @@
+local EquipUtils = require("musha_equiputils")
+
 local assets=
 {
 	Asset("ANIM", "anim/armor_mushaa.zip"),
@@ -359,7 +361,7 @@ if not inst.share_item and owner and not owner:HasTag("musha") and owner.compone
  	
 	SpawnPrefab("green_leaves").Transform:SetPosition(inst:GetPosition():Get())	
     UpgradeArmor(inst)
-    if inst.components.container ~= nil then
+    if inst.components.container ~= nil and EquipUtils.ShouldAutoOpenArmorContainer(owner) then
         inst.components.container:Open(owner)
 	end 
 	inst.components.fueled:StartConsuming() 

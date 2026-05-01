@@ -447,6 +447,12 @@ local function OnOpen(inst)
 
 end 
 
+local function OpenFrostArmorContainer(inst, owner)
+	if inst.components.container ~= nil and owner ~= nil then
+		inst.components.container:Open(owner)
+	end
+end
+
 local function OnClose(inst) 
     inst.SoundEmitter:PlaySound("dontstarve/common/fireOut")
 
@@ -524,9 +530,7 @@ inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
 	elseif inst.level >=750 then	
 	 	inst.components.equippable.dapperness = TUNING.DAPPERNESS_SMALL
 	end 
-	  if inst.components.container ~= nil then
-        inst.components.container:Open(owner)
-	  end
+	OpenFrostArmorContainer(inst, owner)
 	
 inst.task1 = inst:DoPeriodicTask(0.2, function() Release_Frost(inst, owner) end)
 
@@ -627,21 +631,15 @@ if data and data.attacker and math.random() < expchance and inst.level < 4010 th
 	
 end
 local function onuseshield(inst,owner)
-	if inst.components.container ~= nil then
-         inst.components.container:Open(owner)
-    end
+	OpenFrostArmorContainer(inst, owner)
 	if not inst.broken then
 	inst.shield = true
-	inst:AddTag("fridge")
 	on_shield(inst)
 	local owner = inst.components.inventoryitem.owner
         if owner then
            owner.sg:GoToState("shell_enter")
 	owner.SoundEmitter:PlaySound("dontstarve/wilson/pickup_reeds")
         end
-		
-	elseif inst.broken then
-		inst:RemoveTag("fridge")
 	end
 end
 
@@ -650,7 +648,6 @@ local function offuseshield(inst,owner)
         inst.components.container:Open(owner)
 		end]]
 	inst.components.fueled:StopConsuming()
-	inst:RemoveTag("fridge")	
    if inst.consume then inst.consume:Cancel() inst.consume = nil end
 	off_shield(inst)
 
@@ -699,9 +696,8 @@ local function fn()
     inst.AnimState:SetBuild("armor_frostar")
     inst.AnimState:PlayAnimation("anim")
 	        inst:AddTag("waterproofer")
-		    inst:AddTag("musha_items")
+			inst:AddTag("musha_items")
 			inst:AddTag("butterfly")
-			--inst:AddTag("fridge")
 			inst:AddTag("backpack")
 			inst:AddTag("lowcool")
 			inst:AddTag("aquatic")
@@ -723,8 +719,8 @@ local function fn()
 	
 inst.entity:SetPristine()	
 	if not TheWorld.ismastersim then
-		inst.OnEntityReplicated = function(inst) 
-			inst.replica.container:WidgetSetup("backpack") 
+		inst.OnEntityReplicated = function(inst)
+			inst.replica.container:WidgetSetup("frostsmall")
 		end
 		return inst
 	end
@@ -751,9 +747,13 @@ inst.components.armor:InitCondition(99999999999999999999999999999999999999999999
     inst.components.equippable:SetOnUnequip( onunequip )
 
 	inst:AddComponent("container")
-	inst.components.container:WidgetSetup("backpack")
+	inst.components.container:WidgetSetup("frostsmall")
 	inst.components.container.onopenfn = OnOpen
 	inst.components.container.onclosefn = OnClose
+
+	inst:AddComponent("preserver")
+	inst.components.preserver:SetPerishRateMultiplier(TUNING.PERISH_FRIDGE_MULT)
+	inst.components.preserver:SetTemperatureRateMultiplier(TUNING.PERISH_FRIDGE_MULT)
 	
 	inst:AddComponent("machine")
     inst.components.machine.turnonfn = onuseshield

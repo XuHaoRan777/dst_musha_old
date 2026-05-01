@@ -1,3 +1,5 @@
+local EquipUtils = require("musha_equiputils")
+
 local assets=
 {
 	Asset("ANIM", "anim/armor_mushab.zip"),
@@ -434,7 +436,7 @@ inst.components.fueled:StartConsuming()
    owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly_blue", "swap_body_tall")
    end
 	
-	  if inst.components.container ~= nil then
+	  if inst.components.container ~= nil and EquipUtils.ShouldAutoOpenArmorContainer(owner) then
         inst.components.container:Open(owner)
 		end
 

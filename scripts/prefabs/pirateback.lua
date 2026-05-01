@@ -6,6 +6,36 @@ local assets=
 	
 }
 
+local function GetPirateBackEquipSlot()
+	local slot_mode = TUNING.MUSHA_PIRATEBACK_SLOT or "auto"
+	if slot_mode == "body" then
+		return EQUIPSLOTS.BODY
+	end
+
+	return EQUIPSLOTS.BACK
+		or EQUIPSLOTS.PACK
+		or EQUIPSLOTS.BACKPACK
+		or EQUIPSLOTS.BAG
+		or EQUIPSLOTS.BODY
+end
+
+local function IsPirateBackExtraSlot(inst)
+	return inst.components.equippable ~= nil
+		and inst.components.equippable.equipslot ~= nil
+		and inst.components.equippable.equipslot ~= EQUIPSLOTS.BODY
+end
+
+local function IsPirateBackEquippedBy(inst, owner)
+	if owner == nil
+		or owner.components.inventory == nil
+		or inst.components.equippable == nil
+	then
+		return false
+	end
+
+	return owner.components.inventory:GetEquippedItem(inst.components.equippable.equipslot) == inst
+end
+
 -- compatible with SW mods
 local function OnDropped(inst)
 if inst.DLC2 then
@@ -364,6 +394,118 @@ local function OnClose(inst)
 	 	inst.SoundEmitter:PlaySound("dontstarve/common/fireOut")
 end 
 
+local function ApplyPirateBodyVisual(inst, owner)
+	if inst.Pirate then
+		owner.AnimState:OverrideSymbol("swap_body", "armor_pirate", "swap_body")
+	elseif inst.Green then
+		owner.AnimState:OverrideSymbol("swap_body", "armor_mushaa", "swap_body")
+	elseif inst.Pink then
+		owner.AnimState:OverrideSymbol("swap_body", "armor_mushab", "swap_body")
+	elseif inst.Blue then
+		owner.AnimState:OverrideSymbol("swap_body", "armor_frostar", "swap_body")
+	elseif inst.Chest then
+		owner.AnimState:OverrideSymbol("swap_body", "swap_pirate_musha_bag", "backpack")
+		owner.AnimState:OverrideSymbol("swap_body", "swap_pirate_musha_bag", "swap_body")
+	end
+end
+
+local function ApplyPirateBackVisual(inst, owner)
+	if inst.Chest then
+		owner.AnimState:OverrideSymbol("backpack", "swap_pirate_musha_bag", "backpack")
+		owner.AnimState:OverrideSymbol("swap_body_tall", "swap_pirate_musha_bag", "swap_body")
+	end
+
+	if inst.Bmm then
+		owner.AnimState:OverrideSymbol("swap_body_tall", "musha_backpack5_mini", "swap_body_tall")
+	elseif inst.BT then
+		owner.AnimState:OverrideSymbol("swap_body_tall", "musha_backpack4_mini", "swap_body_tall")
+	elseif inst.BS then
+		owner.AnimState:OverrideSymbol("swap_body_tall", "musha_backpack3", "swap_body_tall")
+	elseif inst.BM then
+		owner.AnimState:OverrideSymbol("swap_body_tall", "musha_backpack", "swap_body_tall")
+	elseif inst.BL then
+		owner.AnimState:OverrideSymbol("swap_body_tall", "musha_backpack2", "swap_body_tall")
+	elseif inst.WSP then
+		owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly_pink_s", "swap_body_tall")
+	elseif inst.WSR then
+		owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly_s", "swap_body_tall")
+	elseif inst.WSB then
+		owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly_blue_s", "swap_body_tall")
+	elseif inst.WSH then
+		owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly_green_s", "swap_body_tall")
+	elseif inst.WLR then
+		owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly", "swap_body_tall")
+	elseif inst.WLB then
+		owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly_blue", "swap_body_tall")
+	end
+end
+
+local function ApplyPirateVisual(inst, owner)
+	if owner == nil or owner.AnimState == nil then
+		return
+	end
+
+	if not IsPirateBackExtraSlot(inst) then
+		ApplyPirateBodyVisual(inst, owner)
+	end
+
+	ApplyPirateBackVisual(inst, owner)
+end
+
+local function QueuePirateVisualRefresh(inst, owner)
+	if not IsPirateBackExtraSlot(inst) then
+		return
+	end
+
+	if inst._pirateback_visual_task ~= nil then
+		inst._pirateback_visual_task:Cancel()
+	end
+
+	inst._pirateback_visual_task = inst:DoTaskInTime(0, function()
+		inst._pirateback_visual_task = nil
+		if inst:IsValid()
+			and owner ~= nil
+			and owner:IsValid()
+			and IsPirateBackEquippedBy(inst, owner)
+		then
+			ApplyPirateVisual(inst, owner)
+		end
+	end)
+end
+
+local function StartPirateVisualWatch(inst, owner)
+	if not IsPirateBackExtraSlot(inst) or owner == nil then
+		return
+	end
+
+	inst._pirateback_visual_owner = owner
+	inst._pirateback_visual_handler = function(owner, data)
+		if data == nil or data.eslot == EQUIPSLOTS.BODY then
+			QueuePirateVisualRefresh(inst, owner)
+		end
+	end
+
+	inst:ListenForEvent("equip", inst._pirateback_visual_handler, owner)
+	inst:ListenForEvent("unequip", inst._pirateback_visual_handler, owner)
+end
+
+local function StopPirateVisualWatch(inst, owner)
+	if inst._pirateback_visual_task ~= nil then
+		inst._pirateback_visual_task:Cancel()
+		inst._pirateback_visual_task = nil
+	end
+
+	if inst._pirateback_visual_handler ~= nil then
+		local visual_owner = inst._pirateback_visual_owner or owner
+		if visual_owner ~= nil then
+			inst:RemoveEventCallback("equip", inst._pirateback_visual_handler, visual_owner)
+			inst:RemoveEventCallback("unequip", inst._pirateback_visual_handler, visual_owner)
+		end
+		inst._pirateback_visual_handler = nil
+		inst._pirateback_visual_owner = nil
+	end
+end
+
 local function onequip(inst, owner)
 if not inst.share_item and owner and not owner:HasTag("musha") and owner.components.inventory then
         owner.components.inventory:Unequip(EQUIPSLOTS.BODY, true)
@@ -372,42 +514,9 @@ if not inst.share_item and owner and not owner:HasTag("musha") and owner.compone
 	inst:ListenForEvent("blocked", OnBlocked, owner)
    UpgradeArmor(inst)
    inst.components.fueled:StartConsuming()
-     
-    if inst.Pirate then  
-	owner.AnimState:OverrideSymbol("swap_body", "armor_pirate", "swap_body")
-	elseif inst.Green then  
-	owner.AnimState:OverrideSymbol("swap_body", "armor_mushaa", "swap_body")
-	elseif inst.Pink then  
-	owner.AnimState:OverrideSymbol("swap_body", "armor_mushab", "swap_body")
-	elseif inst.Blue then  
-	owner.AnimState:OverrideSymbol("swap_body", "armor_frostar", "swap_body")
-	elseif inst.Chest then 
-    owner.AnimState:OverrideSymbol("swap_body", "swap_pirate_musha_bag", "backpack")
-	owner.AnimState:OverrideSymbol("swap_body", "swap_pirate_musha_bag", "swap_body")
-	end
-if inst.Bmm then
-   owner.AnimState:OverrideSymbol("swap_body_tall", "musha_backpack5_mini", "swap_body_tall")
-   elseif inst.BT then
-   owner.AnimState:OverrideSymbol("swap_body_tall", "musha_backpack4_mini", "swap_body_tall")
-   elseif inst.BS then
-   owner.AnimState:OverrideSymbol("swap_body_tall", "musha_backpack3", "swap_body_tall")
-   elseif inst.BM then
-   owner.AnimState:OverrideSymbol("swap_body_tall", "musha_backpack", "swap_body_tall")
-   elseif inst.BL then
-   owner.AnimState:OverrideSymbol("swap_body_tall", "musha_backpack2", "swap_body_tall")
-   elseif inst.WSP then
-   owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly_pink_s", "swap_body_tall")
-   elseif inst.WSR then
-   owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly_s", "swap_body_tall")
-   elseif inst.WSB then
-   owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly_blue_s", "swap_body_tall")
-   elseif inst.WSH then
-   owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly_green_s", "swap_body_tall")
-   elseif inst.WLR then
-   owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly", "swap_body_tall")
-   elseif inst.WLB then
-   owner.AnimState:OverrideSymbol("swap_body_tall", "armor_butterfly_blue", "swap_body_tall")
-   end
+
+	ApplyPirateVisual(inst, owner)
+	StartPirateVisualWatch(inst, owner)
    
 	if inst.level <750 then
 	--owner.AnimState:OverrideSymbol("swap_body_tall", "musha_backpack2", "swap_body_tall")
@@ -499,12 +608,18 @@ if data and data.attacker and math.random() < expchance and inst.level < 4010 th
 	    end
 
 local function onunequip(inst, owner)
+StopPirateVisualWatch(inst, owner)
 inst:RemoveEventCallback("blocked", OnBlocked, owner)
 inst.components.fueled:StopConsuming()        
       UpgradeArmor(inst)
-    owner.AnimState:ClearOverrideSymbol("swap_body")
-	owner.AnimState:ClearOverrideSymbol("backpack")
-    owner.AnimState:ClearOverrideSymbol("swap_body_tall")
+	if IsPirateBackExtraSlot(inst) then
+		owner.AnimState:ClearOverrideSymbol("backpack")
+		owner.AnimState:ClearOverrideSymbol("swap_body_tall")
+	else
+		owner.AnimState:ClearOverrideSymbol("swap_body")
+		owner.AnimState:ClearOverrideSymbol("backpack")
+		owner.AnimState:ClearOverrideSymbol("swap_body_tall")
+	end
    -- owner.components.inventory:SetOverflow(nil)
    -- inst.components.container:Close(owner)
 inst:RemoveEventCallback("attacked", inst.expfn, owner)  
@@ -584,7 +699,7 @@ local function fn()
 	inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.02)
 	
       inst:AddComponent("equippable")
-    inst.components.equippable.equipslot = EQUIPSLOTS.BODY
+    inst.components.equippable.equipslot = GetPirateBackEquipSlot()
 
     inst.components.equippable:SetOnEquip( onequip )
     inst.components.equippable:SetOnUnequip( onunequip )

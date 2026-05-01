@@ -520,18 +520,18 @@ local function frostsmall()
         {
             slotpos = {},
             animbank = "ui_backpack_2x4",
-            animbuild = "ui_chest_frosthammer",
-            pos = GLOBAL.Vector3(-5, 100, 0),
+            animbuild = "ui_backpack_2x4",
+            pos = GLOBAL.Vector3(-5, -70, 0),
             side_align_tip = 160,
         },
-		 issidewidget = true,
-        type = "chest",
+        issidewidget = false,
+        type = "side_inv_behind",
     }
     
-	for y = 0, 1 do
-		table.insert(container.widget.slotpos, GLOBAL.Vector3(-126, -y*75 + 114 ,-126 +75, -y*75 + 114 ))
-
-end
+	for y = 0, 3 do
+		table.insert(container.widget.slotpos, GLOBAL.Vector3(-162, -y * 75 + 114, 0))
+		table.insert(container.widget.slotpos, GLOBAL.Vector3(-87, -y * 75 + 114, 0))
+	end
     return container
 end
 params.frostsmall = frostsmall()
@@ -547,7 +547,7 @@ AddPrefabPostInit("world_network", function(inst)
         function containers.widgetsetup(container, prefab)
             containers_widgetsetup_base2(container, prefab)
             if container.type == "frostsmall" then
-                container.type = "chest"
+                container.type = "side_inv_behind"
             end end end
     if containers.MAXITEMSLOTS < MAXITEMSLOTS then
         containers.MAXITEMSLOTS = MAXITEMSLOTS
