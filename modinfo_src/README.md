@@ -22,10 +22,14 @@ Build:
 .\tools\build_modinfo.ps1
 ```
 
+The build command regenerates `modinfo.lua` and runs `luac -p` against `meta.lua`, every `options/*.lua` source file, and the generated `modinfo.lua`.
+
 Check:
 
 ```powershell
 .\tools\build_modinfo.ps1 -Check
 ```
+
+The check command verifies that `modinfo.lua` is up to date and runs the same Lua syntax check. Use it before committing config changes.
 
 Each `options/*.lua` file is intentionally written as `return { ... }` so editors and `luac` can parse it as a normal Lua file. The build script removes that wrapper when generating `configuration_options`.

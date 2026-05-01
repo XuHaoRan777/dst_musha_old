@@ -602,7 +602,7 @@ local function fn()
  
 ----------------------
     inst:AddComponent("waterproofer")
-    inst.components.waterproofer:SetEffectiveness(0)
+    inst.components.waterproofer:SetEffectiveness(0.8)
 
 	inst:AddComponent("container")
 	inst.components.container:WidgetSetup("piggyback")

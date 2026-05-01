@@ -773,7 +773,7 @@ inst.components.armor:InitCondition(99999999999999999999999999999999999999999999
  
     inst.OnLoad = OnLoad
     inst:AddComponent("waterproofer")
-    inst.components.waterproofer.effectiveness = 0
+    inst.components.waterproofer:SetEffectiveness(0.8)
 
         inst:AddComponent("fueled")
        inst.components.fueled.fueltype = "CHEMICAL"

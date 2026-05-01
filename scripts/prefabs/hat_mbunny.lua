@@ -747,6 +747,7 @@ local function fn()
    
     inst:AddTag("hat")
 	inst:AddTag("musha_items")
+	inst:AddTag("waterproofer")
 	
 	if inst.goggles_on then
 	inst:AddTag("goggles")
@@ -778,6 +779,9 @@ local function fn()
     	
     inst:AddComponent("inventoryitem")
     inst.components.inventoryitem.atlasname = "images/inventoryimages/hat_mbunny.xml"
+
+	inst:AddComponent("waterproofer")
+    inst.components.waterproofer:SetEffectiveness(0.8)
 
     inst:AddComponent("armor")
 	inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.11)

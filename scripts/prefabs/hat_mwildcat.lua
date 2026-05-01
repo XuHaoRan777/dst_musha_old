@@ -627,7 +627,7 @@ local function fn()
 	end
 
 	inst:AddComponent("waterproofer")
-    inst.components.waterproofer:SetEffectiveness(0)
+    inst.components.waterproofer:SetEffectiveness(1)
 	
     inst:AddComponent("inspectable")
     	

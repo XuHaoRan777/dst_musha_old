@@ -177,7 +177,10 @@ local bodyguard_wilson = GetModConfigData("bodyguardwilson")
 --local share_item = GetModConfigData("shareitems")
 --local in_container =  GetModConfigData("incontainer")
 --local musha_in_container =  GetModConfigData("musha_incontainer")
-local Mod_language =  GetModConfigData("modlanguage")
+local Mod_language = GetModConfigData("modlanguage")
+if Mod_language == nil or Mod_language == "auto" then
+	Mod_language = "english"
+end
 
 local Widget = require("widgets/widget")
 local Image = require("widgets/image")
@@ -196,39 +199,7 @@ modimport("scripts/musha_adds_recipe.lua")
 -----------
 --translation
 
-if Mod_language == "auto" then
-
-	--ENG
-	 KOR = 0
-	 CHA = 0
-	 RUS = 0
-
-	for _, moddir in ipairs(GLOBAL.KnownModIndex:GetModsToLoad()) do
-	local language = GLOBAL.KnownModIndex:GetModInfo(moddir).name
-	if language == "한글 모드 서버 버전" or language == "한글 모드 클라이언트 버전" or language == "굶지마 다함께 한글화 [서버 버전]" or language == "굶지마 다함께 한글화 [클라이언트 버전]" then
-	KOR = 1
-	elseif language == "Chinese Language Pack" or language == "Chinese Plus" then
-	CHA = 1
-	elseif language == "Russian Language Pack" or language == "Russification Pack for DST" or language == "Russian For Mods (Client)" then
-	RUS = 1
-	end
-	end
-
-	if KOR == 1 then
-	modimport("scripts/strings_musha_ko.lua")
-	STRINGS.CHARACTERS.MUSHA = require "speech_musha_ko"
-	elseif CHA == 1 then
-	modimport("scripts/strings_musha_cn.lua")
-	STRINGS.CHARACTERS.MUSHA = require "speech_musha_cn"
-	elseif RUS == 1 then
-	modimport("scripts/strings_musha_ru.lua")
-	STRINGS.CHARACTERS.MUSHA = require "speech_musha_ru"
-	else
-	modimport("scripts/strings_musha_en.lua")
-	STRINGS.CHARACTERS.MUSHA = require "speech_musha_en"
-	end
-
-elseif Mod_language == "korean" then
+if Mod_language == "korean" then
 	modimport("scripts/strings_musha_ko.lua")
 	STRINGS.CHARACTERS.MUSHA = require "speech_musha_ko"
 elseif Mod_language == "chinese" then
@@ -240,7 +211,9 @@ elseif Mod_language == "russian" then
 elseif Mod_language == "english" then
 	modimport("scripts/strings_musha_en.lua")
 	STRINGS.CHARACTERS.MUSHA = require "speech_musha_en"
-
+else
+	modimport("scripts/strings_musha_en.lua")
+	STRINGS.CHARACTERS.MUSHA = require "speech_musha_en"
 end
 
 modimport("scripts/musha_adds_states.lua")
@@ -4191,16 +4164,14 @@ AddPrefabPostInitAny(function(inst)
 
 -------------------------------------------------
 
-  function loud_Lightning_effect(inst)
- if IsServer then
-if Loud_Lightning == "loud1" then
-loud_1 = true
-elseif Loud_Lightning == "loud2" then
-loud_2 = true
-elseif Loud_Lightning == "loud3" then
-loud_3 = true
-end end end
-  AddPrefabPostInit("musha", loud_Lightning_effect)
+local function loud_Lightning_effect(inst)
+	if IsServer then
+		inst.loud_1 = Loud_Lightning == "loud1"
+		inst.loud_2 = Loud_Lightning == "loud2"
+		inst.loud_3 = Loud_Lightning == "loud3"
+	end
+end
+AddPrefabPostInit("musha", loud_Lightning_effect)
 
 
   function Death_Penalty(inst)
