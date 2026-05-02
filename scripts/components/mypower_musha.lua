@@ -2,7 +2,7 @@ local Mypower_musha = Class(function(self, inst)
     self.inst = inst
 	--inst:DoTaskInTime(0, function() self:Start() end)
 end)
-local SkillDefs = require("musha_skilldefs")
+local SkillDefs = require("musha/skills/defs")
 
 -----------------------------------------------------------------
 

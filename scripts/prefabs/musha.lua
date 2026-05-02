@@ -1,8 +1,8 @@
 local MakePlayerCharacter = require("prefabs/player_common")
 local MushaCommands = require("usercommands")
-local SkillDefs = require("musha_skilldefs")
-local MushaAnim = require("musha_animutils")
-local MushaTasks = require("musha_taskutils")
+local SkillDefs = require("musha/skills/defs")
+local MushaAnim = require("musha/utils/anim")
+local MushaTasks = require("musha/utils/task")
 --local easing = require("easing")
 local assets = {
   Asset("SCRIPT", "scripts/prefabs/player_common.lua"),

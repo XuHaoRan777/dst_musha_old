@@ -2,7 +2,7 @@ local require = GLOBAL.require
 local STRINGS = GLOBAL.STRINGS
 local ACTIONS = GLOBAL.ACTIONS
 local EQUIPSLOTS = GLOBAL.EQUIPSLOTS
-local SkillDefs = require("musha_skilldefs")
+local SkillDefs = require("musha/skills/defs")
 local PerformPreviewBufferedActionIfAvailable
 local GetSpellpowerCurrent
 local HasManaForAction

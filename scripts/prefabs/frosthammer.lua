@@ -1,4 +1,4 @@
-local SkillDefs = require("musha_skilldefs")
+local SkillDefs = require("musha/skills/defs")
 
 local assets=
 {

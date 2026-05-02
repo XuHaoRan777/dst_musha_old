@@ -13,13 +13,13 @@ TECH = GLOBAL.TECH
 local IsServer = GLOBAL.TheNet:GetIsServer()
 local containers = require("containers")
 local CompanionStates = require("musha_companionstates")
-local SkillDefs = require("musha_skilldefs")
-local MushaAnim = require("musha_animutils")
-local MushaConfig = require("musha_config")
-local LightningSkill = require("musha_skill_lightning")
-local SleepSkill = require("musha_skill_sleep")
-local ShadowSkill = require("musha_skill_shadow")
-local MusicSkill = require("musha_skill_music")
+local SkillDefs = require("musha/skills/defs")
+local MushaAnim = require("musha/utils/anim")
+local MushaConfig = require("musha/config/config")
+local LightningSkill = require("musha/skills/lightning")
+local SleepSkill = require("musha/skills/sleep")
+local ShadowSkill = require("musha/skills/shadow")
+local MusicSkill = require("musha/skills/music")
 local VisualCommands = require("musha_visual_commands")
 local Config = MushaConfig.Load(GetModConfigData, TUNING)
 
@@ -71,7 +71,7 @@ else
 	STRINGS.CHARACTERS.MUSHA = require "speech_musha_en"
 end
 
-require("musha_name_fallbacks").Register(STRINGS)
+require("musha/utils/name_fallbacks").Register(STRINGS)
 
 modimport("scripts/musha_adds_states.lua")
 
@@ -86,7 +86,7 @@ require("musha_inventory_overflow").Register({
 	GLOBAL = GLOBAL,
 })
 
-require("musha_config_postinit").Register(Config, AddPrefabPostInit, IsServer, TUNING)
+require("musha/config/postinit").Register(Config, AddPrefabPostInit, IsServer, TUNING)
 
 modimport("scripts/mypower_musha_1.lua")
 modimport("scripts/widgets/spellpower_statusdisplays.lua")
@@ -145,7 +145,7 @@ SleepSkill.Register({
 	TUNING = TUNING,
 })
 
-require("musha_skill_shield").Register({
+require("musha/skills/shield").Register({
 	AddModRPCHandler = AddModRPCHandler,
 	IsNearWriteable = IsNearWriteable,
 	SkillDefs = SkillDefs,
