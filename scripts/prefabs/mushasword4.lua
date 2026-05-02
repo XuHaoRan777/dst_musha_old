@@ -126,8 +126,34 @@ local function onsave(inst, data)
 	data.charge_time = inst.charge_time
 end
 
+local function ClearToolActions(inst)
+	if inst.components.tool == nil then
+		return
+	end
+
+	for action in pairs(inst.components.tool.actions) do
+		inst:RemoveTag(action.id.."_tool")
+	end
+	inst.components.tool.actions = {}
+end
+
+local function SetPhoenixAxeToolMode(inst, action, effectiveness, tough)
+	if inst.components.tool == nil then
+		return
+	end
+
+	ClearToolActions(inst)
+	inst.components.tool:SetAction(action, effectiveness)
+	inst.components.tool:EnableToughWork(tough)
+end
+
 local function OnDurability(inst, data)
 inst.broken = true
+SetPhoenixAxeToolMode(inst, ACTIONS.CHOP, 1, false)
+inst.pick = false
+inst.axe = true
+inst.boost = false
+inst:RemoveTag("phoenix_axe")
     inst.components.weapon:SetDamage(1)
 	inst.components.talker:Say(STRINGS.MUSHA_WEAPON_BROKEN.." \n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (1)")
 end
@@ -718,6 +744,7 @@ local owner = inst.components.inventoryitem.owner
 	if not inst.broken then
     if inst.pick then
 	inst.components.weapon:SetRange(1)
+	SetPhoenixAxeToolMode(inst, ACTIONS.MINE, 2, true)
 	inst.axe = false
     owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixaxe2", "phoenixaxe")
     owner.AnimState:Show("ARM_carry") 
@@ -731,6 +758,7 @@ local owner = inst.components.inventoryitem.owner
 	end]]
 	else
 	inst.components.weapon:SetRange(0)
+	SetPhoenixAxeToolMode(inst, ACTIONS.CHOP, 2, true)
 	inst.axe = true
 	inst.pick = false
 	owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixaxe", "phoenixaxe")
@@ -740,6 +768,7 @@ local owner = inst.components.inventoryitem.owner
 	end
 	elseif inst.broken then
 	inst.components.weapon:SetRange(0)
+	SetPhoenixAxeToolMode(inst, ACTIONS.CHOP, 1, false)
 	inst.axe = true
 	inst.pick = false
 	owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixaxe_broken", "phoenixaxe")
@@ -790,7 +819,7 @@ end
 local function off_boost(inst, data)
 local owner = inst.components.inventoryitem.owner 
 if owner ~= nil then
-inst.boost = false 
+	inst.boost = false 
 	inst.axe = true	
 	inst.pick = false
 		if inst:HasTag("phoenix_axe") then
@@ -804,8 +833,7 @@ inst.boost = false
 		end
 	if not inst.broken then
 
-	inst.components.tool:OnRemoveFromEntity()
-	inst.components.tool:SetAction(ACTIONS.CHOP, 2)
+	SetPhoenixAxeToolMode(inst, ACTIONS.CHOP, 2, true)
 
 	inst.components.weapon:SetRange(0)
 
@@ -842,11 +870,14 @@ if owner ~= nil and inst.broken then
 	--[[if inst.components.spellcaster ~= nil then
 	inst:RemoveComponent("spellcaster")
 	end]]
-	inst:RemoveComponent("blinkstaff")
+	if inst.components.blinkstaff ~= nil then
+		inst:RemoveComponent("blinkstaff")
+	end
 	Upgradedamage(inst)	
 	inst.axe = true	
 	inst.pick = false
 	inst:RemoveTag("phoenix_axe")
+	SetPhoenixAxeToolMode(inst, ACTIONS.CHOP, 1, false)
 	inst.components.talker:Say("-"..STRINGS.MUSHA_WEAPON.."\n"..STRINGS.MUSHA_ITEM_DUR.." (0)")
     owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixaxe_broken", "phoenixaxe")
     owner.AnimState:Show("ARM_carry") 
@@ -861,8 +892,7 @@ if owner ~= nil and not inst.boost and not inst.broken then
     inst.components.spellcaster:SetSpellFn(createlight)
     inst.components.spellcaster.canuseonpoint = true
 	end]]
-	inst.components.tool:OnRemoveFromEntity()
-	inst.components.tool:SetAction(ACTIONS.MINE, 2)
+	SetPhoenixAxeToolMode(inst, ACTIONS.MINE, 2, true)
 
 	Upgradedamage(inst)
 	inst.pick = true	
@@ -944,7 +974,7 @@ local function fn()
     end	
 	
 	inst:AddComponent("tool")
-	inst.components.tool:SetAction(ACTIONS.CHOP, 2)
+	SetPhoenixAxeToolMode(inst, ACTIONS.CHOP, 2, true)
 	 
     inst:AddComponent("weapon")
 	inst.components.weapon:SetRange(0)
