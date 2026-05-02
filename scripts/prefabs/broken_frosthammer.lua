@@ -479,6 +479,7 @@ local function on_shield(inst, owner)
 if inst.shield and not inst.broken then
 inst.components.talker:Say(STRINGS.MUSHA_ITEM_SHIELD.."\n"..STRINGS.MUSHA_ARMOR.."(100)\n"..STRINGS.MUSHA_ITEM_COOL)
 inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 1)
+    if inst.consume then inst.consume:Cancel() inst.consume = nil end
     inst.consume = inst:DoPeriodicTask(1, function() consume(inst, owner) end)
 	
 	elseif inst.shield and inst.broken then
@@ -532,8 +533,10 @@ inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
 	end 
 	OpenFrostArmorContainer(inst, owner)
 	
+if inst.task1 then inst.task1:Cancel() inst.task1 = nil end
 inst.task1 = inst:DoPeriodicTask(0.2, function() Release_Frost(inst, owner) end)
 
+if inst.task2 then inst.task2:Cancel() inst.task2 = nil end
 inst.task2 = inst:DoPeriodicTask(3, function() sanity_cost(inst, owner) end)
 
     inst.expfn = function(attacked, data)
@@ -632,6 +635,9 @@ if data and data.attacker and math.random() < expchance and inst.level < 4010 th
 end
 local function onuseshield(inst,owner)
 	OpenFrostArmorContainer(inst, owner)
+	if inst.shield then
+		return
+	end
 	if not inst.broken then
 	inst.shield = true
 	on_shield(inst)

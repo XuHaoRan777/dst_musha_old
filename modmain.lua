@@ -78,6 +78,13 @@ modimport("scripts/musha_adds_states.lua")
 modimport("scripts/musha_adds_actions.lua")
 
 modimport("scripts/musha_adds_container.lua")
+require("musha_inventory_overflow").Register({
+	AddComponentPostInit = AddComponentPostInit,
+	AddClassPostConstruct = AddClassPostConstruct,
+	AddPlayerPostInit = AddPlayerPostInit,
+	AddPrefabPostInit = AddPrefabPostInit,
+	GLOBAL = GLOBAL,
+})
 
 require("musha_config_postinit").Register(Config, AddPrefabPostInit, IsServer, TUNING)
 

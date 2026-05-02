@@ -8,6 +8,8 @@ local EXTRA_BACK_SLOT_NAMES =
     "BAG",
 }
 
+EquipUtils.EXTRA_BACK_SLOT_NAMES = EXTRA_BACK_SLOT_NAMES
+
 local function IsBackpackLikeItem(item)
     return item ~= nil
         and ((item.components ~= nil and item.components.container ~= nil)
