@@ -5,6 +5,37 @@ local KeyHandler = Class(function(self, inst)
 	end
 end)
 
+local function IsWidgetEditing(widget)
+	if widget == nil then
+		return false
+	end
+
+	if widget.editing then
+		return true
+	end
+
+	if widget.IsEditing ~= nil then
+		local ok, editing = pcall(widget.IsEditing, widget)
+		if ok and editing then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function IsEditingWidgetOnScreen(screen)
+	if screen == nil then
+		return false
+	end
+
+	return IsWidgetEditing(screen.chat_edit)
+		or IsWidgetEditing(screen.console_edit)
+		or IsWidgetEditing(screen.edit_text)
+		or IsWidgetEditing(screen.text_edit)
+		or IsWidgetEditing(screen.name_edit)
+end
+
 function KeyHandler:OnRemoveFromEntity()
 	if self.handler ~= nil then
 		self.handler:Remove()
@@ -22,7 +53,18 @@ function KeyHandler:IsTextInputActive()
 	end
 
 	local screen = TheFrontEnd:GetActiveScreen()
-	return screen ~= nil and (screen.chat_edit ~= nil or screen.console_edit ~= nil)
+	if IsEditingWidgetOnScreen(screen) then
+		return true
+	end
+
+	if TheFrontEnd.GetFocusWidget ~= nil then
+		local focus = TheFrontEnd:GetFocusWidget()
+		if IsWidgetEditing(focus) then
+			return true
+		end
+	end
+
+	return false
 end
 
 function KeyHandler:OnRawKey(key, down)

@@ -6,12 +6,17 @@ Recipe = GLOBAL.Recipe
 local STRINGS = GLOBAL.STRINGS
 local ACTIONS = GLOBAL.ACTIONS
 local Vector3 = GLOBAL.Vector3
+local TUNING = GLOBAL.TUNING
+local TheSim = GLOBAL.TheSim
+local SpawnPrefab = GLOBAL.SpawnPrefab
 TECH = GLOBAL.TECH
 local IsServer = GLOBAL.TheNet:GetIsServer()
 local containers = require("containers")
 local CompanionStates = require("musha_companionstates")
 local SkillDefs = require("musha_skilldefs")
 local MushaAnim = require("musha_animutils")
+local MushaConfig = require("musha_config")
+local Config = MushaConfig.Load(GetModConfigData, TUNING)
 
 ACTIONS.GIVE.priority = 2
 ACTIONS.ADDFUEL.priority = 4
@@ -22,9 +27,7 @@ local ThePlayer = GLOBAL.ThePlayer
 local TheInput = GLOBAL.TheInput
 -----------sleep--------
 local function IsNearWriteable(inst)
-	local x, y, z = inst.Transform:GetWorldPosition()
-	local ents = TheSim:FindEntities(x, y, z, 1, { "_writeable" })
-	return ents ~= nil and #ents > 0
+	return false
 end
 
 local function SayRandomLine(inst, lines)
@@ -146,42 +149,7 @@ local function PlayMushaWakeAnim(inst, is_deep_sleep)
 	end
 end
 
-local Badge_type = GetModConfigData("badge_type")
-local Difficult = GetModConfigData("difficultover")
-local DifficultHealth = GetModConfigData("difficulthealth")
-local DifficultDamage = GetModConfigData("difficultdamage")
-local DifficultDamage_Range = GetModConfigData("difficultdamage_range")
-local DifficultSanity = GetModConfigData("difficultsanity")
-local death_penalty = GetModConfigData("deathPenalty")
-local Loud_Lightning = GetModConfigData("loudlightning")
---local Difficult_Recipe = GetModConfigData("difficultrecipe")
---local Gem_Recipe = GetModConfigData("craftgems")
-local avisual_Musha = GetModConfigData("avisual_musha")
-local avisual_Princess = GetModConfigData("avisual_princess")
-local avisual_Pirate = GetModConfigData("avisual_pirate")
-local avisual_Pirate_Armor = GetModConfigData("avisual_pirate_armor")
-local butterfly_shield = GetModConfigData("on_butterfly_shield")
-local moontree_stop = GetModConfigData("stop_spawning")
-local frostblade3rd = GetModConfigData("frostblade3rd")
-TUNING.MUSHA_PIRATEBACK_SLOT = GetModConfigData("pirateback_slot") or "auto"
---local extra_backpack = GetModConfigData("extrabackpack")
---local Smart = GetModConfigData("smartmusha")
-local Diet = GetModConfigData("dietmusha")
-local Dislike = GetModConfigData("favoritemusha")
-local PuppyPrincess = GetModConfigData("princess_taste")
-local Dtired = GetModConfigData("difficulttired")
-local Dsleep = GetModConfigData("difficultsleep")
-local Dmusic = GetModConfigData("difficultmusic")
-local Dsniff = GetModConfigData("difficultysniff")
-local Dmana = GetModConfigData("difficultmana")
-local bodyguard_wilson = GetModConfigData("bodyguardwilson")
---local share_item = GetModConfigData("shareitems")
---local in_container =  GetModConfigData("incontainer")
---local musha_in_container =  GetModConfigData("musha_incontainer")
-local Mod_language = GetModConfigData("modlanguage")
-if Mod_language == nil or Mod_language == "auto" then
-	Mod_language = "english"
-end
+local Mod_language = Config.modlanguage
 
 local Widget = require("widgets/widget")
 local Image = require("widgets/image")
@@ -217,142 +185,15 @@ else
 	STRINGS.CHARACTERS.MUSHA = require "speech_musha_en"
 end
 
+require("musha_name_fallbacks").Register(STRINGS)
+
 modimport("scripts/musha_adds_states.lua")
 
 modimport("scripts/musha_adds_actions.lua")
 
 modimport("scripts/musha_adds_container.lua")
 
---bodyguard wilson
-local function bodyguardwilson(inst)
-if IsServer then
-  if bodyguard_wilson == 1 then
-	inst.no_bodyguard = true
- end end
-end
-AddPrefabPostInit("musha", bodyguardwilson)
-
-
-function exp_type_meat(inst)
-if IsServer then
-inst:AddComponent("edible")
-    inst.components.edible.foodtype = FOODTYPE.MEAT
-
-
-end end
- function exp_type_veggie(inst)
-if IsServer then
-inst:AddComponent("edible")
-    inst.components.edible.foodtype = FOODTYPE.VEGGIE
-end end
-
-function musha_princess_taste(inst)
-if IsServer then
-inst.princess_taste = true
-end end
-if PuppyPrincess == "princess" then
-AddPrefabPostInit("musha", musha_princess_taste)
-end
-
-function musha_dis_meat(inst)
-if IsServer then
-inst.dis_meat_taste = true
-end end
-function musha_dis_veggie(inst)
-if IsServer then
-inst.dis_veggie_taste = true
-end end
-function musha_normal(inst)
-if IsServer then
-inst.normal_taste = true
-end end
-function musha_meat(inst)
-if IsServer then
-inst.meat_taste = true
-end end
-function musha_veggie(inst)
-if IsServer then
-inst.veggie_taste = true
-end end
-
-
-
-if Dislike == "dis_meat" then
-AddPrefabPostInit("musha", musha_dis_meat)
-end
-if Dislike == "dis_veggie" then
-AddPrefabPostInit("musha", musha_dis_veggie)
-end
-
-if Diet == "normal" then
-AddPrefabPostInit("musha", musha_normal)
-end
-if Diet == "meat" then
-AddPrefabPostInit("musha", musha_meat)
---AddPrefabPostInit("exp", exp_type_meat)
-end
-if Diet == "veggie" then
-AddPrefabPostInit("musha", musha_veggie)
---AddPrefabPostInit("exp", exp_type_veggie)
-end
-
-
-function tentacle_arm(inst)
-if IsServer then
-inst:AddTag("no_exp")
-end end
-AddPrefabPostInit("tentacle_pillar_arm", tentacle_arm)
-
-function yamche_blue(inst)
-if IsServer then
-inst:AddTag("icecream")
-end  end
-AddPrefabPostInit("icecream", yamche_blue)
---end
---AddPrefabPostInit("musha", rockss)
---elemental
-local function elemental( inst )
-inst:AddComponent("fuel")
-inst.components.fuel.fuelvalue = TUNING.SMALL_FUEL
---inst.components.fuel.fuelvalue = TUNING.MED_LARGE_FUEL
-inst.components.fuel.fueltype = "CHEMICAL"
-inst:AddTag("elements")
-end
-local function elemental_ore( inst )
-inst:AddComponent("fuel")
-inst.components.fuel.fuelvalue = TUNING.MED_LARGE_FUEL
-inst.components.fuel.fueltype = "CHEMICAL"
-inst:AddTag("elements")
-end
-local function elemental_gold( inst )
-inst:AddComponent("fuel")
-inst.components.fuel.fuelvalue = TUNING.LARGE_FUEL
-inst.components.fuel.fueltype = "CHEMICAL"
-inst:AddTag("elements")
-end
-
-AddPrefabPostInit("goldnugget",elemental_gold)
-AddPrefabPostInit("thulecite",elemental_gold)
-AddPrefabPostInit("rocks",elemental_ore)
-AddPrefabPostInit("flint",elemental_ore)
-AddPrefabPostInit("marble",elemental_ore)
-AddPrefabPostInit("moonrocknugget",elemental_ore)
-AddPrefabPostInit("thulecite_pieces",elemental_ore)
-AddPrefabPostInit("boneshard",elemental_ore)
-AddPrefabPostInit("stinger",elemental)
-AddPrefabPostInit("spidergland",elemental)
-AddPrefabPostInit("houndstooth",elemental)
-AddPrefabPostInit("snakeskin",elemental)
-AddPrefabPostInit("slurtle_shellpieces",elemental)
-AddPrefabPostInit("silk",elemental)
-
-local function musha_wildness(inst)
-if inst:HasTag("musha") then
-if not inst.ghostenabled then
-	inst.yamche_egg_hunted = true
-end end
-end
-AddPrefabPostInit("musha",musha_wildness)
+require("musha_config_postinit").Register(Config, AddPrefabPostInit, IsServer, TUNING)
 
 modimport("scripts/mypower_musha_1.lua")
 modimport("scripts/widgets/spellpower_statusdisplays.lua")
@@ -372,153 +213,7 @@ use "data/screens/chatinputscreen"
 use "data/screens/consolescreen"
 local MushaCommands = GLOBAL.require("usercommands")
 
-GLOBAL.TUNING.MUSHA = {}
-GLOBAL.TUNING.MUSHA.KEY = GetModConfigData("key") or 108  --L
-GLOBAL.TUNING.MUSHA.KEY2 = GetModConfigData("key2") or 114  --R
-GLOBAL.TUNING.MUSHA.KEY3 = GetModConfigData("key3") or 99  --C
-GLOBAL.TUNING.MUSHA.KEY4 = GetModConfigData("key4") or 120  --X
-GLOBAL.TUNING.MUSHA.KEY5 = GetModConfigData("key5") or 107  --K
-GLOBAL.TUNING.MUSHA.KEY6 = GetModConfigData("key6") or 122  --Z
-GLOBAL.TUNING.MUSHA.KEY7 = GetModConfigData("key7") or 112  --P
-GLOBAL.TUNING.MUSHA.KEY15 = GetModConfigData("key15") or 111  --O
-GLOBAL.TUNING.MUSHA.KEY8 = GetModConfigData("key8") or 118  --V
-GLOBAL.TUNING.MUSHA.KEY9 = GetModConfigData("key9") or 98  --B
---GLOBAL.TUNING.MUSHA.KEY10 = GetModConfigData("key10") or 110  --N
-GLOBAL.TUNING.MUSHA.KEY11 = GetModConfigData("key11") or 103  --G
-GLOBAL.TUNING.MUSHA.KEY12 = GetModConfigData("key12") or 116  --T
-GLOBAL.TUNING.MUSHA.KEY13 = GetModConfigData("key13") or 282  --F1
-GLOBAL.TUNING.MUSHA.KEY14 = GetModConfigData("key14") or 283  --F2
-GLOBAL.TUNING.MUSHA.KEY16 = GetModConfigData("key16") or 285  --F3
-
-
- function visual_back_musha(inst)
-if avisual_Musha == "Bmm" then
-inst.Bmm = true
-elseif avisual_Musha == "BT" then
-inst.BT = true
-elseif avisual_Musha == "BS" then
-inst.BS = true
-elseif avisual_Musha == "BM" then
-inst.BL = true
-elseif avisual_Musha == "BL" then
-inst.BL = true
-elseif avisual_Musha == "WSP" then
-inst.WSP = true
-elseif avisual_Musha == "WSR" then
-inst.WSR = true
-elseif avisual_Musha == "WSB" then
-inst.WSB = true
-elseif avisual_Musha == "WSH" then
-inst.WSH = true
-elseif avisual_Musha == "WLR" then
-inst.WLR = true
-elseif avisual_Musha == "WLB" then
-inst.WLB = true
-end
-end
-AddPrefabPostInit("armor_mushaa", visual_back_musha)
-
- function visual_back_princess(inst)
-if avisual_Princess == "Bmm" then
-inst.Bmm = true
-elseif avisual_Princess == "BT" then
-inst.BT = true
-elseif avisual_Princess == "BS" then
-inst.BS = true
-elseif avisual_Princess == "BM" then
-inst.BL = true
-elseif avisual_Princess == "BL" then
-inst.BL = true
-elseif avisual_Princess == "WSP" then
-inst.WSP = true
-elseif avisual_Princess == "WSR" then
-inst.WSR = true
-elseif avisual_Princess == "WSB" then
-inst.WSB = true
-elseif avisual_Princess == "WSH" then
-inst.WSH = true
-elseif avisual_Princess == "WLR" then
-inst.WLR = true
-elseif avisual_Princess == "WLB" then
-inst.WLB = true
-end
-end
-AddPrefabPostInit("armor_mushab", visual_back_princess)
-
- function visual_back_pirate(inst)
-if avisual_Pirate == "Bmm" then
-inst.Bmm = true
-elseif avisual_Pirate == "BT" then
-inst.BT = true
-elseif avisual_Pirate == "BS" then
-inst.BS = true
-elseif avisual_Pirate == "BM" then
-inst.BL = true
-elseif avisual_Pirate == "BL" then
-inst.BL = true
-elseif avisual_Pirate == "WSP" then
-inst.WSP = true
-elseif avisual_Pirate == "WSR" then
-inst.WSR = true
-elseif avisual_Pirate == "WSB" then
-inst.WSB = true
-elseif avisual_Pirate == "WSH" then
-inst.WSH = true
-elseif avisual_Pirate == "WLR" then
-inst.WLR = true
-elseif avisual_Pirate == "WLB" then
-inst.WLB = true
-end
-end
-AddPrefabPostInit("pirateback", visual_back_pirate)
-
-
- function visual_armor_pirate(inst)
-if avisual_Pirate_Armor == "pirate" then
-inst.Pirate = true
-elseif avisual_Pirate_Armor == "green" then
-inst.Green = true
-elseif avisual_Pirate_Armor == "pink" then
-inst.Pink = true
-elseif avisual_Pirate_Armor == "blue" then
-inst.Blue = true
-elseif avisual_Pirate_Armor == "chest" then
-inst.Chest = true
-end
-end
-AddPrefabPostInit("pirateback", visual_armor_pirate)
-
-
- function frostarmor_shield(inst)
-if butterfly_shield == 2 then
-inst.no_butterfly_shield = true
-
-end
-end
-AddPrefabPostInit("broken_frosthammer", frostarmor_shield)
-
- function moontree_spawn(inst)
-
-if moontree_stop == 2 then
-inst.radius_spawning = true
-end
-if moontree_stop == 3 then
-inst.stop_spawning = true
-
-end
-end
-AddPrefabPostInit("moontree_musha", moontree_spawn)
-
- function frostblade_3rdbooster(inst)
-if frostblade3rd == 2 then
-inst.frostblade3rd_spear = true
-end
-if frostblade3rd == 3 then
-inst.frostblade3rd_spear = true
-inst.frostblade3rd_spear_range = true
-end
-end
-AddPrefabPostInit("mushasword_frost", frostblade_3rdbooster)
+require("musha_equipment_postinit").Register(Config, AddPrefabPostInit)
 
 ---------------
  function on_yamcheinfo(inst)
@@ -540,12 +235,6 @@ end end
  function INFO(inst)
 --Active info level?
 inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end
 if not inst.writing then
 local TheInput = TheInput
 local max_exp = 999997000
@@ -662,11 +351,6 @@ AddModRPCHandler("musha", "INFO", INFO)
 --active skill?  --skill_info
  function INFO2(inst)
 inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end
 if not inst.writing then
 local TheInput = TheInput
 local max_exp = 999997000
@@ -1312,11 +996,6 @@ end
  function Lightning_a(inst)
 inst.writing = false
 local started_valkyrie_this_call = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end
 if not inst.writing and IsMushaSleeping(inst) and not inst:HasTag("playerghost") then
 	inst.components.talker:Say(STRINGS.MUSHA_TALK_NEED_SLEEPY)
 	inst.components.combat:SetRange(2)
@@ -1651,185 +1330,14 @@ end
 end
 AddModRPCHandler("musha", "Lightning_a", Lightning_a)
 
---shield
---active shield
- function shield_go(inst, attacked, data)
-	if inst.components.health == nil or inst.components.health:IsDead() or inst.activec0 then
-		return
-	end
-
-	local shield = SkillDefs.GetActiveShieldLevel(inst.level)
-	if shield == nil or not inst[shield.unlock_flag] then
-		return
-	end
-
-	local fx = SpawnPrefab("forcefieldfxx")
-	inst.on_sparkshield = true
-
-	inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/raise")
-	inst.SoundEmitter:PlaySound("dontstarve/creatures/chester/pop")
-	if fx ~= nil then
-		fx.entity:SetParent(inst.entity)
-		if inst.components.rider ~= nil and inst.components.rider:IsRiding() then
-			fx.Transform:SetScale(2, 2, 2)
-		else
-			fx.Transform:SetScale(0.8, 0.8, 0.8)
-		end
-		fx.Transform:SetPosition(0, 0.2, 0)
-	end
-
-	local fx_hitanim = function()
-		if fx ~= nil and fx:IsValid() then
-			fx.AnimState:PlayAnimation("hit")
-			fx.AnimState:PushAnimation("idle_loop")
-		end
-	end
-
-	if fx ~= nil then
-		fx:ListenForEvent("blocked", fx_hitanim, inst)
-	end
-
-	inst.activec0 = true
-	inst[shield.ready_flag] = true
-	inst:DoTaskInTime(12, function()
-		if fx ~= nil and fx:IsValid() then
-			fx:RemoveEventCallback("blocked", fx_hitanim, inst)
-		end
-
-		if inst:IsValid() then
-			if fx ~= nil and fx:IsValid() then
-				if fx.kill_fx ~= nil then
-					fx.kill_fx(fx)
-				else
-					fx:Remove()
-				end
-			end
-
-			inst.components.talker:Say(STRINGS[shield.cooldown_string])
-			inst.on_sparkshield = false
-
-			inst:DoTaskInTime(shield.cooldown, function()
-				if inst:IsValid() then
-					inst.activec0 = false
-					inst[shield.ready_flag] = false
-					inst.casting = false
-				end
-			end)
-		end
-	end)
-end
-
----
- function shieldgo(inst)
-	local shield = SkillDefs.GetActiveShieldLevel(inst.level)
-	if shield ~= nil and not inst.activec0 and not inst[shield.ready_flag] then
-		inst.components.talker:Say(STRINGS.MUSHA_TALK_SHIELD_FULL)
-		SpawnPrefab("sparks").Transform:SetPosition(inst:GetPosition():Get())
-		inst[shield.ready_flag] = true
-	end
-end
- function on_shield_act(inst)
-	inst.writing = IsNearWriteable(inst)
-	if inst.writing then
-		return
-	end
-
-	if inst:HasTag("playerghost") then
-		inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_OOOOH)
-		return
-	end
-
-	if inst.components.health == nil or inst.components.health:IsDead() then
-		return
-	end
-
-	inst:ListenForEvent("hungerdelta", shieldgo)
-
-	local shield = SkillDefs.GetActiveShieldLevel(inst.level)
-	SkillDefs.ForEachActiveShieldLevel(function(def)
-		inst[def.unlock_flag] = def == shield
-	end)
-
-	if inst.activec0 then
-		SkillDefs.ForEachActiveShieldLevel(function(def)
-			inst[def.unlock_flag] = false
-		end)
-		if inst.components.rider ~= nil and inst.components.rider:IsRiding() then
-			inst.sg:GoToState("repelled")
-		else
-			inst.sg:GoToState("mindcontrolled_pst")
-		end
-		if not SkillDefs.HasMana(inst, "active_shield") then
-			inst.components.talker:Say(STRINGS.MUSHA_TALK_NEED_SPELLPOWER.."\n("..SkillDefs.GetManaCost("active_shield")..")")
-		end
-		return
-	end
-
-	if not SkillDefs.HasMana(inst, "active_shield") then
-		inst.components.talker:Say(STRINGS.MUSHA_TALK_NEED_SPELLPOWER.."\n("..SkillDefs.GetManaCost("active_shield")..")")
-		return
-	end
-
-	if not inst.casting
-		and (inst.components.rider == nil or not inst.components.rider:IsRiding())
-		and not inst.sg:HasStateTag("moving")
-		and not inst.sg:HasStateTag("attack") then
-		inst.casting = true
-		inst.on_sparkshield = true
-	end
-
-	local shocking_self = SpawnPrefab("musha_spin_fx")
-	if shocking_self then
-		shocking_self.Transform:SetPosition(inst:GetPosition():Get())
-		local follower = shocking_self.entity:AddFollower()
-		follower:FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0.5)
-	end
-
-	local x, y, z = inst.Transform:GetWorldPosition()
-	local ents = TheSim:FindEntities(x, y, z, 10)
-	for k, v in pairs(ents) do
-		if inst.components.sanity
-			and v:IsValid()
-			and v.entity:IsVisible()
-			and v.components.health
-			and not v.components.health:IsDead()
-			and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly"))
-			and not v:HasTag("groundspike")
-			and not v:HasTag("player")
-			and not v:HasTag("companion")
-			and not v:HasTag("stalkerminion")
-			and not v:HasTag("structure")
-			and v.components.combat ~= nil
-			and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn")) then
-			SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
-			local shocking = SpawnPrefab("musha_spin_fx")
-			if shocking then
-				shocking.Transform:SetPosition(v:GetPosition():Get())
-				local follower = shocking.entity:AddFollower()
-				follower:FollowSymbol(v.GUID, v.components.combat.hiteffectsymbol, 0, 0, 0.5)
-			end
-
-			if v.components.locomotor and not v:HasTag("ghost") then
-				v.components.locomotor:StopMoving()
-				if v:HasTag("spider") and not v:HasTag("spiderqueen") then
-					v.sg:GoToState("hit_stunlock")
-				else
-					v.sg:GoToState("hit")
-				end
-			end
-			v.components.health:DoDelta(-20)
-
-			if v.components.combat and not v:HasTag("companion") then
-				v.components.combat:SuggestTarget(inst)
-			end
-		end
-	end
-
-	shield_go(inst)
-	SkillDefs.SpendMana(inst, "active_shield")
-end
-
-AddModRPCHandler("musha", "on_shield_act", on_shield_act)
+require("musha_skill_shield").Register({
+	AddModRPCHandler = AddModRPCHandler,
+	IsNearWriteable = IsNearWriteable,
+	SkillDefs = SkillDefs,
+	STRINGS = STRINGS,
+	TheSim = TheSim,
+	SpawnPrefab = SpawnPrefab,
+})
 
 --treasure hunt
 
@@ -2280,11 +1788,6 @@ end
 
  function on_buff_act(inst)
 inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end
 if not inst.writing then
 local performance0 = 1
 local performance1 = 0.25
@@ -2352,7 +1855,7 @@ AddModRPCHandler("musha", "buff", on_buff_act)
 
 
   function on_sleeping(inst)
-inst.writing = IsNearWriteable(inst)
+inst.writing = false
 if not inst.writing and not inst.components.health:IsDead() and not inst.sleep_on and not inst.components.health:IsDead() and not inst:HasTag("playerghost") and not (inst.sg:HasStateTag("moving") or inst.sg:HasStateTag("attack")) and inst.components.stamina_sleep.current >= 90 then
 if TheWorld.state.isday and not inst.tiny_sleep then
 
@@ -2456,305 +1959,14 @@ end
  --end
  AddModRPCHandler("musha", "sleeping", on_sleeping)
 
-  ---------------------moon tree
-
-local DALL_TAG = "dall"
-local DALL_RADIUS = 25
-local DALL_COMPANION =
-{
-	migrate_with_owner = true,
-	can_command = function(dall)
-		return dall.components ~= nil and dall.components.follower ~= nil
-	end,
-	on_follow = function(owner, dall)
-		dall.yamche = true
-		dall.sleep_on = false
-		dall.dall_command_follow = true
-		owner.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_DALL_FOLLOW)
-		MushaCommands.RunTextUserCommand("happy", owner, false)
-	end,
-	on_rest = function(owner, dall)
-		dall.yamche = true
-		dall.sleep_on = true
-		dall.dall_command_follow = false
-		if dall.RestoreDallDrakes ~= nil then
-			dall:RestoreDallDrakes()
-		end
-		owner.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_DALL_STAY)
-	end,
-}
-
-function dall_update(inst)
-	local dall = inst.follow_dall
-		and CompanionStates.FindCommandable(inst, DALL_TAG, DALL_RADIUS, DALL_COMPANION)
-		or (CompanionStates.FindOwned(inst, DALL_TAG, DALL_RADIUS)
-			or CompanionStates.FindCommandable(inst, DALL_TAG, DALL_RADIUS, DALL_COMPANION))
-
-	if dall == nil then
-		return
-	end
-
-	if dall.onsleep then
-		inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_DALL_SLEEPY)
-	elseif inst.follow_dall then
-		CompanionStates.SetFollowing(inst, dall, DALL_TAG, DALL_COMPANION)
-	else
-		CompanionStates.SetResting(inst, dall, DALL_TAG, DALL_COMPANION)
-	end
-end
-
- function order_dall(inst)
-inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end
-if not inst.writing then
-local commandable_dall = CompanionStates.FindCommandable(inst, DALL_TAG, DALL_RADIUS, DALL_COMPANION)
-local has_dall_follower = CompanionStates.HasOwned(inst, DALL_TAG, DALL_RADIUS)
-
-if commandable_dall ~= nil and not has_dall_follower and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
-
-inst.follow_dall = true
-inst.dall_follow = true
-dall_update(inst)
-elseif has_dall_follower and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
-
-inst.follow_dall = false
-inst.dall_follow = false
-dall_update(inst)
-elseif commandable_dall == nil and not inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_DALL_LOST)
-elseif commandable_dall ~= nil and not has_dall_follower and inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_FOLLOW)
-inst.follow_dall = true
-inst.dall_follow = true
-dall_update(inst)
-elseif has_dall_follower and inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_STAY)
-inst.follow_dall = false
-inst.dall_follow = false
-dall_update(inst)
-elseif commandable_dall == nil and inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_OOOOH)
-end
-end
-end
-
-AddModRPCHandler("musha","dall", order_dall)
------pet
-
-
- ---------------------arong
-
-local ARONG_TAG = "Arongb"
-local ARONG_RADIUS = 25
-local ARONG_COMPANION =
-{
-	migrate_with_owner = true,
-	can_command = function(arong)
-		return arong.components ~= nil and arong.components.follower ~= nil
-	end,
-	on_follow = function(owner, arong)
-		owner.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_ARONG_FOLLOW)
-		MushaCommands.RunTextUserCommand("happy", owner, false)
-		arong.yamche = true
-		arong.mount = true
-		arong.command_sleep = false
-		arong.force_sleep = false
-		arong.idle_sleep = false
-		arong.sleep_on = false
-		arong.follow = true
-	end,
-	on_rest = function(owner, arong)
-		owner.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_ARONG_STAY)
-		arong.yamche = true
-		arong.active_hunt = false
-		arong.mount = false
-		arong.command_sleep = true
-		arong.force_sleep = false
-		arong.sleep_on = true
-		arong.follow = false
-	end,
-}
-
-function arong_update(inst)
-	local arong = inst.follow_arong
-		and CompanionStates.FindCommandable(inst, ARONG_TAG, ARONG_RADIUS, ARONG_COMPANION)
-		or (CompanionStates.FindOwned(inst, ARONG_TAG, ARONG_RADIUS)
-			or CompanionStates.FindCommandable(inst, ARONG_TAG, ARONG_RADIUS, ARONG_COMPANION))
-
-	if arong == nil then
-		return
-	end
-
-	if inst.follow_arong then
-		CompanionStates.SetFollowing(inst, arong, ARONG_TAG, ARONG_COMPANION)
-	else
-		CompanionStates.SetResting(inst, arong, ARONG_TAG, ARONG_COMPANION)
-	end
-end
-
- function order_arong(inst)
-inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end
-if not inst.writing then
-local commandable_arong = CompanionStates.FindCommandable(inst, ARONG_TAG, ARONG_RADIUS, ARONG_COMPANION)
-local has_arong_follower = CompanionStates.HasOwned(inst, ARONG_TAG, ARONG_RADIUS)
-
-if commandable_arong ~= nil and not has_arong_follower and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
-inst.follow_arong = true
-inst.arong_follow = true
-arong_update(inst)
-elseif has_arong_follower and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
-inst.follow_arong = false
-inst.arong_follow = false
-arong_update(inst)
-elseif commandable_arong == nil and not inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_ARONG_LOST)
-elseif commandable_arong ~= nil and not has_arong_follower and inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_FOLLOW)
-inst.follow_arong = true
-inst.arong_follow = true
-arong_update(inst)
-elseif has_arong_follower and inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_STAY)
-inst.follow_arong = false
-inst.arong_follow = false
-arong_update(inst)
-elseif commandable_arong == nil and inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_OOOOH)
-end
-end
-end
-
-AddModRPCHandler("musha","arong", order_arong)
-
- -----------------------------
-local YAMCHE_TAG = "yamcheb"
-local YAMCHE_RADIUS = 25
-local YAMCHE_COMPANION =
-{
-	can_command = function(yamche)
-		return yamche ~= nil
-			and yamche.components ~= nil
-			and yamche.components.follower ~= nil
-			and not yamche.house
-			and not yamche.hat
-			and not yamche.picked
-	end,
-	on_follow = function(owner, yamche)
-		yamche.MiniMapEntity:SetIcon("")
-		yamche.yamche = true
-		yamche.sleepn = false
-		yamche.fightn = false
-		yamche.slave = true
-	end,
-	on_rest = function(owner, yamche)
-		yamche.sleepn = true
-		yamche.yamche = true
-		yamche.fightn = true
-		yamche.active_hunt = false
-		yamche.slave = false
-		yamche.MiniMapEntity:SetIcon("musha_small.txt")
-		if yamche.components.sleeper ~= nil and not yamche.components.sleeper:IsAsleep() then
-			yamche.components.sleeper:AddSleepiness(3, 10)
-		end
-		if yamche.pick1 then
-			yamche.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_GATHER_STOP)
-			yamche.pick1 = false
-			yamche.working_food = false
-		end
-	end,
-}
-
-local function find_commandable_yamche(inst)
-return CompanionStates.FindCommandable(inst, YAMCHE_TAG, YAMCHE_RADIUS, YAMCHE_COMPANION)
-end
-
-local function find_owned_yamche(inst)
-return CompanionStates.FindOwned(inst, YAMCHE_TAG, YAMCHE_RADIUS)
-end
-
-local function set_yamche_following(inst, yamche)
-return CompanionStates.SetFollowing(inst, yamche, YAMCHE_TAG, YAMCHE_COMPANION)
-end
-
-local function set_yamche_resting(inst, yamche)
-return CompanionStates.SetResting(inst, yamche, YAMCHE_TAG, YAMCHE_COMPANION)
-end
-
-function yamche_update(inst)
-local yamche = inst.follow and find_commandable_yamche(inst) or (find_owned_yamche(inst) or find_commandable_yamche(inst))
-if yamche == nil then
-return
-end
-if inst.follow then
-set_yamche_following(inst, yamche)
-else
-set_yamche_resting(inst, yamche)
-end
-end
-
- function order_yamche(inst)
-inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end
-if not inst.writing and not inst.hat and not inst.house then
-local commandable_yamche = find_commandable_yamche(inst)
-local owned_yamche = find_owned_yamche(inst)
-local has_yamche_follower = inst.components.leader:CountFollowers("yamcheb") > 0
-if commandable_yamche ~= nil and commandable_yamche.components.follower.leader == inst then
-has_yamche_follower = true
-end
-if owned_yamche ~= nil then
-has_yamche_follower = true
-end
-if not has_yamche_follower and commandable_yamche ~= nil and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_FOLLOW)
-local emote = "happy"
-			if emote ~= nil then
-				MushaCommands.RunTextUserCommand(emote, inst, false)
-			end
-inst.follow = true
-inst.yamche_follow = true
---master_yamche(inst)
-yamche_update(inst)
-elseif has_yamche_follower and not inst.components.health:IsDead() and not inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_STAY)
-
-inst.follow = false
-inst.yamche_follow = false
---master_yamche(inst)
-yamche_update(inst)
-elseif commandable_yamche == nil and not inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_LOST)
-
-elseif not has_yamche_follower and commandable_yamche ~= nil and inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_FOLLOW)
-inst.follow = true
-inst.yamche_follow = true
-yamche_update(inst)
-elseif has_yamche_follower and inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_STAY)
-inst.follow = false
-inst.yamche_follow = false
-yamche_update(inst)
-elseif commandable_yamche == nil and inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_OOOOH)
-end
-end
-end
-
-AddModRPCHandler("musha","yamche", order_yamche)
+require("musha_companioncommands").Register({
+	AddModRPCHandler = AddModRPCHandler,
+	CompanionStates = CompanionStates,
+	STRINGS = STRINGS,
+	MushaCommands = MushaCommands,
+	TheSim = TheSim,
+	SpawnPrefab = SpawnPrefab,
+})
 
 --sneak attack --hide in shadow
 
@@ -2907,11 +2119,6 @@ end
 
  function HideIn(inst)
 inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end
 if not inst.writing then
 
 if not (inst.tiny_sleep or inst.sleep_on) then
@@ -3009,65 +2216,12 @@ end
 AddModRPCHandler("musha","shadows", HideIn)
 
 -----------------------------------------------
-function hiteffectsymbol_hound(inst)
-if IsServer then
-inst.components.combat.hiteffectsymbol = "hound_body"
-end end
-function hiteffectsymbol_frog(inst)
-if IsServer then
-inst.components.combat.hiteffectsymbol = "frogsack"
-end end
-function hiteffectsymbol_body(inst)
-if IsServer then
- inst.components.combat.hiteffectsymbol = "body"
-end end
-AddPrefabPostInit("hound", hiteffectsymbol_hound)
-AddPrefabPostInit("firehound", hiteffectsymbol_hound)
-AddPrefabPostInit("icehound", hiteffectsymbol_hound)
-AddPrefabPostInit("frog", hiteffectsymbol_frog)
-AddPrefabPostInit("hound", hiteffectsymbol_body)
-
-
-function electric_weapon(inst)
-if IsServer then
-        inst:AddTag("electric_weapon")
-end end
-AddPrefabPostInit("nightstick", electric_weapon)
-function no_target(inst)
-if IsServer then
-        inst:AddTag("no_target")
-end end
-AddPrefabPostInit("slurtlehole", no_target)
-
-function arms(inst)
-if IsServer then
-        inst:AddTag("arm")
-end end
-AddPrefabPostInit("tentacle_pillar_arm", arms)
-
-function green_mush(inst)
-if IsServer then
-	 inst:AddComponent("follower")
-	 inst:AddTag("mushrooms")
-end end
-function veggie(inst)
-if IsServer then
-	 inst:AddComponent("follower")
-	 inst:AddTag("wild_veggie")
-
-end end
-AddPrefabPostInit("farm_plant_randomseed", veggie)
-AddPrefabPostInit("green_mushroom", green_mush)
+require("musha_world_postinit").Register(AddPrefabPostInit, IsServer)
 
 -----------------------------------------------
 local function visual_cos(inst)
 ----------------------------------------------
 inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end
 if not inst.writing and not inst.visual_cos then
 	inst.musha_full = false
 	inst.musha_normal = false
@@ -3120,11 +2274,6 @@ AddModRPCHandler("musha","visual_human", visual_human)
 local function visual_hold(inst)
 ----------------------------------------------
 inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end
 if not inst.writing and not inst:HasTag("playerghost") then
 if not inst.visual_cos then
 	inst.musha_full = false
@@ -3707,273 +2856,6 @@ end end
 end
 AddModRPCHandler("musha","visual_hold", visual_hold)
 
-local function yamche2(inst)
-inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end
-if not inst.writing then
---hunt --defense --avoid
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 25, {"yamche"})
-for k,v in pairs(ents) do
-if not inst.components.leader:IsFollower(v) and v:HasTag("yamcheb") and not inst:HasTag("playerghost") and inst.components.leader:CountFollowers("yamcheb") == 0 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_ARONG_SLEEPY)
-elseif v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and not v.peace and not v.active_hunt and not v.defense and not inst:HasTag("playerghost") and not inst.berserks and not inst.fberserk then
-v.yamche = true
-if v:HasTag("yamcheb") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNT)
---v.components.talker:Say("[Aggressive]\nArmor:40")
-v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_OFFENSE)
-v.peace = false
-v.active_hunt = true
-v.defense = false
-v.crazyness = false
-
-end
-elseif v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and not v.peace and v.active_hunt and not v.defense and inst.components.leader:IsFollower(v) and not inst:HasTag("playerghost") and not inst.berserks and not inst.fberserk then
-v.yamche = true
-if v:HasTag("yamcheb") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_RETREAT)
---v.components.talker:Say("[Avoidance]\nArmor:95")
-v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_AVOID)
-v.peace = true
-v.active_hunt = false
-v.defense = true
-v.crazyness = true
-
-end
-elseif v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and v.peace and not v.active_hunt and v.defense and inst.components.leader:IsFollower(v) and not inst:HasTag("playerghost") and not inst.berserks and not inst.fberserk then
-v.yamche = true
-if v:HasTag("yamcheb") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_PROTECT)
---v.components.talker:Say("[Defensive]\nArmor:60")
-v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_DEFFENSE)
-v.peace = false
-v.active_hunt = false
-v.defense = false
-v.crazyness = false
-
-end
-elseif v.components.follower and v.components.follower.leader and v.peace and inst.components.leader:IsFollower(v) and not inst:HasTag("playerghost") and (inst.berserks or inst.fberserk) then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_BERSERK)
-v.yamche = true
-if v:HasTag("yamcheb") then
-v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_AVOID)
-v.peace = true
-v.active_hunt = false
-v.defense = true
-v.crazyness = true
-
-end
-elseif v.components.follower and v.components.follower.leader and not v.peace and inst.components.leader:IsFollower(v) and inst:HasTag("playerghost") and not inst.berserks and not inst.fberserk then
-v.yamche = true
-if v:HasTag("yamcheb") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_GHOST)
-v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_AVOID)
-v.peace = true
-v.active_hunt = false
-v.defense = true
-v.crazyness = false
-end
-elseif v.components.follower and v.components.follower.leader and v.peace and inst.components.leader:IsFollower(v) and inst:HasTag("playerghost") and not inst.berserks and not inst.fberserk then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_OOOOHHHH)
-v.yamche = true
-if v:HasTag("yamcheb") then
-v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_DEFFENSE)
-v.peace = false
-v.active_hunt = false
-v.defense = false
-v.crazyness = false
-end
-----inst.components.talker.colour = Vector3(0.7, 0.85, 1, 1)
-end end end
-end
-AddModRPCHandler("musha","yamche2", yamche2)
-
-local function yamche3(inst)
-inst.writing = false
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 1, {"_writeable"})
-for k,v in pairs(ents) do
-inst.writing = true
-end
-if not inst.writing then
-local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 25, {"yamcheb"})
-for k,v in pairs(ents) do
-if not v.removinv then
-if v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and not inst:HasTag("playerghost") and v.level1 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_LEVEL1)
-v.yamche = true
-
-elseif not v.level1 and v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and not inst:HasTag("playerghost") and v.components.container and v.item_max_full then
-	v.working_food = false
-	v.pick1 = false
-	v.drop = true
-	v.item_1 = false
-	v.item_ready_drop = false
-	inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_SHOWME)
-	v.yamche = true
-
-	SpawnPrefab("dr_warm_loop_2").Transform:SetPosition(v:GetPosition():Get())
-		if not v.light_on then
-		v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_REST.."\n"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x1)")
-		elseif v.light_on then
-		v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_LIGHT.."\n"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x8)")
-		end
-
-elseif not v.level1 and v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and not v.pick1 and not inst:HasTag("playerghost") and not v.item_max_full then
-
-	inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_GATHER)
-	local emote = "cheer"
-			if emote ~= nil then
-				MushaCommands.RunTextUserCommand(emote, inst, false)
-			end
-	v.working_food = true
-	v.pick1 = true
-	v.drop = false
-	v.yamche = true
-
-	if not v.light_on then
-	v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_STUFF.."\n"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x6)")
-	elseif v.light_on then
-	v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_LIGHT.."+"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_STUFF.."\n"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x14)")
-	end
-
-elseif not v.level1 and v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and v.pick1 and not inst:HasTag("playerghost") and not v.item_max_full then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_GATHER_STOP)
-v.working_food = false
-v.pick1 = false
-v.drop = true
-v.yamche = true
-	if not v.light_on then
-	v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_REST.."\n"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x1)")
-	elseif v.light_on then
-	v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_LIGHT.."\n"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x8)")
-	end
-
-
-elseif not v.level1 and not inst.components.leader:IsFollower(v) and not inst:HasTag("playerghost") and inst.components.leader:CountFollowers("yamcheb") == 0 then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_EGG)
-elseif v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and not v.pick1 and inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_GATHER)
-v.working_food = true
-v.pick1 = true
-v.drop = false
-v.yamche = true
-
-	if not v.light_on then
-	v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_STUFF.."\n"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x6)")
-	elseif v.light_on then
-	v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_LIGHT.."+"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_STUFF.."\n"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x14)")
-	end
-elseif not v.level1 and v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and v.pick1 and inst:HasTag("playerghost") then
-inst.components.talker:Say(STRINGS.MUSHA_TALK_GHOST_STOP)
-v.working_food = false
-v.pick1 = false
-v.drop = true
-	if not v.light_on then
-	v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_REST.."\n"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x1)")
-	elseif v.light_on then
-	v.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_LIGHT.."\n"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x8)")
-	end
-end
-----inst.components.talker.colour = Vector3(0.7, 0.85, 1, 1)
-end
-end
---
-local x,y,z = inst.Transform:GetWorldPosition()
-local critter = TheSim:FindEntities(x,y,z, 25, {"critter"})
-for k,v in pairs(critter) do
-if v.components.follower.leader and inst.components.leader:IsFollower(v) and v.components.container ~= nil and v.critter_musha and inst.components.leader:CountFollowers("yamcheb") == 0 then
-
---v.pet_mood_check = true
-if v.components.container:IsFull() then
-		if v.components.locomotor ~= nil then
-		v.components.locomotor:StopMoving()
-		end
-		local emote = "annoyed"
-			if emote ~= nil then
-				MushaCommands.RunTextUserCommand(emote, inst, false)
-			end
-	v.AnimState:PlayAnimation("distress")
-	v.components.machine:TurnOff()
-	v.working_on = false
-	v.item_ready_drop = false
-	v.working_food = false
-	v.pick1 = false
-	v.collect_off = true
-else
-
-if not v.pick1 and not v.working_food then
-
-if v.components.container ~= nil then
-v.components.container:Close()
-v.collect_work = true
-end
-
-inst.components.talker:Say(STRINGS.CRITTER_GATHERING)
-local emote = "cheer"
-			if emote ~= nil then
-				MushaCommands.RunTextUserCommand(emote, inst, false)
-			end
-		v.components.machine:TurnOn()
-		v.working_on = true
-		v.item_ready_drop = true
-			if v.components.locomotor ~= nil then
-			v.components.locomotor:StopMoving()
-			end
-		local random_ani = math.random(1, 2)
-		if random_ani == 1 then
-		v.sg:GoToState("playful")
-		else
-		v.AnimState:PlayAnimation("emote_nuzzle")
-		end
-
-	v.item_ready_drop = true
-	v.working_food = true
-	v.pick1 = true
-
-elseif v.pick1 or v.working_food then
-
-if v.components.container ~= nil then
-v.collect_work = false
-end
-
-inst.components.talker:Say(STRINGS.CRITTER_STOP_GATHER)
-v.components.machine:TurnOff()
-v.working_on = false
-
-	if v.components.locomotor ~= nil then
-	v.components.locomotor:StopMoving()
-	end
-if v.prefab == "critter_lamb" then
-v.AnimState:PlayAnimation("distress")
-v.SoundEmitter:PlaySound("dontstarve/creatures/together/sheepington/yell")
-else
-v.sg:GoToState("emote_cute")
-end
-
-	v.item_ready_drop = false
-	v.working_food = false
-	v.pick1 = false
-
-end
-
-end
-elseif v.components.follower.leader and inst.components.leader:IsFollower(v) and v.components.container ~= nil and v.critter_musha and inst.components.leader:CountFollowers("yamcheb") >= 1 then
-	v.follow_yamche = true
-end
-end
-end
-end
-
-AddModRPCHandler("musha","yamche3", yamche3)
-
-
 --[[local function ydebug(inst)
 inst.writing = false
 local x,y,z = inst.Transform:GetWorldPosition()
@@ -4035,6 +2917,23 @@ elseif self.classified ~= nil then
 self.classified:SetValue("currenthealth", current)
 end end end)
 --hover text
+local function GetSafeHoverName(target)
+if target == nil then
+return nil
+end
+local ok, name = pcall(target.GetDisplayName, target)
+if ok and name ~= nil and name ~= "" then
+return name
+end
+if target.components ~= nil and target.components.named ~= nil and target.components.named.name ~= nil then
+return target.components.named.name
+end
+if target.prefab ~= nil and GLOBAL.STRINGS ~= nil and GLOBAL.STRINGS.NAMES ~= nil then
+return GLOBAL.STRINGS.NAMES[string.upper(target.prefab)]
+end
+return nil
+end
+
 AddGlobalClassPostConstruct('widgets/hoverer', 'HoverText', function(self)
 self.OnUpdate = function(self)
 local using_mouse = self.owner.components and self.owner.components.playercontroller:UsingMouse()
@@ -4060,7 +2959,7 @@ lmb = self.owner.components.playercontroller:GetLeftMouseAction()
 if lmb then
 str = lmb:GetActionString()
 if lmb.target and lmb.invobject == nil and lmb.target ~= lmb.doer then
-local name = lmb.target:GetDisplayName() or (lmb.target.components.named and lmb.target.components.named.name)
+local name = GetSafeHoverName(lmb.target)
 if name then
 local adjective = lmb.target:GetAdjective()
 if adjective then
@@ -4075,7 +2974,8 @@ if lmb.target.components.inspectable and lmb.target.components.inspectable.recor
 GLOBAL.ProfileStatsSet(lmb.target.prefab .. "_seen", true)
 end end end
 if lmb.target and lmb.target ~= lmb.doer and lmb.target.components and lmb.target.components.healthinfo_copy and lmb.target.components.healthinfo_copy.text ~= '' then
-local name = lmb.target:GetDisplayName() or (lmb.target.components.named and lmb.target.components.named.name) or ""
+local name = GetSafeHoverName(lmb.target) or ""
+str = str or ""
 local i,j = string.find(str, " " .. name, nil, true)
 if i ~= nil and i > 1 then str = string.sub(str, 1, (i-1)) end
 str = str.. " " .. name .. " " .. lmb.target.components.healthinfo_copy.text
@@ -4164,220 +3064,7 @@ AddPrefabPostInitAny(function(inst)
 		end)
 
 -------------------------------------------------
-
-local function loud_Lightning_effect(inst)
-	if IsServer then
-		inst.loud_1 = Loud_Lightning == "loud1"
-		inst.loud_2 = Loud_Lightning == "loud2"
-		inst.loud_3 = Loud_Lightning == "loud3"
-	end
-end
-AddPrefabPostInit("musha", loud_Lightning_effect)
-
-
-  function Death_Penalty(inst)
- if IsServer and death_penalty == "off" then
-inst.no_panalty = true
-end end
-  AddPrefabPostInit("musha", Death_Penalty)
-
----------------------------------------------------
-
-
- function SleepnTired(inst)
-if IsServer then
-   if Badge_type == 0 then
-   inst.No_Sleep_Princess = true
-	else
-   inst.No_Sleep_Princess = false
-   end
-end
-end
- AddPrefabPostInit("musha", SleepnTired)
-
-
- function never_eat(inst)
- if IsServer then
-        inst:AddTag("no_edible")
-		end end
-AddPrefabPostInit("powcake", never_eat)
-AddPrefabPostInit("mandrake", never_eat)
-AddPrefabPostInit("cookedmandrake", never_eat)
-AddPrefabPostInit("spoiled_food", never_eat)
------------------------------difficulty test
---
-function musha_font(inst)
-   inst.components.talker.fontsize = 26
-   inst.components.talker.colour = Vector3(0.75, 0.9, 1, 1)
-end
-AddPrefabPostInit("musha", musha_font)
-
-function Difficulty_health(inst)
-if IsServer then
-  if DifficultHealth == "easy" then
- inst.easyh = true
-  elseif DifficultHealth == "normal" then
- inst.normalh = true
-  elseif DifficultHealth == "hard" then
- inst.hardh = true
-  elseif DifficultHealth == "hardcore" then
- inst.hardcoreh = true
- end end
-end
-AddPrefabPostInit("musha", Difficulty_health)
-
-function Difficulty_damage(inst)
-if IsServer then
-  if DifficultDamage == "newbie" then
-  inst.newbied = true
-inst.components.combat.damagemultiplier = 1.5
-  elseif DifficultDamage == "sveasy" then
-  inst.sveasyd = true
-inst.components.combat.damagemultiplier = 1.25
-  elseif DifficultDamage == "veasy" then
-  inst.seasyd = true
-inst.components.combat.damagemultiplier = 1
-  elseif DifficultDamage == "easy" then
-  inst.easyd = true
-inst.components.combat.damagemultiplier = .75
-  elseif DifficultDamage == "normal" then
-  inst.normald = true
-inst.components.combat.damagemultiplier = .55
-  elseif DifficultDamage == "hard" then
-  inst.hardd = true
-inst.components.combat.damagemultiplier = .4
-  elseif DifficultDamage == "hardcore" then
-  inst.hardcored = true
-inst.components.combat.damagemultiplier = .25
-end end
-end
-AddPrefabPostInit("musha", Difficulty_damage)
-
---range weapon damage
-function Difficulty_damage_range(inst)
-if IsServer then
-if DifficultDamage_Range == "veasy" then
-inst.veasy = true
-elseif DifficultDamage_Range == "easy" then
-inst.easy = true
-elseif DifficultDamage_Range == "normal" then
-inst.normalr = true
-elseif DifficultDamage_Range == "hard" then
-inst.hardr = true
-elseif DifficultDamage_Range == "hardcore" then
-inst.hardcorer = true
-end end
-end
-AddPrefabPostInit("musha", Difficulty_damage_range)
-
-function Range_Weapon(inst)
-if IsServer then
-inst:AddTag("range_weapon")
-end end
-
-AddPrefabPostInit("boomerang", Range_Weapon)
-AddPrefabPostInit("blowdart_sleep",Range_Weapon )
-AddPrefabPostInit("blowdart_fire",Range_Weapon )
-AddPrefabPostInit("blowdart_pipe",Range_Weapon )
-AddPrefabPostInit("blowdart_walrus",Range_Weapon)
-AddPrefabPostInit("blowdart_poison",Range_Weapon )
-AddPrefabPostInit("blowdart_yellow",Range_Weapon )
-
-function Difficulty_tired(inst)
-if IsServer then
-  if Dtired == "dtired_veasy" then
- inst.dtired_veasy = true
-  elseif Dtired == "dtired_easy" then
- inst.dtired_easy = true
-  elseif Dtired == "dtired_normal" then
- inst.dtired_normal = true
-  elseif Dtired == "dtired_hard" then
- inst.dtired_hard = true
-  elseif Dtired == "dtired_hardcore" then
- inst.dtired_hardcore = true
- end end
-end
-AddPrefabPostInit("musha", Difficulty_tired)
-
-function Difficulty_sleep(inst)
-if IsServer then
-  if Dsleep == "dsleep_veasy" then
- inst.dsleep_veasy = true
-  elseif Dsleep == "dsleep_easy" then
- inst.dsleep_easy = true
-  elseif Dsleep == "dsleep_normal" then
- inst.dsleep_normal = true
-  elseif Dsleep == "dsleep_hard" then
- inst.dsleep_hard = true
-  elseif Dsleep == "dsleep_hardcore" then
- inst.dsleep_hardcore = true
- end end
-end
-AddPrefabPostInit("musha", Difficulty_sleep)
-
-function Difficulty_music(inst)
-if IsServer then
-  if Dmusic == "dmusic_veasy" then
- inst.dmusic_veasy = true
-  elseif Dmusic == "dmusic_easy" then
- inst.dmusic_easy = true
-  elseif Dmusic == "dmusic_normal" then
- inst.dmusic_normal = true
-  elseif Dmusic == "dmusic_hard" then
- inst.dmusic_hard = true
-  elseif Dmusic == "dmusic_hardcore" then
- inst.dmusic_hardcore = true
- end end
-end
-AddPrefabPostInit("musha", Difficulty_music)
-
-function Difficulty_mana(inst)
-if IsServer then
- inst.musha_mana_regen = SkillDefs.GetManaRegenForConfig(Dmana)
-  if Dmana == "dmana_veasy" then
- inst.dmana_veasy = true
-  elseif Dmana == "dmana_easy" then
- inst.dmana_easy = true
-  elseif Dmana == "dmana_normal" then
- inst.dmana_normal = true
-  elseif Dmana == "dmana_hard" then
- inst.dmana_hard = true
-  elseif Dmana == "dmana_hardcore" then
- inst.dmana_hardcore = true
-  end
-end
-end
-AddPrefabPostInit("musha", Difficulty_mana)
-
-function Difficulty_sniff(inst)
-if IsServer then
-  if Dsniff == "easy" then
- inst.dsniff_easy = true
-  elseif Dsniff == "normal" then
- inst.dsniff_normal = true
-  elseif Dsniff == "hard" then
- inst.dsniff_hard = true
-  elseif Dsniff == "hardcore" then
- inst.dsniff_hardcore = true
- end end
-end
-AddPrefabPostInit("musha", Difficulty_sniff)
-
-function Difficulty_sanity(inst)
-if IsServer then
-  if DifficultSanity == "newbie" then
- inst.newbies = true
-  elseif DifficultSanity == "easy" then
- inst.easys = true
-  elseif DifficultSanity == "normal" then
- inst.normals = true
-  elseif DifficultSanity == "hard" then
- inst.hards = true
-  elseif DifficultSanity == "hardcore" then
- inst.hardcores = true
- end end
-end
-AddPrefabPostInit("musha", Difficulty_sanity)
+require("musha_difficulty_postinit").Register(Config, AddPrefabPostInit, IsServer, Vector3, SkillDefs)
 
 -------
 AddModCharacter("musha","FEMALE")

@@ -13,6 +13,11 @@ local function ConsolePostConstruct(inst)
 	function inst:OnBecomeInactive()
 		inst._base.OnBecomeInactive(inst)
 
+		if inst.console_edit ~= nil then
+			inst.console_edit:SetEditing(false)
+		end
+		TheFrontEnd:LockFocus(false)
+
     	if inst.runtask ~= nil then
         	inst.runtask:Cancel()
         	inst.runtask = nil

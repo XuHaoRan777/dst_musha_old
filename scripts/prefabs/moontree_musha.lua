@@ -1744,17 +1744,24 @@ end
 end
  
 local function OnAttacked(inst, data)
-	if data.attacker and data.attacker:HasTag("musha") or data.attacker:HasTag("player") then
-	inst.components.combat:SetTarget(nil)
-	inst.components.combat:GiveUp()
-    end
-if inst.sleep_on then
-InShadow(inst)
-inst.sg:GoToState("sleeping")
-elseif not inst.sleep_on then
-    inst.components.combat:SetTarget(data.attacker)
+	local attacker = data ~= nil and data.attacker or nil
+
+	if attacker ~= nil and (attacker:HasTag("musha") or attacker:HasTag("player")) then
+		inst.components.combat:SetTarget(nil)
+		inst.components.combat:GiveUp()
+		if inst.sleep_on then
+			InShadow(inst)
+			inst.sg:GoToState("sleeping")
+		end
+		return
 	end
-	            
+
+	if inst.sleep_on then
+		InShadow(inst)
+		inst.sg:GoToState("sleeping")
+	elseif attacker ~= nil then
+		inst.components.combat:SetTarget(attacker)
+	end
 end
 
 local function OnLoad(inst, data)

@@ -61,10 +61,20 @@ poo.Transform:SetPosition(inst.Transform:GetWorldPosition())
 	end
 	
 local function OnAttacked(inst, data)
-    inst.components.combat:SetTarget(data.attacker)
-    inst.components.combat:ShareTarget(data.attacker, 30, function(dude)
-        return dude:HasTag("musha") and not dude.components.health:IsDead()
-    end, 5)
+    local attacker = data ~= nil and data.attacker or nil
+
+    if attacker ~= nil and (attacker:HasTag("musha") or attacker:HasTag("player")) then
+        inst.components.combat:SetTarget(nil)
+        inst.components.combat:GiveUp()
+        return
+    end
+
+    if attacker ~= nil then
+        inst.components.combat:SetTarget(attacker)
+        inst.components.combat:ShareTarget(attacker, 30, function(dude)
+            return dude:HasTag("musha") and not dude.components.health:IsDead()
+        end, 5)
+    end
 end
 
 local function FollowGrownArong(inst)

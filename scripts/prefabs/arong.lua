@@ -400,12 +400,51 @@ local function CanShareTarget(dude)
         and not (dude.components.health:IsDead() or dude:HasTag("player"))
 end
 
+local function IsMushaOrPlayerAttacker(attacker)
+    return attacker ~= nil
+        and (attacker:HasTag("musha") or attacker:HasTag("player"))
+end
+
+local function ClearCombatTarget(inst)
+    if inst.components.combat ~= nil then
+        inst.components.combat:SetTarget(nil)
+        inst.components.combat:GiveUp()
+    end
+end
+
+local function ApplyPermanentArongLoyalty(inst)
+    inst._arong_permanent_loyalty = true
+
+    if inst.components.domesticatable ~= nil then
+        inst.components.domesticatable:SetMinObedience(1)
+        inst.components.domesticatable:DeltaObedience(1)
+        inst.components.domesticatable:PauseDomesticationDecay(true)
+    end
+
+    if inst.components.rideable ~= nil then
+        inst.components.rideable:SetRequiredObedience(0)
+        inst.components.rideable:SetSaddleable(true)
+    end
+end
+
 local function OnAttacked(inst, data)
+    local attacker = data ~= nil and data.attacker or nil
+
     if inst._ridersleeptask ~= nil then
         inst._ridersleeptask:Cancel()
         inst._ridersleeptask = nil
     end
     inst._ridersleep = nil
+
+    if IsMushaOrPlayerAttacker(attacker) then
+        ApplyPermanentArongLoyalty(inst)
+        ClearCombatTarget(inst)
+        if inst.components.hitchable and not inst.components.hitchable.canbehitched then
+            inst.components.hitchable:Unhitch()
+        end
+        return
+    end
+
     if inst.components.rideable:IsBeingRidden() then
         if not inst.components.domesticatable:IsDomesticated() or not inst.tendency == TENDENCY.ORNERY then
             inst.components.domesticatable:DeltaDomestication(TUNING.BEEFALO_DOMESTICATION_ATTACKED_DOMESTICATION)
@@ -413,12 +452,14 @@ local function OnAttacked(inst, data)
         end
         inst.components.domesticatable:DeltaTendency(TENDENCY.ORNERY, TUNING.BEEFALO_ORNERY_ATTACKED)
     else
-        if data.attacker ~= nil and data.attacker:HasTag("player") then
-            inst.components.domesticatable:DeltaDomestication(TUNING.BEEFALO_DOMESTICATION_ATTACKED_BY_PLAYER_DOMESTICATION)
-            inst.components.domesticatable:DeltaObedience(TUNING.BEEFALO_DOMESTICATION_ATTACKED_BY_PLAYER_OBEDIENCE)
+        if attacker ~= nil then
+            if attacker:HasTag("player") then
+                inst.components.domesticatable:DeltaDomestication(TUNING.BEEFALO_DOMESTICATION_ATTACKED_BY_PLAYER_DOMESTICATION)
+                inst.components.domesticatable:DeltaObedience(TUNING.BEEFALO_DOMESTICATION_ATTACKED_BY_PLAYER_OBEDIENCE)
+            end
+            inst.components.combat:SetTarget(attacker)
+            inst.components.combat:ShareTarget(attacker, 30, CanShareTarget, 5)
         end
-        inst.components.combat:SetTarget(data.attacker)
-        inst.components.combat:ShareTarget(data.attacker, 30, CanShareTarget, 5)
     end
     if inst.components.hitchable and not inst.components.hitchable.canbehitched then
         inst.components.hitchable:Unhitch()
@@ -625,6 +666,10 @@ local function SetTendency(inst, changedomestication)
             inst:ApplyBuildOverrides(inst.components.rideable:GetRider().AnimState)
         end
     end
+
+    if inst._arong_permanent_loyalty then
+        ApplyPermanentArongLoyalty(inst)
+    end
 end
 
 local function GetBaseSkin(inst)
@@ -663,12 +708,22 @@ local function CalculateBuckDelay(inst)
 end
 
 local function OnBuckTime(inst)
+    if inst._arong_permanent_loyalty then
+        inst._bucktask = nil
+        return
+    end
+
     --V2C: reschedule because :Buck() is not guaranteed!
     inst._bucktask = inst:DoTaskInTime(1 + math.random(), OnBuckTime)
     inst.components.rideable:Buck()
 end
 
 local function OnObedienceDelta(inst, data)
+    if inst._arong_permanent_loyalty then
+        inst.components.rideable:SetSaddleable(true)
+        return
+    end
+
     inst.components.rideable:SetSaddleable(data.new >= TUNING.BEEFALO_SADDLEABLE_OBEDIENCE)
 
     if data.new > data.old and inst._bucktask ~= nil then
@@ -1152,7 +1207,9 @@ local function OnRiderChanged(inst, data)
         if inst.components.sleeper ~= nil then
             inst.components.sleeper:WakeUp()
         end
-        inst._bucktask = inst:DoTaskInTime(CalculateBuckDelay(inst), OnBuckTime)
+        if not inst._arong_permanent_loyalty then
+            inst._bucktask = inst:DoTaskInTime(CalculateBuckDelay(inst), OnBuckTime)
+        end
         inst.components.knownlocations:RememberLocation("loiteranchor", inst:GetPosition())
     elseif inst.components.health:IsDead() then
         if inst.sg.currentstate.name ~= "death" then
@@ -1267,7 +1324,11 @@ local function MountSleepTest(inst)
 end
 
 local function ToggleDomesticationDecay(inst)
-    inst.components.domesticatable:PauseDomesticationDecay(inst.components.saltlicker.salted or inst.components.sleeper:IsAsleep())
+    inst.components.domesticatable:PauseDomesticationDecay(
+        inst._arong_permanent_loyalty
+        or inst.components.saltlicker.salted
+        or inst.components.sleeper:IsAsleep()
+    )
 end
 
 local function onwenthome(inst,data)
@@ -1279,6 +1340,7 @@ end
 
 local function OnInit(inst)
     inst:UpdateDomestication()
+    ApplyPermanentArongLoyalty(inst)
 end
 
 local function CustomOnHaunt(inst)
@@ -1327,6 +1389,8 @@ fns.OnLoadPostPass = function(inst,data)
 			inst.components.health:DoDelta(0)
 		end
 	end
+
+    ApplyPermanentArongLoyalty(inst)
 end
 
 local function CanSpawnPoop(inst)
@@ -1609,7 +1673,11 @@ inst.level = 0
 	inst.on_wakeup = inst:DoPeriodicTask(4, on_wakeup)  
 	
    inst.gasfn = function(attacked, data)
-    if data ~= nil and data.attacker and data.attacker.components.sleeper and inst.components.health:GetPercent() <= .5 then
+    if data ~= nil
+        and data.attacker
+        and not IsMushaOrPlayerAttacker(data.attacker)
+        and data.attacker.components.sleeper
+        and inst.components.health:GetPercent() <= .5 then
             data.attacker.components.sleeper:AddSleepiness(3, 24)
 	SpawnPrefab("small_puff").Transform:SetPosition(data.attacker:GetPosition():Get())
        end end
@@ -1621,6 +1689,7 @@ inst.level = 0
 
     inst.SetTendency = SetTendency
     inst:SetTendency()
+    ApplyPermanentArongLoyalty(inst)
 
     --inst._marked_for_despawn = nil
 

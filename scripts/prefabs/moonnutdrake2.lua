@@ -13,12 +13,24 @@ local prefabs =
 local brain = require("brains/moonnutdrakebrain")
 
 
+local function IsLoyalTarget(target)
+    return target ~= nil
+        and (target:HasTag("musha") or target:HasTag("player"))
+end
+
+local function ClearLoyalTarget(inst)
+    if inst.components.combat ~= nil then
+        inst.components.combat:SetTarget(nil)
+        inst.components.combat:GiveUp()
+    end
+end
+
 local function RetargetFn(inst)
      local dist = 15
 	 local leader = inst.components.follower.leader
     if inst.components.follower and inst.components.follower.leader then
     return FindEntity(inst, dist, function(guy)
-        return inst.components.combat:CanTarget(guy)
+        return not IsLoyalTarget(guy) and inst.components.combat:CanTarget(guy)
     end,
     nil,
       {"musha","player","wall","houndmound","structure","companion","yamche","arongb","pig","bee","rocky","webber","bird","koalefant","beefalo","companion","moondrake","moondrake2","butterfly","prey",--[["cavedweller",]]"statue","character","abigail","smashable","veggie","shadowminion","catcoon","animal"})
@@ -27,7 +39,8 @@ local function RetargetFn(inst)
 end 	
 
 local function KeepTargetFn(inst, target)
-    return not inst.sg:HasStateTag("exit")
+    return not IsLoyalTarget(target)
+        and not inst.sg:HasStateTag("exit")
         and (inst.sg:HasStateTag("hidden")
             or (target ~= nil and
                 not target.components.health:IsDead() and inst.components.combat:CanTarget(target) and
@@ -42,13 +55,14 @@ end
 
 local function OnHitfreeze(inst, data)
 local other = data.target
-if not (other:HasTag("smashable")) then
+if IsLoyalTarget(other) then
+    ClearLoyalTarget(inst)
+    return
+end
+if other ~= nil and not (other:HasTag("smashable")) then
     if other and other.components.freezable then
         other.components.freezable:AddColdness(0.25)
         --other.components.freezable:SpawnShatterFX()
-elseif other and other:HasTag("musha") then
-	inst.components.combat:SetTarget(nil)
-inst.components.combat:GiveUp()
     end
     if other.components.burnable and other.components.burnable:IsBurning() then
         other.components.burnable:Extinguish()
@@ -57,12 +71,24 @@ end
 end
 
 local function OnAttacked(inst, data)
-    inst.components.combat:SetTarget(data.attacker)
-    inst.components.combat:ShareTarget(data.attacker, 15, CanShareTarget, 10)
-	
-	if data.attacker and data.attacker:HasTag("musha") or data.attacker:HasTag("player") then
-	inst.components.combat:SetTarget(nil)
-	inst.components.combat:GiveUp()
+    local attacker = data ~= nil and data.attacker or nil
+
+    if IsLoyalTarget(attacker) then
+        ClearLoyalTarget(inst)
+        inst:DoTaskInTime(0, ClearLoyalTarget)
+        return
+    end
+
+    if attacker ~= nil then
+        inst.components.combat:SetTarget(attacker)
+        inst.components.combat:ShareTarget(attacker, 15, CanShareTarget, 10)
+    end
+end
+
+local function OnNewCombatTarget(inst, data)
+    if data ~= nil and IsLoyalTarget(data.target) then
+        ClearLoyalTarget(inst)
+        inst:DoTaskInTime(0, ClearLoyalTarget)
     end
 end
 
@@ -179,8 +205,9 @@ end
     inst.components.combat:SetRetargetFunction(1, RetargetFn)
     inst.components.combat:SetKeepTargetFunction(KeepTargetFn)
     --inst.components.combat:SetHurtSound("dontstarve_DLC001/creatures/decidous/drake_hit")
-	inst.components.combat:SetHurtSound("dontstarve_DLC001/creatures/deciduous/drake_hit")
+    inst.components.combat:SetHurtSound("dontstarve_DLC001/creatures/deciduous/drake_hit")
     inst:ListenForEvent("attacked", OnAttacked)
+    inst:ListenForEvent("newcombattarget", OnNewCombatTarget)
 	inst:ListenForEvent("onhitother", OnHitfreeze)
 		inst.components.combat.playerdamagepercent = 0
     inst:DoTaskInTime(5, inst.ListenForEvent, "losttarget", OnLostTarget)
