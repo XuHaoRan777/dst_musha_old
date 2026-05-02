@@ -1,11 +1,8 @@
 return {
     {
         name = "modlanguage",
-        label = T("游戏内语言", "In-game Language"),
-        hover = T(
-            "影响游戏内文本。配置页面会跟随客户端语言自动显示中文或英文。",
-            "Controls in-game text. The config screen follows the client locale."
-        ),
+        label = T("Mod 语言", "Mod Language"),
+        hover = LanguageHover(),
         options = {
             {description = "English", data = "english"},
             {description = "한글", data = "korean"},
