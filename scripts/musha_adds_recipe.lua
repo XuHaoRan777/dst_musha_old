@@ -103,6 +103,34 @@ end
 GLOBAL.STRINGS.TABS.MUSHA = "MushA"
 GLOBAL.RECIPETABS['MUSHA'] = {str = "MUSHA", sort=12, icon = "mushatab.tex", icon_atlas = "images/mushatab.xml"}
 
+local AddRecipeLegacy = AddRecipe
+local AddRecipe2Compat = AddRecipe2
+local CHARACTER_RECIPE_FILTERS = { "CHARACTER" }
+
+local function ShouldUseCharacterFilter(name, tab)
+	return tab == RECIPETABS.MUSHA or name == "musha_nametag"
+end
+
+local function AddRecipe(name, ingredients, tab, tech, placer, min_spacing, nounlock, numtogive, builder_tag, atlas, image, testfn, product, build_mode, build_distance, ...)
+	if AddRecipe2Compat ~= nil and ShouldUseCharacterFilter(name, tab) then
+		return AddRecipe2Compat(name, ingredients, tech, {
+			placer = placer,
+			min_spacing = min_spacing,
+			nounlock = nounlock,
+			numtogive = numtogive,
+			builder_tag = builder_tag,
+			atlas = atlas,
+			image = image,
+			testfn = testfn,
+			product = product,
+			build_mode = build_mode,
+			build_distance = build_distance,
+		}, CHARACTER_RECIPE_FILTERS)
+	end
+
+	return AddRecipeLegacy(name, ingredients, tab, tech, placer, min_spacing, nounlock, numtogive, builder_tag, atlas, image, testfn, product, build_mode, build_distance, ...)
+end
+
 ----BOOK----
 
 
