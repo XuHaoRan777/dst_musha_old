@@ -598,6 +598,52 @@ local function GetYamcheHatBuild(inst)
 	return "hat_house"
 end
 
+local function GetYamcheMapIcon(inst)
+	return "musha_small.tex"
+end
+
+local function RefreshYamcheMapIcon(inst)
+	if inst ~= nil and inst.MiniMapEntity ~= nil then
+		inst.MiniMapEntity:SetIcon(GetYamcheMapIcon(inst))
+		inst.MiniMapEntity:SetEnabled(true)
+	end
+end
+
+local function RefreshYamcheInventoryIcon(inst)
+	if inst == nil or inst.components == nil or inst.components.inventoryitem == nil then
+		return
+	end
+
+	if inst.level1 then
+		inst.components.inventoryitem:ChangeImageName("musha_small")
+		inst.components.inventoryitem.atlasname = "images/inventoryimages/musha_small.xml"
+	elseif inst.level2 then
+		inst.components.inventoryitem:ChangeImageName("musha_teen")
+		inst.components.inventoryitem.atlasname = "images/inventoryimages/musha_teen.xml"
+	elseif inst.level3 then
+		inst.components.inventoryitem:ChangeImageName("musha_tall")
+		inst.components.inventoryitem.atlasname = "images/inventoryimages/musha_tall.xml"
+	elseif inst.level4 then
+		inst.components.inventoryitem:ChangeImageName("musha_tall2")
+		inst.components.inventoryitem.atlasname = "images/inventoryimages/musha_tall2.xml"
+	elseif inst.level5 then
+		inst.components.inventoryitem:ChangeImageName("musha_tall3")
+		inst.components.inventoryitem.atlasname = "images/inventoryimages/musha_tall3.xml"
+	elseif inst.level6 then
+		inst.components.inventoryitem:ChangeImageName("musha_tall4")
+		inst.components.inventoryitem.atlasname = "images/inventoryimages/musha_tall4.xml"
+	elseif inst.level7 then
+		inst.components.inventoryitem:ChangeImageName("musha_tall5")
+		inst.components.inventoryitem.atlasname = "images/inventoryimages/musha_tall5.xml"
+	elseif inst.level8 then
+		inst.components.inventoryitem:ChangeImageName("musha_rp3")
+		inst.components.inventoryitem.atlasname = "images/inventoryimages/musha_rp3.xml"
+	elseif inst.super_baby then
+		inst.components.inventoryitem:ChangeImageName("musha_small_super")
+		inst.components.inventoryitem.atlasname = "images/inventoryimages/musha_small_super.xml"
+	end
+end
+
 local function ApplyYamcheHatVisual(inst, owner)
 	if owner == nil or owner.AnimState == nil then
 		return
@@ -607,6 +653,29 @@ local function ApplyYamcheHatVisual(inst, owner)
 	owner.AnimState:Show("HAT")
 	owner.AnimState:Hide("HAIR_NOHAT")
 	owner.AnimState:Show("HAIR")
+end
+
+local function RefreshEquippedYamcheHatVisual(inst)
+	if inst == nil or inst.components == nil or inst.components.inventoryitem == nil then
+		return false
+	end
+
+	local owner = inst.components.inventoryitem.owner
+	if not IsYamcheHeadEquipped(inst, owner) then
+		return false
+	end
+
+	inst.house = true
+	RefreshYamcheInventoryIcon(inst)
+	if inst.level1 or inst.super_baby then
+		inst.baby = true
+		inst.light_on = true
+		if inst.Light ~= nil then
+			inst.Light:Enable(true)
+		end
+	end
+	ApplyYamcheHatVisual(inst, owner)
+	return true
 end
 
 local function QueueYamcheHatVisualRefresh(inst, owner)
@@ -657,12 +726,7 @@ inst.components.hunger:SetRate(0.03)
 end
 end
 
-if inst.house and inst.components.inventoryitem ~= nil then
-	local owner = inst.components.inventoryitem.owner
-	if IsYamcheHeadEquipped(inst, owner) then
-		ApplyYamcheHatVisual(inst, owner)
-	end
-end
+RefreshEquippedYamcheHatVisual(inst)
 
 if inst.components.health and not inst.open and not inst.campfire then 
 	if not inst.sleep_on and inst.components.health:GetPercent() > .3 then
@@ -1153,9 +1217,7 @@ local function SetDroppedYamcheResting(inst)
 	inst.active_hunt = false
 	inst.slave = false
 	inst.yamche = true
-	if inst.MiniMapEntity ~= nil then
-		inst.MiniMapEntity:SetIcon("musha_small.txt")
-	end
+	RefreshYamcheMapIcon(inst)
 	if inst.components.sleeper ~= nil and not inst.components.sleeper:IsAsleep() then
 		inst.components.sleeper:AddSleepiness(3, 10)
 	end
@@ -1283,9 +1345,8 @@ end
 
 
 	inst.components.follower:SetLeader(nil)
-	if not inst.level1 and not inst.super_baby then	
-	    ApplyYamcheHatVisual(inst, owner)
-	end
+	RefreshYamcheInventoryIcon(inst)
+	ApplyYamcheHatVisual(inst, owner)
 if inst.level1 then		
 inst.components.growable:StopGrowing()
  
@@ -2140,12 +2201,8 @@ elseif inst.shield_on and inst.components.health:GetPercent() <= .1 then
 
 local function on_close(inst)
 local owner = inst.components.follower.leader
-if owner ~= nil then
-inst.MiniMapEntity:SetIcon( "" )
+RefreshYamcheMapIcon(inst)
 inst.follow = false
-elseif owner == nil then
-inst.MiniMapEntity:SetIcon( "musha_small.tex" )
-end
 if inst.pick1 then
 
 inst.components.locomotor.walkspeed = 8
@@ -2162,12 +2219,7 @@ local function on_far(inst)
 local owner = inst.components.follower.leader
 
 if owner ~= nil then
-
-	if inst.active_hunt then
-		inst.MiniMapEntity:SetIcon( "musha_small.tex" )
-	elseif not inst.active_hunt then
-		inst.MiniMapEntity:SetIcon( "" )
-	end
+	RefreshYamcheMapIcon(inst)
 	
 inst.follow = true
 
@@ -2187,7 +2239,7 @@ else
 end
 
 elseif owner == nil then
-inst.MiniMapEntity:SetIcon( "musha_small.tex" )
+	RefreshYamcheMapIcon(inst)
 inst.components.locomotor.walkspeed = 6
 end 
 
@@ -3203,6 +3255,12 @@ inst:DoTaskInTime(9, function() inst.anti_monkey = false inst.components.contain
 
 end end
 
+local function IsMonkeyThreat(inst)
+	return inst ~= nil
+		and not inst:HasTag("nightmare")
+		and (inst:HasTag("monkey") or inst:HasTag("pirate") or inst.prefab == "prime_mate" or inst.prefab == "powder_monkey")
+end
+
 
 local function on_follow(inst, data)
 
@@ -3237,11 +3295,11 @@ inst.components.talker:Say(STRINGS.MUSHA_LEVEL_LEVEL.." Super Baby\n"..STRINGS.M
 end
 
 --anti monkey  -- Don't Touch Me
-if not inst.sleep_on and not inst.anti_monkey then
+if inst.components.follower.leader and not inst.sleep_on and not inst.anti_monkey then
 local x,y,z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x,y,z, 2, {"monkey"})
+local ents = TheSim:FindEntities(x,y,z, 3, nil, nil, {"monkey", "pirate"})
 for k,v in pairs(ents) do
-if not v:HasTag("nightmare") then
+if IsMonkeyThreat(v) then
 inst.anti_monkey = true
 local random = 0.2
 if math.random() < random then
@@ -4545,9 +4603,8 @@ local function create_base(inst)
 	inst:AddTag("crazy")
 		
 	inst.entity:AddMiniMapEntity()
-	inst.MiniMapEntity:SetIcon( "musha_small.tex" )
-	inst.MiniMapEntity:SetEnabled(true)
-	--inst.MiniMapEntity:SetPriority(10)
+	RefreshYamcheMapIcon(inst)
+	inst.MiniMapEntity:SetPriority(10)
 	--inst.MiniMapEntity:SetDrawOverFogOfWar(false)
    
 	--inst.MiniMapEntity:SetIcon( "musha_teen.tex" )

@@ -87,6 +87,10 @@ require("musha/equipment/inventory_overflow").Register({
 })
 
 require("musha/config/postinit").Register(Config, AddPrefabPostInit, IsServer, TUNING)
+require("musha/prefabs/monkey_immunity").Register({
+	AddPrefabPostInit = AddPrefabPostInit,
+	IsServer = IsServer,
+})
 
 modimport("scripts/mypower_musha_1.lua")
 modimport("scripts/widgets/spellpower_statusdisplays.lua")

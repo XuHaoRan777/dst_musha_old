@@ -35,6 +35,13 @@ local function SetOwnerFollowState(owner, state_name, legacy_name, value)
 	owner[legacy_name] = value
 end
 
+local function RefreshYamcheMapIcon(yamche)
+	if yamche ~= nil and yamche.MiniMapEntity ~= nil then
+		yamche.MiniMapEntity:SetIcon("musha_small.tex")
+		yamche.MiniMapEntity:SetEnabled(true)
+	end
+end
+
 local function RegisterDall(deps)
 	local CompanionStates = deps.CompanionStates
 	local STRINGS = deps.STRINGS
@@ -214,9 +221,7 @@ local function RegisterYamcheFollow(deps)
 				and not yamche.picked
 		end,
 		on_follow = function(owner, yamche)
-			if yamche.MiniMapEntity ~= nil then
-				yamche.MiniMapEntity:SetIcon("")
-			end
+			RefreshYamcheMapIcon(yamche)
 			yamche.yamche = true
 			yamche.sleepn = false
 			yamche.fightn = false
@@ -228,9 +233,7 @@ local function RegisterYamcheFollow(deps)
 			yamche.fightn = true
 			yamche.active_hunt = false
 			yamche.slave = false
-			if yamche.MiniMapEntity ~= nil then
-				yamche.MiniMapEntity:SetIcon("musha_small.txt")
-			end
+			RefreshYamcheMapIcon(yamche)
 			if yamche.components.sleeper ~= nil and not yamche.components.sleeper:IsAsleep() then
 				yamche.components.sleeper:AddSleepiness(3, 10)
 			end
