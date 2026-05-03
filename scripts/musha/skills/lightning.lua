@@ -48,6 +48,32 @@ local function ClearShadowVisual(inst)
 	end
 end
 
+local function IsProtectedLightningTarget(inst, target)
+	if target == nil or target == inst then
+		return true
+	end
+
+	if target:HasTag("player")
+		or target:HasTag("companion")
+		or target:HasTag("yamche")
+		or target:HasTag("yamcheb")
+		or target:HasTag("arongb")
+		or target:HasTag("Arongb")
+		or target:HasTag("dall")
+		or target.musha_migration_companion then
+		return true
+	end
+
+	local follower = target.components ~= nil and target.components.follower or nil
+	if follower ~= nil and follower.leader ~= nil and follower.leader:HasTag("musha") then
+		return true
+	end
+
+	return inst.components ~= nil
+		and inst.components.leader ~= nil
+		and inst.components.leader:IsFollower(target)
+end
+
 local function ClearValkyrieLightning(inst, env, play_fx, refund)
 	inst.components.combat:SetRange(2)
 	inst:RemoveEventCallback("onhitother", M.OnHitLightning)
@@ -139,6 +165,7 @@ local function IsLightningTarget(inst, target)
 		and target.components.health ~= nil
 		and not target.components.health:IsDead()
 		and not target.ghost_spark
+		and not IsProtectedLightningTarget(inst, target)
 		and not (target:HasTag("berrythief") or target:HasTag("bird") or target:HasTag("butterfly"))
 		and not target:HasTag("groundspike")
 		and not target:HasTag("player")
@@ -174,6 +201,7 @@ end
 function M.OnHitLightning(inst, data)
 	local other = data ~= nil and data.target or nil
 	if other == nil
+		or IsProtectedLightningTarget(inst, other)
 		or other:HasTag("smashable")
 		or other:HasTag("shadowminion")
 		or other:HasTag("alignwall") then

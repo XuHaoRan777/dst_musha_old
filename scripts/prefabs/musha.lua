@@ -1344,13 +1344,47 @@ local function on_shard_shield(inst, attacked)
 	end
 end
 
+local function IsProtectedLightningEntity(inst, target)
+	if target == nil or target == inst then
+		return true
+	end
+
+	if target:HasTag("player")
+		or target:HasTag("companion")
+		or target:HasTag("yamche")
+		or target:HasTag("yamcheb")
+		or target:HasTag("arongb")
+		or target:HasTag("Arongb")
+		or target:HasTag("dall")
+		or target.musha_migration_companion then
+		return true
+	end
+
+	local follower = target.components ~= nil and target.components.follower or nil
+	if follower ~= nil and follower.leader ~= nil and follower.leader:HasTag("musha") then
+		return true
+	end
+
+	return inst.components ~= nil
+		and inst.components.leader ~= nil
+		and inst.components.leader:IsFollower(target)
+end
+
+local function ClearFriendlyLightningMarks(target)
+	if target ~= nil and target:IsValid() then
+		target:RemoveTag("burn")
+		target.burn = false
+		target.bloom = false
+	end
+end
+
 
 function Call_lightining_on(inst)
 if (inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst.vl7 or inst.vl8) and not inst.call_lightining_on then
 local x,y,z = inst.Transform:GetWorldPosition()
 local ents = TheSim:FindEntities(x, y, z, 12)
 for k,v in pairs(ents) do
-	if v:IsValid() and v.entity:IsVisible() and v.components.health ~= nil and not v.components.health:IsDead() and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly")) and not v:HasTag("groundspike") and not v:HasTag("player") and not v:HasTag("stalkerminion") and not inst.components.rider ~= nil and not inst.components.rider:IsRiding() and not inst.sg:HasStateTag("moving") and not inst.sg:HasStateTag("attack") and not v:HasTag("structure") and v.components.combat ~= nil and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn") or v:HasTag("werepig") or v:HasTag("frog")) then
+	if v:IsValid() and v.entity:IsVisible() and not IsProtectedLightningEntity(inst, v) and v.components.health ~= nil and not v.components.health:IsDead() and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly")) and not v:HasTag("groundspike") and not v:HasTag("player") and not v:HasTag("stalkerminion") and not inst.components.rider ~= nil and not inst.components.rider:IsRiding() and not inst.sg:HasStateTag("moving") and not inst.sg:HasStateTag("attack") and not v:HasTag("structure") and v.components.combat ~= nil and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn") or v:HasTag("werepig") or v:HasTag("frog")) then
 
 inst.call_lightining_on = true
 inst:DoTaskInTime( 10, function() if inst.call_lightining_on then inst.call_lightining_on = false inst.cast_call_lightining = false end end)
@@ -2222,7 +2256,7 @@ end
 
 local function Call_lightining_attack(inst, data)
 	 local other = data.target
-if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable") and not other:HasTag("alignwall") and not other:HasTag("shadowminion") and other.components.health then
+if other and not IsProtectedLightningEntity(inst, other) and not other:HasTag("stalkerminion") and not other:HasTag("smashable") and not other:HasTag("alignwall") and not other:HasTag("shadowminion") and other.components.health then
 	 local hitcall = 0.06
 
 if other and math.random() < hitcall and other and other.components.health ~= nil and not other.components.health:IsDead() and not other:HasTag("burn") and not other:HasTag("structure") and not other:HasTag("groundspike") and not other:HasTag("stalkerminion") and other.components.locomotor and inst.components.sanity.current >= 10 then
@@ -2237,7 +2271,9 @@ if inst.level >= 10 then
     local x, y, z = inst.Transform:GetWorldPosition()
     local burn = TheSim:FindEntities(x, y, z, 40, { "burn" })
 for i, v in ipairs(burn) do
-	if v.components.health ~= nil and not v.components.health:IsDead() then
+	if IsProtectedLightningEntity(inst, v) then
+		ClearFriendlyLightningMarks(v)
+	elseif v.components.health ~= nil and not v.components.health:IsDead() and v.components.combat ~= nil then
 	if not v.bloom then
 		if not v.shocked then
 		v.shocked = true
@@ -2315,10 +2351,10 @@ end
 
 --[[
 local function Call_lightining_on(inst, data)
-   local x, y, z = inst.Transform:GetWorldPosition()
+	local x, y, z = inst.Transform:GetWorldPosition()
     local ents = TheSim:FindEntities(x, y, z, 18, { "burn" })
     for i, v in ipairs(ents) do
-if inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.components.health ~= nil and not v.components.health:IsDead() then
+if not IsProtectedLightningEntity(inst, v) and inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.components.health ~= nil and not v.components.health:IsDead() then
 	inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
 	TheWorld:PushEvent("screenflash", .9)
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
@@ -2335,7 +2371,7 @@ if inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.componen
     v.components.burnable:Extinguish()
 	end
 	end)
-	elseif inst.level >= 430 and inst.level < 1880 and inst.active_valkyrie and v:HasTag("burn") and v.components.health ~= nil and not v.components.health:IsDead() then
+	elseif not IsProtectedLightningEntity(inst, v) and inst.level >= 430 and inst.level < 1880 and inst.active_valkyrie and v:HasTag("burn") and v.components.health ~= nil and not v.components.health:IsDead() then
 	inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
 	TheWorld:PushEvent("screenflash", .9)
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
@@ -2352,7 +2388,7 @@ if inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.componen
     v.components.burnable:Extinguish()
 	end
 	end)
-	elseif inst.level >= 1880 and inst.level < 7000 and inst.active_valkyrie and v:HasTag("burn") and v.components.health ~= nil and not v.components.health:IsDead() then
+	elseif not IsProtectedLightningEntity(inst, v) and inst.level >= 1880 and inst.level < 7000 and inst.active_valkyrie and v:HasTag("burn") and v.components.health ~= nil and not v.components.health:IsDead() then
 	inst.SoundEmitter:PlaySound("dontstarve/rain/thunder_close")
 	TheWorld:PushEvent("screenflash", .9)
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
@@ -2369,7 +2405,7 @@ if inst.level < 430 and inst.active_valkyrie and v:HasTag("burn") and v.componen
     v.components.burnable:Extinguish()
 	end
 	end)
-	elseif inst.level >= 7000 and inst.active_valkyrie and v:HasTag("burn") and v.components.health ~= nil and not v.components.health:IsDead() thenand inst.components.playercontroller then
+	elseif not IsProtectedLightningEntity(inst, v) and inst.level >= 7000 and inst.active_valkyrie and v:HasTag("burn") and v.components.health ~= nil and not v.components.health:IsDead() thenand inst.components.playercontroller then
 		inst.components.playercontroller:Enable(false)
 		inst.components.locomotor:Stop()
 	inst.sg:GoToState("book2") inst:DoTaskInTime( 0.1, function() inst.components.playercontroller:Enable(true) end)
@@ -5862,7 +5898,7 @@ local hitcall = 0.5
 		end]]
 
 
-if inst.LightWatcher:IsInLight() and data and data.attacker --[[and data.attacker.components.burnable]] and not inst.fberserk and not inst.berserks and data.attacker.components.health ~= nil and not data.attacker.components.health:IsDead() and not data.attacker:HasTag("thorny") and not data.attacker:HasTag("shadowcreature") and not data.attacker:HasTag("burn") and not data.attacker:HasTag("groundspike") and data.attacker.components.locomotor and inst.components.sanity.current >= 10 then
+if inst.LightWatcher:IsInLight() and data and data.attacker --[[and data.attacker.components.burnable]] and not IsProtectedLightningEntity(inst, data.attacker) and not inst.fberserk and not inst.berserks and data.attacker.components.health ~= nil and not data.attacker.components.health:IsDead() and not data.attacker:HasTag("thorny") and not data.attacker:HasTag("shadowcreature") and not data.attacker:HasTag("burn") and not data.attacker:HasTag("groundspike") and data.attacker.components.locomotor and inst.components.sanity.current >= 10 then
 		data.attacker:AddTag("burn")
 		SpawnPrefab("sparks").Transform:SetPosition(data.attacker:GetPosition():Get())
 		-- data.attacker.burn = true
@@ -6221,7 +6257,7 @@ if inst.on_sparkshield then
 	local x,y,z = inst.Transform:GetWorldPosition()
 	local ents = TheSim:FindEntities(x, y, z, 10)
 for k,v in pairs(ents) do
-if v:IsValid() and v.entity:IsVisible() and v.components.health ~= nil and not v.components.health:IsDead() and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly")) and not v:HasTag("groundspike") and not v:HasTag("player") and not v:HasTag("companion") and not v:HasTag("stalkerminion") and not v:HasTag("structure") and v.components.combat ~= nil and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn")) then
+	if v:IsValid() and v.entity:IsVisible() and not IsProtectedLightningEntity(inst, v) and v.components.health ~= nil and not v.components.health:IsDead() and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly")) and not v:HasTag("groundspike") and not v:HasTag("player") and not v:HasTag("companion") and not v:HasTag("stalkerminion") and not v:HasTag("structure") and v.components.combat ~= nil and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn")) then
 
 	if inst.level then --< 430 then
 
