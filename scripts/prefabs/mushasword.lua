@@ -1,5 +1,7 @@
 
 ---------------------------
+local EquipUtils = require("musha/equipment/utils")
+
 local assets=
 {
 	Asset("ANIM", "anim/mushasword.zip"),
@@ -465,7 +467,7 @@ SpawnPrefab("splash").Transform:SetPosition(inst:GetPosition():Get())
 end
 
 local function onequip(inst, owner)
-	if not inst.share_item and owner and not owner:HasTag("musha") and owner.components.inventory then
+	if EquipUtils.ShouldRejectMushaItemWearer(inst, owner) then
 		owner.components.inventory:Unequip(EQUIPSLOTS.HANDS, true)
         owner:DoTaskInTime(0.5, function()  owner.components.inventory:DropItem(inst) end)
 	end
@@ -490,13 +492,24 @@ elseif inst.level >=1400 then  --1400
     inst.Light:SetIntensity(.5)
     inst.Light:SetColour(225/255,120/255,80/255)
 end
-inst.blink_weapon = inst:DoPeriodicTask(1, function() 
+if inst.blink_weapon ~= nil then
+	inst.blink_weapon:Cancel()
+	inst.blink_weapon = nil
+end
+if EquipUtils.HasSanity(owner) then
+inst.blink_weapon = inst:DoPeriodicTask(1, function()
 	if not inst.broken and inst.boost and inst.level >= 250 then
-		if not inst.components.blinkstaff and owner.components.sanity.current >=10 then
+		if not EquipUtils.HasSanity(owner) then
+			if inst.components.blinkstaff ~= nil then
+				inst:RemoveComponent("blinkstaff")
+			end
+			return
+		end
+		if not inst.components.blinkstaff and EquipUtils.HasSanityAtLeast(owner, 10) then
 			inst:AddComponent("blinkstaff")
 			inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
 			inst.components.blinkstaff.onblinkfn = onblink
-		elseif inst.components.blinkstaff and owner.components.sanity.current <10 then
+		elseif inst.components.blinkstaff and not EquipUtils.HasSanityAtLeast(owner, 10) then
 			if inst.components.blinkstaff ~= nil then
 			inst:RemoveComponent("blinkstaff")
 			end
@@ -504,8 +517,13 @@ inst.blink_weapon = inst:DoPeriodicTask(1, function()
 	end
 	end)
 end
+end
 
 local function onunequip(inst, owner) 
+if inst.blink_weapon ~= nil then
+	inst.blink_weapon:Cancel()
+	inst.blink_weapon = nil
+end
 owner.fire = false
     Upgradedamage(inst)
 	inst.Light:Enable(false)
@@ -521,7 +539,7 @@ owner.fire = false
 end
 
 local function sanity(inst, owner)
-if owner.components.health and owner.components.health:IsHurt() then
+if owner.components.health and owner.components.health:IsHurt() and owner.components.sanity ~= nil then
         owner.components.sanity:DoDelta(1,false)
 end
 end
@@ -643,7 +661,7 @@ elseif inst.level >=250 and inst.level <1400 then  --250  1400
     owner.AnimState:Show("ARM_carry") 
     owner.AnimState:Hide("ARM_normal") 
 
-   if not inst.components.blinkstaff and owner.components.sanity.current >= 10 and not inst.broken then
+   if not inst.components.blinkstaff and EquipUtils.HasSanityAtLeast(owner, 10) and not inst.broken then
     inst:AddComponent("blinkstaff")
 	inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
     inst.components.blinkstaff.onblinkfn = onblink
@@ -652,7 +670,7 @@ elseif inst.level >=250 and inst.level <1400 then  --250  1400
    	
 elseif inst.level >=1400 then  --1400
 	inst.components.talker:Say(STRINGS.MUSHA_WEAPON_SWORD_POWER_2.."\n"..STRINGS.MUSHA_ITEM_LIGHT.."(3+)\n"..STRINGS.MUSHA_WEAPON_FIRE_D.." X2(30D)) \n"..STRINGS.MUSHA_WEAPON_BLINK)
-     if not inst.components.blinkstaff and owner.components.sanity.current >= 10 and not inst.broken then
+     if not inst.components.blinkstaff and EquipUtils.HasSanityAtLeast(owner, 10) and not inst.broken then
     inst:AddComponent("blinkstaff")
 	inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
     inst.components.blinkstaff.onblinkfn = onblink

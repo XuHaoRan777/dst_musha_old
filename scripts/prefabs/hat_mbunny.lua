@@ -1,3 +1,5 @@
+local EquipUtils = require("musha/equipment/utils")
+
 local assets=
 {
 	Asset("ANIM", "anim/hat_mbunny.zip"),
@@ -642,7 +644,7 @@ local function onunequip(inst, owner)
 local function onequip(inst, owner)
 local owner = inst.components.inventoryitem.owner
 if owner ~= nil then
-	if not inst.share_item and not owner:HasTag("musha") and owner.components.inventory then
+	if EquipUtils.ShouldRejectMushaItemWearer(inst, owner) then
          owner.components.inventory:Unequip(EQUIPSLOTS.HEAD, true)
 		owner:DoTaskInTime(0.5, function()  owner.components.inventory:DropItem(inst) end)
 	end

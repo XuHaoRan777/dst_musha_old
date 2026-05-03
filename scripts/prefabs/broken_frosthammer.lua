@@ -1,4 +1,5 @@
 local FrostArmor = require("musha/prefabs/frost_armor")
+local EquipUtils = require("musha/equipment/utils")
 
 local assets=
 {
@@ -358,6 +359,9 @@ end
 local sanity_cost = FrostArmor.SanityCost
 
 local function Release_Frost(inst,owner)
+	if owner == nil or owner.sg == nil or owner.AnimState == nil then
+		return
+	end
  
 local danger = FindEntity(owner, 7, function(target) 
                 return (target:HasTag("monster") and not target:HasTag("player") and not owner:HasTag("spiderwhisperer"))
@@ -449,9 +453,13 @@ end
 local stopusingshield = FrostArmor.StopUsingShield
 
 local function onequip(inst, owner) 
-if not inst.share_item and owner and not owner:HasTag("musha") and owner.components.inventory then
+if EquipUtils.ShouldRejectMushaItemWearer(inst, owner) then
          owner.components.inventory:Unequip(EQUIPSLOTS.BODY, true)
-		owner:DoTaskInTime(0.5, function()  owner.components.inventory:DropItem(inst) end)
+		owner:DoTaskInTime(0.5, function()
+			if owner.components ~= nil and owner.components.inventory ~= nil then
+				owner.components.inventory:DropItem(inst)
+			end
+		end)
 	end
 
 inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
@@ -472,10 +480,14 @@ inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
 	RefreshFrostArmorContainer(inst, owner)
 	
 if inst.task1 then inst.task1:Cancel() inst.task1 = nil end
-inst.task1 = inst:DoPeriodicTask(0.2, function() Release_Frost(inst, owner) end)
+if owner ~= nil and owner.sg ~= nil then
+	inst.task1 = inst:DoPeriodicTask(0.2, function() Release_Frost(inst, owner) end)
+end
 
 if inst.task2 then inst.task2:Cancel() inst.task2 = nil end
-inst.task2 = inst:DoPeriodicTask(3, function() sanity_cost(inst, owner) end)
+if owner ~= nil and owner.sg ~= nil then
+	inst.task2 = inst:DoPeriodicTask(3, function() sanity_cost(inst, owner) end)
+end
 
     inst.expfn = function(attacked, data)
 local expchance = 0.5
@@ -580,7 +592,9 @@ local function onuseshield(inst,owner)
 	on_shield(inst)
 	local owner = inst.components.inventoryitem.owner
         if owner then
-           owner.sg:GoToState("shell_enter")
+           if owner.sg ~= nil then
+               owner.sg:GoToState("shell_enter")
+           end
 	owner.SoundEmitter:PlaySound("dontstarve/wilson/pickup_reeds")
         end
 	end

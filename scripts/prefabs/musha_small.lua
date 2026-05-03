@@ -1,6 +1,7 @@
 --require "prefabutil"
 require "brains/mushasmallbrain"
 local brain = require "brains/mushasmallbrain"
+local EquipUtils = require("musha/equipment/utils")
 require "stategraphs/SGmusha_small"
 require "stategraphs/SGmusha_teen"
 require "stategraphs/SGmusha_tall"
@@ -1327,7 +1328,7 @@ end
 
 local function onyamche_house(inst, owner)
 inst.house = true
-if not inst.share_item and owner and not owner:HasTag("musha") and owner.components.inventory then
+if EquipUtils.ShouldRejectMushaItemWearer(inst, owner) then
          owner.components.inventory:Unequip(EQUIPSLOTS.HEAD, true)
 		owner:DoTaskInTime(0.5, function()  owner.components.inventory:DropItem(inst) end)
 end

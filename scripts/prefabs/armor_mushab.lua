@@ -395,7 +395,7 @@ end
 
 
 local function onequip(inst, owner) 
-if not inst.share_item and owner and not owner:HasTag("musha") and owner.components.inventory then
+if EquipUtils.ShouldRejectMushaItemWearer(inst, owner) then
          owner.components.inventory:Unequip(EQUIPSLOTS.BODY, true)
 		owner:DoTaskInTime(0.5, function()  owner.components.inventory:DropItem(inst) end)
 	end

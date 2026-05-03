@@ -1,3 +1,5 @@
+local EquipUtils = require("musha/equipment/utils")
+
 local assets=
 {
 	Asset("ANIM", "anim/mushasword4.zip"),
@@ -91,7 +93,10 @@ end
 
 local function createlight(staff, target, pos)
     local caster = staff.components.inventoryitem.owner
-if caster.components.sanity.current >= 35 then
+if not EquipUtils.HasSanity(caster) then
+	return
+end
+if EquipUtils.HasSanityAtLeast(caster, 35) then
 
     local light = SpawnPrefab("lightning")
     --local light2 = SpawnPrefab("stafflight")
@@ -104,7 +109,7 @@ if caster.components.sanity.current >= 35 then
         caster.components.sanity:DoDelta(-20)
         --caster.components.sanity:DoDelta(-TUNING.SANITY_HUGE)
 
-    elseif caster.components.sanity.current < 30 then
+    elseif not EquipUtils.HasSanityAtLeast(caster, 30) then
 	local fail1 = SpawnPrefab("statue_transition")
     local fail2 = SpawnPrefab("statue_transition_2")
 
@@ -734,7 +739,7 @@ end
 local function onequip(inst, owner)
 
 local owner = inst.components.inventoryitem.owner
-	if not inst.share_item and owner and not owner:HasTag("musha") and owner.components.inventory then
+	if EquipUtils.ShouldRejectMushaItemWearer(inst, owner) then
 		owner.components.inventory:Unequip(EQUIPSLOTS.HANDS, true)
         owner:DoTaskInTime(0.5, function()  owner.components.inventory:DropItem(inst) end)
 	end
@@ -777,24 +782,40 @@ local owner = inst.components.inventoryitem.owner
 	inst:RemoveTag("phoenix_axe")
 	end
 
-	--owner:AddTag("phoenixblade") 
-	inst.blink_weapon = inst:DoPeriodicTask(1, function() 
+	--owner:AddTag("phoenixblade")
+	if inst.blink_weapon ~= nil then
+		inst.blink_weapon:Cancel()
+		inst.blink_weapon = nil
+	end
+	if EquipUtils.HasSanity(owner) then
+	inst.blink_weapon = inst:DoPeriodicTask(1, function()
 	if not inst.broken and inst.boost then
-		if not inst.components.blinkstaff and owner.components.sanity.current >=10 then
+		if not EquipUtils.HasSanity(owner) then
+			if inst.components.blinkstaff ~= nil then
+				inst:RemoveComponent("blinkstaff")
+			end
+			return
+		end
+		if not inst.components.blinkstaff and EquipUtils.HasSanityAtLeast(owner, 10) then
 			inst:AddComponent("blinkstaff")
 			inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
 			inst.components.blinkstaff.onblinkfn = onblink
-		elseif inst.components.blinkstaff and owner.components.sanity.current <10 then
+		elseif inst.components.blinkstaff and not EquipUtils.HasSanityAtLeast(owner, 10) then
 			if inst.components.blinkstaff ~= nil then
 			inst:RemoveComponent("blinkstaff")
 			end
 		end
 	end
 	end)
+	end
 	
 end
 
 local function onunequip(inst, owner) 
+		if inst.blink_weapon ~= nil then
+			inst.blink_weapon:Cancel()
+			inst.blink_weapon = nil
+		end
 		if inst.components.blinkstaff ~= nil then
 			inst:RemoveComponent("blinkstaff")
 		end
@@ -909,10 +930,10 @@ if owner ~= nil and not inst.boost and not inst.broken then
     
 boostFX(inst)
 
-	if not inst.components.blinkstaff and owner.components.sanity.current >= 10 and not inst.broken then
-    inst:AddComponent("blinkstaff")
+	if not inst.components.blinkstaff and EquipUtils.HasSanityAtLeast(owner, 10) and not inst.broken then
+	inst:AddComponent("blinkstaff")
 	inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
-    inst.components.blinkstaff.onblinkfn = onblink
+	inst.components.blinkstaff.onblinkfn = onblink
 	end
 --[[elseif owner and inst.boost and not inst.broken then
 

@@ -1,3 +1,5 @@
+local EquipUtils = require("musha/equipment/utils")
+
 local assets=
 {
 	Asset("ANIM", "anim/mushasword_frost.zip"),
@@ -433,7 +435,7 @@ end
 
 local function onequip(inst, owner)
 local owner = inst.components.inventoryitem.owner
-	if not inst.share_item and owner ~= nil and not owner:HasTag("musha") and owner.components.inventory then
+	if EquipUtils.ShouldRejectMushaItemWearer(inst, owner) then
 		owner.components.inventory:Unequip(EQUIPSLOTS.HANDS, true)
         owner:DoTaskInTime(0.5, function()  owner.components.inventory:DropItem(inst) end)
 	end
@@ -470,13 +472,24 @@ elseif inst.broken then
     owner.AnimState:Show("ARM_carry") 
     owner.AnimState:Hide("ARM_normal")
 end
-inst.blink_weapon = inst:DoPeriodicTask(1, function() 
+if inst.blink_weapon ~= nil then
+	inst.blink_weapon:Cancel()
+	inst.blink_weapon = nil
+end
+if EquipUtils.HasSanity(owner) then
+inst.blink_weapon = inst:DoPeriodicTask(1, function()
 	if not inst.broken and inst.boost and inst.level >= 250 then
-		if not inst.components.blinkstaff and owner.components.sanity.current >=10 then
+		if not EquipUtils.HasSanity(owner) then
+			if inst.components.blinkstaff ~= nil then
+				inst:RemoveComponent("blinkstaff")
+			end
+			return
+		end
+		if not inst.components.blinkstaff and EquipUtils.HasSanityAtLeast(owner, 10) then
 			inst:AddComponent("blinkstaff")
 			inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
 			inst.components.blinkstaff.onblinkfn = onblink
-		elseif inst.components.blinkstaff and owner.components.sanity.current <10 then
+		elseif inst.components.blinkstaff and not EquipUtils.HasSanityAtLeast(owner, 10) then
 			if inst.components.blinkstaff ~= nil then
 			inst:RemoveComponent("blinkstaff")
 			end
@@ -484,8 +497,13 @@ inst.blink_weapon = inst:DoPeriodicTask(1, function()
 	end
 	end)
 end
+end
 
 local function onunequip(inst, owner) 
+		if inst.blink_weapon ~= nil then
+			inst.blink_weapon:Cancel()
+			inst.blink_weapon = nil
+		end
 		if inst.components.blinkstaff ~= nil then
 			inst:RemoveComponent("blinkstaff")
 		end
@@ -597,7 +615,7 @@ if inst.level <250 then
 	
 elseif inst.level >=250 and inst.level <1400 then
 	inst.components.talker:Say(STRINGS.MUSHA_WEAPON_SWORD_POWER_2.."\n"..STRINGS.MUSHA_ITEM_SPEED.."(10)\n"..STRINGS.MUSHA_ITEM_LIGHT.."(2-)\n"..STRINGS.MUSHA_ITEM_FREEZE.."(8D/60C) \n"..STRINGS.MUSHA_WEAPON_BLINK)
-    if not inst.components.blinkstaff and owner.components.sanity.current >= 10 and not inst.broken then
+    if not inst.components.blinkstaff and EquipUtils.HasSanityAtLeast(owner, 10) and not inst.broken then
     inst:AddComponent("blinkstaff")
 	inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
     inst.components.blinkstaff.onblinkfn = onblink
@@ -615,7 +633,7 @@ elseif inst.level >=250 and inst.level <1400 then
 elseif inst.level >=1400 then
 
 	inst.components.talker:Say(STRINGS.MUSHA_WEAPON_SWORD_POWER_3.."\n"..STRINGS.MUSHA_ITEM_SPEED.."(15)\n"..STRINGS.MUSHA_ITEM_LIGHT.."(3-)\n"..STRINGS.MUSHA_ITEM_FREEZE.."(12D/80C) \n"..STRINGS.MUSHA_WEAPON_BLINK)
-	if not inst.components.blinkstaff and owner.components.sanity.current >= 10 and not inst.broken then
+	if not inst.components.blinkstaff and EquipUtils.HasSanityAtLeast(owner, 10) and not inst.broken then
     inst:AddComponent("blinkstaff")
 	inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
     inst.components.blinkstaff.onblinkfn = onblink

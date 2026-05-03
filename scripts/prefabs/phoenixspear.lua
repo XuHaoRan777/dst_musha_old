@@ -1,3 +1,5 @@
+local EquipUtils = require("musha/equipment/utils")
+
 local assets=
 {
 	Asset("ANIM", "anim/phoenixspear.zip"),
@@ -107,6 +109,61 @@ local function onblink(staff, pos, caster)
     if caster.components.sanity ~= nil then
         caster.components.sanity:DoDelta(-6)
     end
+end
+
+local function StopBlinkWeaponTask(inst)
+	if inst.blink_weapon ~= nil then
+		inst.blink_weapon:Cancel()
+		inst.blink_weapon = nil
+	end
+	if inst.components.blinkstaff ~= nil then
+		inst:RemoveComponent("blinkstaff")
+	end
+end
+
+local function GetBlinkOwner(inst, fallback_owner)
+	if inst.components.inventoryitem ~= nil then
+		return inst.components.inventoryitem.owner or fallback_owner
+	end
+	return fallback_owner
+end
+
+local function CanOwnerUseBlink(owner)
+	return owner ~= nil
+		and owner.components ~= nil
+		and owner.components.sanity ~= nil
+		and owner.components.sanity.current >= 10
+end
+
+local function RefreshBlinkStaff(inst, owner)
+	if inst.broken or inst.boost or inst.level < 4000 or not CanOwnerUseBlink(owner) then
+		if inst.components.blinkstaff ~= nil then
+			inst:RemoveComponent("blinkstaff")
+		end
+		return
+	end
+
+	if inst.components.blinkstaff == nil then
+		inst:AddComponent("blinkstaff")
+		inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
+		inst.components.blinkstaff.onblinkfn = onblink
+	end
+end
+
+local function StartBlinkWeaponTask(inst, owner)
+	StopBlinkWeaponTask(inst)
+	if inst.level < 4000 then
+		return
+	end
+
+	inst.blink_weapon = inst:DoPeriodicTask(1, function()
+		local current_owner = GetBlinkOwner(inst, owner)
+		if current_owner == nil or current_owner.components == nil or current_owner.components.sanity == nil then
+			StopBlinkWeaponTask(inst)
+			return
+		end
+		RefreshBlinkStaff(inst, current_owner)
+	end)
 end
 
 local function blinkstaff_reticuletargetfn()
@@ -514,7 +571,9 @@ if not inst.boost then
 	    local fx2 = SpawnPrefab("statue_transition")
 		local pos = Vector3(target.Transform:GetWorldPosition())
 		fx2.Transform:SetPosition(pos:Get())
-		attacker.components.sanity:DoDelta(2)
+		if attacker.components.sanity ~= nil then
+			attacker.components.sanity:DoDelta(2)
+		end
 		
 			end
 		end
@@ -572,7 +631,13 @@ end
 end
 
 local function onequip(inst, owner)
-	if not inst.share_item and owner ~= nil and not owner:HasTag("musha") and owner.components.inventory then
+	if owner == nil or owner.AnimState == nil then
+		Upgradedamage(inst)
+		StopBlinkWeaponTask(inst)
+		return
+	end
+
+	if EquipUtils.ShouldRejectMushaItemWearer(inst, owner) then
 		owner.components.inventory:Unequip(EQUIPSLOTS.HANDS, true)
         owner:DoTaskInTime(0.5, function()  owner.components.inventory:DropItem(inst) end)
 	end
@@ -620,42 +685,29 @@ local function onequip(inst, owner)
 	end
 
 	
-	inst.blink_weapon = inst:DoPeriodicTask(1, function() 
-	if not inst.broken and inst.level >= 4000 then
-		if not inst.boost and not inst.components.blinkstaff and owner.components.sanity.current >=10 then
-			inst:AddComponent("blinkstaff")
-			inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
-			inst.components.blinkstaff.onblinkfn = onblink
-		elseif not inst.boost and inst.components.blinkstaff ~= nil and owner.components.sanity.current <10 then
-			inst:RemoveComponent("blinkstaff")
-		elseif inst.boost and inst.components.blinkstaff ~= nil then
-			inst:RemoveComponent("blinkstaff")	
-			
-		end
-	end
-	end)
+	StartBlinkWeaponTask(inst, owner)
 
 end
 
 local function onunequip(inst, owner) 
    Upgradedamage(inst)
+	if owner == nil or owner.AnimState == nil then
+		StopBlinkWeaponTask(inst)
+		return
+	end
     owner.frost = false
     owner.AnimState:Hide("ARM_carry") 
     owner.AnimState:Show("ARM_normal") 
 		--owner:RemoveTag("phoenixblade") 
 		--inst:RemoveTag("frost_spear")
-	if inst.components.blinkstaff ~= nil then
-    inst:RemoveComponent("blinkstaff")
-	end
+	StopBlinkWeaponTask(inst)
 
 end
 
 local function off_boost(inst, data)
 local owner = inst.components.inventoryitem.owner 
 if owner ~= nil then
-	if inst.components.blinkstaff ~= nil then
-    inst:RemoveComponent("blinkstaff")
-	end
+	StopBlinkWeaponTask(inst)
 	inst.boost = false 
 	owner.fire = true
 	owner.frost = false
@@ -698,9 +750,7 @@ local owner = inst.components.inventoryitem.owner
 
 if owner ~= nil then
 if inst.broken then
-	if inst.components.blinkstaff ~= nil then
-    inst:RemoveComponent("blinkstaff")
-	end
+	StopBlinkWeaponTask(inst)
 	Upgradedamage(inst)
 	--inst.boost = false 	
 	--inst.red = true	
@@ -734,28 +784,11 @@ if not inst.boost and not inst.broken then
     owner.AnimState:Show("ARM_carry") 
     owner.AnimState:Hide("ARM_normal") 
 	
-if inst.level >=4000 then
-	
-	
-	inst.blink_weapon = inst:DoPeriodicTask(1, function() 
-	if not inst.broken then
-		if not inst.boost and not inst.components.blinkstaff and owner.components.sanity.current >=10 then
-			inst:AddComponent("blinkstaff")
-			inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
-			inst.components.blinkstaff.onblinkfn = onblink
-		elseif not inst.boost and inst.components.blinkstaff and owner.components.sanity.current <10 then
-			inst:RemoveComponent("blinkstaff")
-		elseif inst.boost and inst.components.blinkstaff then
-			inst:RemoveComponent("blinkstaff")	
-			
-		end
-	end
-	end)
-		
-end
+StartBlinkWeaponTask(inst, owner)
 
 end
 end
+
 end
 
 local function fn()
