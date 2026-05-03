@@ -1,3 +1,4 @@
+local EggHatch = require("musha/prefabs/egg_hatch")
 local assets=
 {
 	Asset("ANIM", "anim/musha_egg8.zip"),
@@ -58,7 +59,7 @@ local function Hatch1(inst)
    
     local rp1= SpawnPrefab("musha_rp1")
     rp1.Transform:SetPosition(inst.Transform:GetWorldPosition())
-    rp1.sg:GoToState("hatch")
+    EggHatch.FinishSpawn(rp1, inst)
 	if not inst.cooking_born then	green_apple(inst)	end
     inst:Remove()
 end
@@ -67,7 +68,7 @@ local function Hatch2(inst)
    
     local rp2= SpawnPrefab("musha_rp2")
     rp2.Transform:SetPosition(inst.Transform:GetWorldPosition())
-    rp2.sg:GoToState("hatch")
+    EggHatch.FinishSpawn(rp2, inst)
 	if not inst.cooking_born then	green_apple(inst)	end
     inst:Remove()
 end
@@ -76,7 +77,7 @@ local function Hatch3(inst)
    
     local rp3= SpawnPrefab("musha_rp3")
     rp3.Transform:SetPosition(inst.Transform:GetWorldPosition())
-    rp3.sg:GoToState("hatch")
+    EggHatch.FinishSpawn(rp3, inst)
 	if not inst.cooking_born then	green_apple(inst)	end
     inst:Remove()
 end
@@ -85,7 +86,7 @@ local function Hatch4(inst)
    
     local rp4= SpawnPrefab("musha_rp4")
     rp4.Transform:SetPosition(inst.Transform:GetWorldPosition())
-    rp4.sg:GoToState("hatch")
+    EggHatch.FinishSpawn(rp4, inst)
 	if not inst.cooking_born then	green_apple(inst)	end
     inst:Remove()
 end
@@ -94,7 +95,7 @@ local function Hatch5(inst)
    
     local rp5= SpawnPrefab("musha_rp5")
     rp5.Transform:SetPosition(inst.Transform:GetWorldPosition())
-    rp5.sg:GoToState("hatch")
+    EggHatch.FinishSpawn(rp5, inst)
 	if not inst.cooking_born then	green_apple(inst)	end
     inst:Remove()
 end
@@ -103,7 +104,7 @@ local function Hatch6(inst)
    
     local rp6= SpawnPrefab("musha_rp6")
     rp6.Transform:SetPosition(inst.Transform:GetWorldPosition())
-    rp6.sg:GoToState("hatch")
+    EggHatch.FinishSpawn(rp6, inst)
 	if not inst.cooking_born then	green_apple(inst)	end
     inst:Remove()
 end
@@ -112,7 +113,7 @@ local function Hatch7(inst)
    
     local rp7= SpawnPrefab("musha_rp7")
     rp7.Transform:SetPosition(inst.Transform:GetWorldPosition())
-    rp7.sg:GoToState("hatch")
+    EggHatch.FinishSpawn(rp7, inst)
 	if not inst.cooking_born then	green_apple(inst)	end
     inst:Remove()
 end
@@ -121,7 +122,7 @@ local function Hatch8(inst)
    
     local rp8= SpawnPrefab("musha_rpice")
     rp8.Transform:SetPosition(inst.Transform:GetWorldPosition())
-    rp8.sg:GoToState("hatch")
+    EggHatch.FinishSpawn(rp8, inst)
 	if not inst.cooking_born then	green_apple(inst)	end
     inst:Remove()
 end
@@ -200,9 +201,9 @@ local function OnNear(inst)
         inst.components.playerprox:IsPlayerClose() and
         inst.components.hatchable.state == "hatch" and
         not inst.components.inventoryitem:IsHeld() then
-        CheckHatch(inst)
+        EggHatch.Play(inst, CheckHatch)
     end
-     --CheckHatch(inst)
+     --EggHatch.Play(inst, CheckHatch)
 end
 local function OnFar(inst)
     inst.playernear = false
@@ -210,7 +211,7 @@ end
 
 local function OnDropped(inst)
     inst.components.hatchable:StartUpdating()
-    CheckHatch(inst)
+    EggHatch.Play(inst, CheckHatch)
 	inst.holding = false
     PlayUncomfySound(inst)
 	inst.Light:Enable(true)
@@ -280,7 +281,7 @@ local function OnHatchState(inst, state)
     elseif state == "comfy" then
         inst.AnimState:PlayAnimation("idle_happy", true)
     elseif state == "hatch" then
-        CheckHatch(inst)
+        EggHatch.Play(inst, CheckHatch)
     elseif state == "dead" then
         --print("   ACK! *splat*")
         if inst.components.hatchable.toohot then
@@ -316,6 +317,7 @@ local inst = CreateEntity()
     MakeInventoryPhysics(inst)
 
     inst.AnimState:SetBuild("musha_egg8")
+    inst._musha_hatch_build = "musha_egg8"
     inst.AnimState:SetBank("egg")
     inst.AnimState:PlayAnimation("egg")
 	
@@ -371,7 +373,7 @@ local function defaultfn(anim)
     inst.components.hatchable:SetCrackTime(10)
     inst.components.hatchable:SetHatchTime(10)
     inst.components.hatchable:SetHatchFailTime(TUNING.SMALLBIRD_HATCH_TIME * 900000000000)
-    inst.components.hatchable:SetHeaterPrefs(false, nil, true)
+    inst.components.hatchable:SetHeaterPrefs(true, true, true)
 	inst.components.hatchable:StartUpdating()
 	
 	inst:AddComponent("characterspecific_musha")	
@@ -435,7 +437,7 @@ local function cookedfn()
     inst.components.hatchable:SetCrackTime(10)
     inst.components.hatchable:SetHatchTime(0)
     inst.components.hatchable:SetHatchFailTime(TUNING.SMALLBIRD_HATCH_TIME * 9999999999999999999)
-    inst.components.hatchable:SetHeaterPrefs(false, nil, true)
+    inst.components.hatchable:SetHeaterPrefs(true, true, true)
 	inst.components.hatchable:StartUpdating()
 	
 	inst:AddComponent("characterspecific_musha")	
@@ -463,7 +465,7 @@ inst.components.inventoryitem:ChangeImageName("musha_egg_cracked8")
 
 		inst:DoTaskInTime( 1, function() 
 inst.components.hatchable.state = "hatch"
-CheckHatch(inst) end)
+EggHatch.Play(inst, CheckHatch) end)
 	
 	return inst
 end

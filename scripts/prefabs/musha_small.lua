@@ -27,6 +27,7 @@ local assets =
 	Asset("ANIM", "anim/musha_ice.zip"),
     Asset("ANIM", "anim/hat_yamche.zip"),
 	Asset("ANIM", "anim/hat_yamche_on.zip"),
+	Asset("ANIM", "anim/hat_house.zip"),
 	Asset("SOUND", "sound/tallbird.fsb"),
 	
 
@@ -581,6 +582,52 @@ local function GetStatus(inst)
 end
 
 ------------------   
+
+local function IsYamcheHeadEquipped(inst, owner)
+	return inst ~= nil
+		and owner ~= nil
+		and owner.components ~= nil
+		and owner.components.inventory ~= nil
+		and owner.components.inventory:GetEquippedItem(EQUIPSLOTS.HEAD) == inst
+end
+
+local function GetYamcheHatBuild(inst)
+	if inst ~= nil and (inst.level1 or inst.super_baby) then
+		return TheWorld.state.isnight and inst.light_on and "hat_yamche_on" or "hat_yamche"
+	end
+	return "hat_house"
+end
+
+local function ApplyYamcheHatVisual(inst, owner)
+	if owner == nil or owner.AnimState == nil then
+		return
+	end
+
+	owner.AnimState:OverrideSymbol("swap_hat", GetYamcheHatBuild(inst), "swap_hat")
+	owner.AnimState:Show("HAT")
+	owner.AnimState:Hide("HAIR_NOHAT")
+	owner.AnimState:Show("HAIR")
+end
+
+local function QueueYamcheHatVisualRefresh(inst, owner)
+	if owner == nil then
+		return
+	end
+
+	ApplyYamcheHatVisual(inst, owner)
+
+	local function refresh(owner)
+		if inst ~= nil
+			and inst:IsValid()
+			and IsYamcheHeadEquipped(inst, owner) then
+			ApplyYamcheHatVisual(inst, owner)
+		end
+	end
+
+	owner:DoTaskInTime(0, refresh)
+	owner:DoTaskInTime(0.25, refresh)
+	owner:DoTaskInTime(1, refresh)
+end
 	
 local function ystarve(inst, data)
 
@@ -608,6 +655,13 @@ inst.components.hunger:SetRate(0.015)
 elseif inst.baby_light_on then
 inst.components.hunger:SetRate(0.03)
 end
+end
+
+if inst.house and inst.components.inventoryitem ~= nil then
+	local owner = inst.components.inventoryitem.owner
+	if IsYamcheHeadEquipped(inst, owner) then
+		ApplyYamcheHatVisual(inst, owner)
+	end
 end
 
 if inst.components.health and not inst.open and not inst.campfire then 
@@ -810,19 +864,13 @@ end
 			inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x2)")
 			inst.baby_light_on = true
 			end
-			owner.AnimState:OverrideSymbol("swap_hat", "hat_yamche_on", "swap_hat")
-			owner.AnimState:Show("HAT")
-			owner.AnimState:Hide("HAIR_NOHAT")
-			owner.AnimState:Show("HAIR")
+			ApplyYamcheHatVisual(inst, owner)
 		elseif inst.components.inventoryitem and owner and TheWorld.state.isnight and inst.light_on then
 			if not inst.baby_light_on then
 			inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x2)")
 			inst.baby_light_on = true
 			end
-			owner.AnimState:OverrideSymbol("swap_hat", "hat_yamche_on", "swap_hat")
-			owner.AnimState:Show("HAT")
-			owner.AnimState:Hide("HAIR_NOHAT")
-			owner.AnimState:Show("HAIR")
+			ApplyYamcheHatVisual(inst, owner)
 		end
 	end
 end]]
@@ -837,10 +885,7 @@ if inst.super_baby then
 			inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x2)")
 			inst.baby_light_on = true
 			end
-			owner.AnimState:OverrideSymbol("swap_hat", "hat_yamche_on", "swap_hat")
-			owner.AnimState:Show("HAT")
-			owner.AnimState:Hide("HAIR_NOHAT")
-			owner.AnimState:Show("HAIR")
+			ApplyYamcheHatVisual(inst, owner)
 		
 				if inst.components.hunger.current >= 15 then
  		   --inst.entity:AddLight()
@@ -880,10 +925,7 @@ if inst.super_baby then
 			inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_LIGHT_OFF.."\n"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x1)")
 			inst.baby_light_on = false
 			end
-			owner.AnimState:OverrideSymbol("swap_hat", "hat_yamche", "swap_hat")
-			owner.AnimState:Show("HAT")
-			owner.AnimState:Hide("HAIR_NOHAT")
-			owner.AnimState:Show("HAIR")
+			ApplyYamcheHatVisual(inst, owner)
 		end
 	elseif not inst.house then	
 		if inst.components.hunger.current >= 15 then
@@ -929,10 +971,7 @@ if inst.baby then
 			inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x2)")
 			inst.baby_light_on = true
 			end
-			owner.AnimState:OverrideSymbol("swap_hat", "hat_yamche_on", "swap_hat")
-			owner.AnimState:Show("HAT")
-			owner.AnimState:Hide("HAIR_NOHAT")
-			owner.AnimState:Show("HAIR")
+			ApplyYamcheHatVisual(inst, owner)
 		
 				if inst.components.hunger.current >= 15 then
  		
@@ -971,10 +1010,7 @@ if inst.baby then
 			inst.components.talker:Say(STRINGS.MUSHA_TALK_ORDER_YAMCHE_LIGHT_OFF.."\n"..STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY.."(x1)")
 			inst.baby_light_on = false
 			end
-			owner.AnimState:OverrideSymbol("swap_hat", "hat_yamche", "swap_hat")
-			owner.AnimState:Show("HAT")
-			owner.AnimState:Hide("HAIR_NOHAT")
-			owner.AnimState:Show("HAIR")
+			ApplyYamcheHatVisual(inst, owner)
 		end
 	elseif not inst.house then	
 		if inst.components.hunger.current >= 15 then
@@ -1248,10 +1284,7 @@ end
 
 	inst.components.follower:SetLeader(nil)
 	if not inst.level1 and not inst.super_baby then	
-	    owner.AnimState:OverrideSymbol("swap_hat", "hat_house", "swap_hat")
-        owner.AnimState:Show("HAT")
-        owner.AnimState:Hide("HAIR_NOHAT")
-        owner.AnimState:Show("HAIR")
+	    ApplyYamcheHatVisual(inst, owner)
 	end
 if inst.level1 then		
 inst.components.growable:StopGrowing()
@@ -1272,9 +1305,14 @@ if inst.super_baby then
 	ystarve(inst)
 		
 end
+	QueueYamcheHatVisualRefresh(inst, owner)
 end
 
 local function offyamche_house(inst, owner)
+	if owner == nil or owner.AnimState == nil then
+		return
+	end
+		owner.AnimState:ClearOverrideSymbol("swap_hat")
 		owner.AnimState:Hide("HAT")
         owner.AnimState:Hide("HAT_HAIR")
         owner.AnimState:Show("HAIR_NOHAT")

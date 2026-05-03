@@ -1,3 +1,4 @@
+local EggHatch = require("musha/prefabs/egg_hatch")
 require "prefabutil"
 local assets=
 {
@@ -46,7 +47,7 @@ end
 local function Hatch(inst)
     local yamchebird = SpawnPrefab("musha_small")
     yamchebird.Transform:SetPosition(inst.Transform:GetWorldPosition())
-    yamchebird.sg:GoToState("hatch")
+    EggHatch.FinishSpawn(yamchebird, inst)
 	if not inst.cooking_born then
 	green_apple(inst)
 	end
@@ -74,9 +75,8 @@ local function OnNear(inst)
         inst.components.playerprox:IsPlayerClose() and
         inst.components.hatchable.state == "hatch" and
         not inst.components.inventoryitem:IsHeld() then
-        Hatch(inst)
+        EggHatch.Play(inst, CheckHatch)
     end
-     --CheckHatch(inst)
 end
 local function OnFar(inst)
  
@@ -84,7 +84,7 @@ end
 
 local function OnDropped(inst)
     inst.components.hatchable:StartUpdating()
-    CheckHatch(inst)
+    EggHatch.Play(inst, CheckHatch)
 	inst.holding = false
     PlayUncomfySound(inst)
 	inst.Light:Enable(true)
@@ -153,7 +153,7 @@ local function OnHatchState(inst, state)
     elseif state == "comfy" then
         inst.AnimState:PlayAnimation("idle_happy", true)
     elseif state == "hatch" then
-        CheckHatch(inst)
+        EggHatch.Play(inst, CheckHatch)
     elseif state == "dead" then
         --print("   ACK! *splat*")
         if inst.components.hatchable.toohot then
@@ -187,6 +187,7 @@ local inst = CreateEntity()
     MakeInventoryPhysics(inst)
 
     inst.AnimState:SetBuild("musha_egg")
+    inst._musha_hatch_build = "musha_egg"
     inst.AnimState:SetBank("egg")
     inst.AnimState:PlayAnimation("egg")
 	
@@ -242,7 +243,7 @@ local function defaultfn(anim)
     inst.components.hatchable:SetCrackTime(10)
     inst.components.hatchable:SetHatchTime(10)
     inst.components.hatchable:SetHatchFailTime(TUNING.SMALLBIRD_HATCH_TIME * 900000000000)
-    inst.components.hatchable:SetHeaterPrefs(false, nil, true)
+    inst.components.hatchable:SetHeaterPrefs(true, true, true)
 	inst.components.hatchable:StartUpdating()
 	
 	inst:AddComponent("characterspecific_musha")	
@@ -306,7 +307,7 @@ local function cookedfn()
     inst.components.hatchable:SetCrackTime(10)
     inst.components.hatchable:SetHatchTime(10)
     inst.components.hatchable:SetHatchFailTime(TUNING.SMALLBIRD_HATCH_TIME * 9999999999999999999)
-    inst.components.hatchable:SetHeaterPrefs(false, nil, true)
+    inst.components.hatchable:SetHeaterPrefs(true, true, true)
 	inst.components.hatchable:StartUpdating()
 	
 	inst:AddComponent("characterspecific_musha")	
@@ -335,7 +336,7 @@ local function cookedfn()
 
 inst:DoTaskInTime( 1, function() 
 inst.components.hatchable.state = "hatch"
-CheckHatch(inst) end)
+EggHatch.Play(inst, CheckHatch) end)
 	
 	return inst
 end
