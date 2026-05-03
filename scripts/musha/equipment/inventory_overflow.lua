@@ -1,6 +1,6 @@
 local InventoryOverflow = {}
 
-local EquipUtils = require("musha_equiputils")
+local EquipUtils = require("musha/equipment/utils")
 local G = nil
 local debuglib = nil
 

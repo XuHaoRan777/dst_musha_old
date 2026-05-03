@@ -12,7 +12,7 @@ local SpawnPrefab = GLOBAL.SpawnPrefab
 TECH = GLOBAL.TECH
 local IsServer = GLOBAL.TheNet:GetIsServer()
 local containers = require("containers")
-local CompanionStates = require("musha_companionstates")
+local CompanionStates = require("musha/companions/states")
 local SkillDefs = require("musha/skills/defs")
 local MushaAnim = require("musha/utils/anim")
 local MushaConfig = require("musha/config/config")
@@ -78,7 +78,7 @@ modimport("scripts/musha_adds_states.lua")
 modimport("scripts/musha_adds_actions.lua")
 
 modimport("scripts/musha_adds_container.lua")
-require("musha_inventory_overflow").Register({
+require("musha/equipment/inventory_overflow").Register({
 	AddComponentPostInit = AddComponentPostInit,
 	AddClassPostConstruct = AddClassPostConstruct,
 	AddPlayerPostInit = AddPlayerPostInit,
@@ -106,7 +106,7 @@ use "data/screens/chatinputscreen"
 use "data/screens/consolescreen"
 local MushaCommands = GLOBAL.require("usercommands")
 
-require("musha_equipment_postinit").Register(Config, AddPrefabPostInit)
+require("musha/equipment/postinit").Register(Config, AddPrefabPostInit)
 
 require("musha_info_commands").Register({
 	AddModRPCHandler = AddModRPCHandler,
@@ -168,7 +168,7 @@ MusicSkill.Register({
 	SpawnPrefab = SpawnPrefab,
 })
 
-require("musha_companioncommands").Register({
+require("musha/companions/commands").Register({
 	AddModRPCHandler = AddModRPCHandler,
 	CompanionStates = CompanionStates,
 	STRINGS = STRINGS,
@@ -178,7 +178,7 @@ require("musha_companioncommands").Register({
 })
 
 -----------------------------------------------
-require("musha_world_postinit").Register(AddPrefabPostInit, IsServer)
+require("musha/world/postinit").Register(AddPrefabPostInit, IsServer)
 
 -----------------------------------------------
 VisualCommands.Register({
@@ -187,7 +187,7 @@ VisualCommands.Register({
 	STRINGS = STRINGS,
 })
 
-require("musha_companion_hoverinfo").Register({
+require("musha/companions/hoverinfo").Register({
 	AddClassPostConstruct = AddClassPostConstruct,
 	AddGlobalClassPostConstruct = AddGlobalClassPostConstruct,
 	AddPrefabPostInitAny = AddPrefabPostInitAny,
@@ -197,7 +197,7 @@ require("musha_companion_hoverinfo").Register({
 })
 
 -------------------------------------------------
-require("musha_difficulty_postinit").Register(Config, AddPrefabPostInit, IsServer, Vector3, SkillDefs)
+require("musha/world/difficulty_postinit").Register(Config, AddPrefabPostInit, IsServer, Vector3, SkillDefs)
 
 -------
 AddModCharacter("musha","FEMALE")

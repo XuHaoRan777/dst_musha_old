@@ -1,4 +1,4 @@
-local EquipUtils = require("musha_equiputils")
+local EquipUtils = require("musha/equipment/utils")
 
 local assets=
 {
