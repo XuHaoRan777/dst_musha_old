@@ -1,4 +1,5 @@
 local brain = require "brains/dallbrain"
+local DallLifecycle = require("musha/prefabs/dall_lifecycle")
 require "prefabutil"
 
 local assets =
@@ -964,190 +965,17 @@ end
 end
 end
 
-local DALL_PLANT_TAG = "dall_plant"
-local DALL_DRAKE_TAG = "dall_drake"
-local DALL_PLANT_LIMIT = 15
-
-local function count_dall_plants(inst)
-local radius = inst.radius_spawning and 5 or 30
-local x, y, z = inst.Transform:GetWorldPosition()
-local count = 0
-local ents = TheSim:FindEntities(x, y, z, radius, {DALL_PLANT_TAG})
-for _, plant in pairs(ents) do
-if plant.dall_owner == nil or plant.dall_owner == inst then
-count = count + 1
-end
-end
-return count
-end
-
-local function can_spawn_dall_plant(inst)
-return count_dall_plants(inst) < DALL_PLANT_LIMIT
-end
-
-local function mark_dall_plant(inst, plant)
-if plant then
-plant:AddTag(DALL_PLANT_TAG)
-plant.dall_owner = inst
-if plant.components and plant.components.follower then
-plant.components.follower:SetLeader(inst)
-end
-if inst.components and inst.components.leader and plant.components and plant.components.follower then
-inst.components.leader:AddFollower(plant)
-end
-end
-return plant
-end
-
-local function is_dall_plant(inst, plant)
-if not plant or not plant:IsValid() then
-return false
-end
-if plant.dall_owner == inst then
-return true
-end
-return (plant.dall_owner == nil and plant:HasTag(DALL_PLANT_TAG))
-or (plant.components
-and plant.components.follower
-and plant.components.follower.leader == inst)
-end
-
-local function spawn_dall_plant(inst, prefab, x, y, z, force)
-if not force and not can_spawn_dall_plant(inst) then
-return nil
-end
-local plant = SpawnPrefab(prefab)
-if plant then
-plant.Transform:SetPosition(x, y, z)
-mark_dall_plant(inst, plant)
-end
-return plant
-end
-
-local function spawn_dall_rest_plant(inst, x, y, z, force)
-if math.random() < 0.5 then
-local moonbush = spawn_dall_plant(inst, "moonbush", x, y, z, force)
-if moonbush then
-moonbush.AnimState:PlayAnimation("shake")
-end
-else
-local moonlight = spawn_dall_plant(inst, "moonlight_plant", x, y, z, force)
-if moonlight then
-moonlight.AnimState:PlayAnimation("grow")
-end
-end
-end
-
-local function mark_dall_drake(inst, drake)
-if drake then
-drake:AddTag(DALL_DRAKE_TAG)
-drake.dall_owner = inst
-if drake.components and drake.components.follower then
-drake.components.follower:SetLeader(inst)
-end
-if inst.components and inst.components.leader then
-inst.components.leader:AddFollower(drake)
-end
-drake.slave = true
-drake.exit = false
-end
-return drake
-end
-
-local function is_dall_drake(inst, drake)
-if not drake or not drake:IsValid() then
-return false
-end
-if drake.dall_owner == inst then
-return true
-end
-return drake.components
-and drake.components.follower
-and drake.components.follower.leader == inst
-end
-
-local function count_dall_drakes(inst)
-local x, y, z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x, y, z, 100, {DALL_DRAKE_TAG})
-local count = 0
-for _, drake in pairs(ents) do
-if is_dall_drake(inst, drake) and not drake.inst_in then
-count = count + 1
-end
-end
-return count
-end
-
-local function remove_dall_drake_for_migration(inst, drake)
-if not is_dall_drake(inst, drake) or drake.inst_in then
-return false
-end
-if drake.components and drake.components.follower then
-drake.components.follower:SetLeader(nil)
-end
-drake.inst_in = true
-drake:Remove()
-return true
-end
-
-local function remove_dall_drakes_for_migration(inst)
-local x, y, z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x, y, z, 100, {DALL_DRAKE_TAG})
-for _, drake in pairs(ents) do
-remove_dall_drake_for_migration(inst, drake)
-end
-end
-
-local function restore_dall_drake(inst, drake)
-if not is_dall_drake(inst, drake) or drake.inst_in then
-return false
-end
-local x, y, z = drake.Transform:GetWorldPosition()
-if drake.components and drake.components.follower then
-drake.components.follower:SetLeader(nil)
-end
-drake.inst_in = true
-SpawnPrefab("small_puff").Transform:SetPosition(x, y, z)
-SpawnPrefab("green_leaves").Transform:SetPosition(x, y, z)
-spawn_dall_rest_plant(inst, x, y, z, true)
-drake:Remove()
-return true
-end
-
-local function restore_dall_drakes(inst)
-local x, y, z = inst.Transform:GetWorldPosition()
-local ents = TheSim:FindEntities(x, y, z, 100, {"moondrake"})
-for _, drake in pairs(ents) do
-restore_dall_drake(inst, drake)
-end
-end
-
-local function spawn_dall_drake(inst, x, y, z)
-local drake = SpawnPrefab("moonnutdrake")
-if drake then
-drake.Transform:SetPosition(x, y, z)
-mark_dall_drake(inst, drake)
-if drake.sg then
-drake.sg:GoToState("enter")
-end
-end
-return drake
-end
-
-local function spawn_migration_dall_drakes(inst)
-local count = inst.pending_migration_drakes or 0
-inst.pending_migration_drakes = nil
-if count <= 0 or inst.sleep_on then
-return
-end
-
-local x, y, z = inst.Transform:GetWorldPosition()
-for i = 1, count do
-local angle = math.random() * 2 * math.pi
-local radius = 2 + math.random() * 2
-spawn_dall_drake(inst, x + math.cos(angle) * radius, y, z + math.sin(angle) * radius)
-end
-end
+local count_dall_drakes = DallLifecycle.CountDrakes
+local can_spawn_dall_plant = DallLifecycle.CanSpawnPlant
+local mark_dall_plant = DallLifecycle.MarkPlant
+local is_dall_plant = DallLifecycle.IsPlant
+local spawn_dall_plant = DallLifecycle.SpawnPlant
+local mark_dall_drake = DallLifecycle.MarkDrake
+local restore_dall_drake = DallLifecycle.RestoreDrake
+local restore_dall_drakes = DallLifecycle.RestoreDrakes
+local spawn_dall_drake = DallLifecycle.SpawnDrake
+local spawn_migration_dall_drakes = DallLifecycle.SpawnMigrationDrakes
+local remove_dall_drakes_for_migration = DallLifecycle.RemoveDrakesForMigration
 
 local function summon_check(inst, data)
  	--summon
@@ -1909,16 +1737,16 @@ end
 	inst.components.follower:KeepLeaderOnAttacked()
     inst.components.follower.keepdeadleader = true
   
-	inst.on_follow = inst:DoPeriodicTask(0, on_follow)  
-	inst.on_sleep = inst:DoPeriodicTask(5, on_sleep)  
-	---inst.forgelab = inst:DoPeriodicTask(0, forgelab) 
-	
-inst.summon_check = inst:DoPeriodicTask(1, summon_check)  	
-inst.summon_drake = inst:DoPeriodicTask(25, summon_drake)  
-inst.summon_1 = inst:DoPeriodicTask(75, summon_bush) 
-inst.summon_2 = inst:DoPeriodicTask(100, summon_carrot) 
-inst.summon_3 = inst:DoPeriodicTask(300, summon_dusk) 
-inst.summon_4 = inst:DoPeriodicTask(150, summon_night)
+	DallLifecycle.RegisterTasks(inst, {
+		on_follow = on_follow,
+		on_sleep = on_sleep,
+		summon_check = summon_check,
+		summon_drake = summon_drake,
+		summon_bush = summon_bush,
+		summon_carrot = summon_carrot,
+		summon_dusk = summon_dusk,
+		summon_night = summon_night,
+	})
 
 	
 local leader = inst.components.follower.leader

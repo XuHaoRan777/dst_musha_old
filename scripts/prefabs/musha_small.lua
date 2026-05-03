@@ -9,6 +9,7 @@ require "stategraphs/SGmusha_tall3"
 require "stategraphs/SGmusha_tall4"
 require "stategraphs/SGmusha_tall5"
 require "stategraphs/SGmusha_tall6"
+local MushaSmallGrowth = require("musha/prefabs/musha_small_growth")
 
 local SLEEP_NEAR_LEADER_DISTANCE = 2
 local CRY_NEAR_LEADER_DISTANCE = 20
@@ -4413,39 +4414,19 @@ inst.components.health:SetInvincible(false)
 
 --time
 --(lv2)
-local function GetTeenGrowTime(inst)
-	return 1
-end
+local GetTeenGrowTime = MushaSmallGrowth.GetTeenGrowTime
 --(lv3)
-local function GetTallGrowTime(inst)
-	return 1
-	--return 1400
-end
+local GetTallGrowTime = MushaSmallGrowth.GetTallGrowTime
 --(lv4)
-local function GetTall2GrowTime(inst)
-	return 1
-	--return 2200
-end
+local GetTall2GrowTime = MushaSmallGrowth.GetTall2GrowTime
 --(lv5)
-local function GetTall3GrowTime(inst)
-	return 1
-	--return 3000
-end
+local GetTall3GrowTime = MushaSmallGrowth.GetTall3GrowTime
 --(lv6)
-local function GetTall4GrowTime(inst)
-	return 1
-	--return 3800
-end
+local GetTall4GrowTime = MushaSmallGrowth.GetTall4GrowTime
 --(lv7)
-local function GetTall5GrowTime(inst)
-	return 1
-	--return 4600
-end
+local GetTall5GrowTime = MushaSmallGrowth.GetTall5GrowTime
 --(RP)
-local function GetTall6GrowTime(inst)
-	return 1
-	--return 4600
-end
+local GetTall6GrowTime = MushaSmallGrowth.GetTall6GrowTime
 
 --[[
 local function GetTallGrowTime(inst)

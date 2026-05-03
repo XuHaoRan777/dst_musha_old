@@ -25,6 +25,7 @@ local prefabs =
 }
 
 local brain = require("brains/wormbrain")
+local GreenwormBehavior = require("musha/prefabs/greenworm_behavior")
 
 local MAX_LIGHT_FRAME = 20
 
@@ -134,39 +135,7 @@ local function getstatus(inst)
         or "WORM"
 end
 
-local function areaislush(x, y, z)
-    return #TheSim:FindEntities(x, y, z, 7, { "pickable" }, { "INLIMBO" }) >= 3
-end
-
-local function notclaimed(x, y, z)
-    --(1 because this will always find yourself)
-    return #TheSim:FindEntities(x, y, z, 30, { "worm" }) <= 1
-end
-
-local function LookForHome(inst)
-    if inst.components.knownlocations:GetLocation("home") ~= nil then
-        inst.HomeTask:Cancel()
-        inst.HomeTask = nil
-        return
-    end
-
-    local map = TheWorld.Map
-    local x, y, z = inst.Transform:GetWorldPosition()
-
-    for i = 1, 30 do
-        local s = i / 32--(num/2) -- 32.0
-        local a = math.sqrt(s * 512)
-        local b = math.sqrt(s) * 30
-        local x1 = x + math.sin(a) * b
-        local z1 = z + math.cos(a) * b
-
-        if map:IsAboveGroundAtPoint(x1, 0, z1) and areaislush(x1, 0, z1) and notclaimed(x1, 0, z1) then
-            --Yay! Set this as my home
-            inst.components.knownlocations:RememberLocation("home", Vector3(x1, 0, z1))
-            return
-        end
-    end
-end
+local LookForHome = GreenwormBehavior.LookForHome
 
 local function playernear(inst, player)
     if inst.attacktask == nil and inst.sg:HasStateTag("lure") then
@@ -186,11 +155,7 @@ local function IsWorm(dude)
 end
 
 local function onattacked(inst, data)
-SpawnPrefab("green_leaves").Transform:SetPosition(inst:GetPosition():Get())
-    if data.attacker ~= nil then
-        inst.components.combat:SetTarget(data.attacker)
-        inst.components.combat:ShareTarget(data.attacker, 40, IsWorm, 3)
-    end
+    GreenwormBehavior.OnAttacked(inst, data, IsWorm)
 end
 
 local function CustomOnHaunt(inst, haunter)

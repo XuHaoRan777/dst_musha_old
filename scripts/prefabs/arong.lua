@@ -1,3 +1,5 @@
+local ArongLoyalty = require("musha/prefabs/arong_loyalty")
+local ArongRiding = require("musha/prefabs/arong_riding")
 local fns = {} -- a table to store local functions in so that we don't hit the 60 upvalues limit
 
 local assets =
@@ -400,32 +402,9 @@ local function CanShareTarget(dude)
         and not (dude.components.health:IsDead() or dude:HasTag("player"))
 end
 
-local function IsMushaOrPlayerAttacker(attacker)
-    return attacker ~= nil
-        and (attacker:HasTag("musha") or attacker:HasTag("player"))
-end
-
-local function ClearCombatTarget(inst)
-    if inst.components.combat ~= nil then
-        inst.components.combat:SetTarget(nil)
-        inst.components.combat:GiveUp()
-    end
-end
-
-local function ApplyPermanentArongLoyalty(inst)
-    inst._arong_permanent_loyalty = true
-
-    if inst.components.domesticatable ~= nil then
-        inst.components.domesticatable:SetMinObedience(1)
-        inst.components.domesticatable:DeltaObedience(1)
-        inst.components.domesticatable:PauseDomesticationDecay(true)
-    end
-
-    if inst.components.rideable ~= nil then
-        inst.components.rideable:SetRequiredObedience(0)
-        inst.components.rideable:SetSaddleable(true)
-    end
-end
+local IsMushaOrPlayerAttacker = ArongLoyalty.IsMushaOrPlayerAttacker
+local ClearCombatTarget = ArongLoyalty.ClearCombatTarget
+local ApplyPermanentArongLoyalty = ArongLoyalty.ApplyPermanent
 
 local function OnAttacked(inst, data)
     local attacker = data ~= nil and data.attacker or nil
@@ -685,26 +664,7 @@ local function ShouldBeg(inst)
 end
 
 local function CalculateBuckDelay(inst)
-    local domestication =
-        inst.components.domesticatable ~= nil
-        and inst.components.domesticatable:GetDomestication()
-        or 0
-
-    local moodmult = fns.GetIsInMood(inst) and TUNING.BEEFALO_BUCK_TIME_MOOD_MULT or 1
-
-    local beardmult =
-        (inst.components.beard ~= nil and inst.components.beard.bits == 0)
-        and TUNING.BEEFALO_BUCK_TIME_NUDE_MULT
-        or 1
-
-    local domesticmult =
-        inst.components.domesticatable:IsDomesticated()
-        and 1
-        or TUNING.BEEFALO_BUCK_TIME_UNDOMESTICATED_MULT
-
-    local basedelay = Remap(domestication, 0, 1, TUNING.BEEFALO_MIN_BUCK_TIME, TUNING.BEEFALO_MAX_BUCK_TIME)
-
-    return basedelay * moodmult * beardmult * domesticmult
+    return ArongRiding.CalculateBuckDelay(inst, fns.GetIsInMood, TENDENCY)
 end
 
 local function OnBuckTime(inst)
@@ -1180,16 +1140,15 @@ local function OnHealthDelta(inst, data)
 end
 
 local function OnBeingRidden(inst, dt)
-    inst.components.domesticatable:DeltaTendency(TENDENCY.RIDER, TUNING.BEEFALO_RIDER_RIDDEN * dt)
+    ArongRiding.OnBeingRidden(inst, dt, TENDENCY)
 end
 
 local function OnRiderDoAttack(inst, data)
-    inst.components.domesticatable:DeltaTendency(TENDENCY.ORNERY, TUNING.BEEFALO_ORNERY_DOATTACK)
+    ArongRiding.OnRiderDoAttack(inst, TENDENCY)
 end
 
 local function DoRiderSleep(inst, sleepiness, sleeptime)
-    inst._ridersleeptask = nil
-    inst.components.sleeper:AddSleepiness(sleepiness, sleeptime)
+    ArongRiding.DoRiderSleep(inst, sleepiness, sleeptime)
 end
 
 local function OnRiderChanged(inst, data)
@@ -1257,11 +1216,7 @@ local function OnRefuseRider(inst, data)
 end
 
 local function OnRiderSleep(inst, data)
-    inst._ridersleep = inst.components.rideable:IsBeingRidden() and {
-        time = GetTime(),
-        sleepiness = data.sleepiness,
-        sleeptime = data.sleeptime,
-    } or nil
+    ArongRiding.OnRiderSleep(inst, data)
 end
 
 local function dobeefalounhitch(inst)

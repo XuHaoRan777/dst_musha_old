@@ -1,3 +1,5 @@
+local FrostArmor = require("musha/prefabs/frost_armor")
+
 local assets=
 {
 	Asset("ANIM", "anim/swap_frostpocket.zip"),
@@ -353,20 +355,7 @@ end
 end
 -------- --------
 
-local function sanity_cost(inst, owner)
-    
-	if not inst.components.heater and inst.shield then
-	inst:AddComponent("heater")
-	end
-    if owner.components.sanity and inst.shield then
-	 
-        owner.components.sanity:DoDelta(-1,false)
-		inst.components.heater:SetThermics(false, true)
-		inst.components.heater.equippedheat = -2
-		inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
-	end
-	
-end
+local sanity_cost = FrostArmor.SanityCost
 
 local function Release_Frost(inst,owner)
  
@@ -438,25 +427,10 @@ inst.components.equippable.walkspeedmult = 1.4
 		end
 end
 
-local function OnBlocked(owner)
-    owner.SoundEmitter:PlaySound("dontstarve/wilson/hit_armour")
-end
-
-local function OnOpen(inst)
-    inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
-
-end 
-
-local function OpenFrostArmorContainer(inst, owner)
-	if inst.components.container ~= nil and owner ~= nil then
-		inst.components.container:Open(owner)
-	end
-end
-
-local function OnClose(inst) 
-    inst.SoundEmitter:PlaySound("dontstarve/common/fireOut")
-
-end 
+local OnBlocked = FrostArmor.OnBlocked
+local OnOpen = FrostArmor.OnOpen
+local OpenFrostArmorContainer = FrostArmor.OpenContainer
+local OnClose = FrostArmor.OnClose
 
 local function OnLoad(inst, data)
     UpgradeArmor(inst)
@@ -466,49 +440,13 @@ local function OnPutInInventory(inst)
     UpgradeArmor(inst)
     end 
 ---------------------------------------shield on
-local function consume(inst, owner)
-if not inst.broken and inst.shield then
-inst.components.fueled:DoDelta(-20000)
-end
-if inst.broken and inst.shield then
-inst.components.fueled:DoDelta(0)
-end
-end
-
-local function on_shield(inst, owner)
-if inst.shield and not inst.broken then
-inst.components.talker:Say(STRINGS.MUSHA_ITEM_SHIELD.."\n"..STRINGS.MUSHA_ARMOR.."(100)\n"..STRINGS.MUSHA_ITEM_COOL)
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 1)
-    if inst.consume then inst.consume:Cancel() inst.consume = nil end
-    inst.consume = inst:DoPeriodicTask(1, function() consume(inst, owner) end)
-	
-	elseif inst.shield and inst.broken then
-inst.components.talker:Say(STRINGS.MUSHA_ITEM_SHIELD_BROKEN.."\n"..STRINGS.MUSHA_ARMOR.."(0)")
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0)
-      if inst.consume then inst.consume:Cancel() inst.consume = nil end
-end end
+local on_shield = FrostArmor.StartShield
 
 local function off_shield(inst)
-if inst.shield then
-inst.shield = false
-UpgradeArmor(inst)
-if inst.consume then inst.consume:Cancel() inst.consume = nil end
-end
-	if inst.components.heater then
-	inst:RemoveComponent("heater")
-	end
+	FrostArmor.StopShield(inst, UpgradeArmor)
 end
 --------------Shield hat
-    local function stopusingshield(inst, data)
-        local hat = inst.components.inventory and inst.components.inventory:GetEquippedItem(EQUIPSLOTS.BODY)
-        if hat and not (data.statename == "shell_idle" or data.statename == "shell_hit" or data.statename == "shell_enter") then
-		inst.shield = false
-        hat.components.useableitem:StopUsingItem()
-        end
-		--[[if inst.components.container ~= nil then
-        inst.components.container:Open(owner)
-		end]]
-    end	
+local stopusingshield = FrostArmor.StopUsingShield
 
 local function onequip(inst, owner) 
 if not inst.share_item and owner and not owner:HasTag("musha") and owner.components.inventory then

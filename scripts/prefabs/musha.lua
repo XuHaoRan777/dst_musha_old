@@ -3,6 +3,8 @@ local MushaCommands = require("usercommands")
 local SkillDefs = require("musha/skills/defs")
 local MushaAnim = require("musha/utils/anim")
 local MushaTasks = require("musha/utils/task")
+local MushaSave = require("musha/prefabs/musha_save")
+local MushaDeath = require("musha/prefabs/musha_death")
 --local easing = require("easing")
 local assets = {
   Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
@@ -5334,188 +5336,7 @@ local function ondeath(inst)
         end
     end
     inst.components.health.numrevives = 0
-	--level 1
-	if not inst.no_panalty then
-if inst.level >0 and inst.level <5 then
-	inst.level = inst.level - 1
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -1") end)
-	levelexp(inst)
-
-	--level 2
-elseif inst.level >=5 and inst.level <10  then
-	inst.level = inst.level - 3
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -3 ") end)
-	levelexp(inst)
-
-	--level 3
-elseif inst.level >=10 and inst.level <30  then
-	inst.level = inst.level - 6
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -6 ") end)
-	levelexp(inst)
-
-	--level 4
-elseif inst.level >=30 and inst.level <50  then
-	inst.level = inst.level - 9
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -9 ") end)
-
-	levelexp(inst)
-
-	--level 5
-elseif inst.level >=50 and inst.level <80  then
-	inst.level = inst.level - 12
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -12 ") end)
-	levelexp(inst)
-
-	--level 6
-elseif inst.level >=80 and inst.level <125  then
-	inst.level = inst.level - 16
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -16 ") end)
-	levelexp(inst)
-
-	--level 7
-elseif inst.level >=125 and inst.level <200  then
-	inst.level = inst.level - 20
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -20 ") end)
-	levelexp(inst)
-
-	--level 8
-elseif inst.level >=200 and inst.level <340  then
-	inst.level = inst.level - 24
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -24 ") end)
-	levelexp(inst)
-
-	--level 9
-elseif inst.level >=340 and inst.level <430  then
-	inst.level = inst.level - 28
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -28 ") end)
-	levelexp(inst)
-
-	--level 10
-elseif inst.level >=430 and inst.level <530  then
-	inst.level = inst.level - 32
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -32 ") end)
-	levelexp(inst)
-
-	--level 11
-elseif inst.level >=530 and inst.level <640  then
-	inst.level = inst.level - 37
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -37 ") end)
-	levelexp(inst)
-
-	--level 12
-elseif inst.level >=640 and inst.level <760  then
-	inst.level = inst.level - 42
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -42 ") end)
-	levelexp(inst)
-
-	--level 13
-elseif inst.level >=760 and inst.level <890  then
-	inst.level = inst.level - 47
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -47 ") end)
-	levelexp(inst)
-
-	--level 14
-elseif inst.level >=890 and inst.level <1030  then
-	inst.level = inst.level - 52
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -52 ") end)
-	levelexp(inst)
-
-	--level 15
-elseif inst.level >=1030 and inst.level <1180  then
-	inst.level = inst.level - 57
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -57 ") end)
-	levelexp(inst)
-
-	--level 16
-elseif inst.level >=1180 and inst.level <1340  then
-	inst.level = inst.level - 63
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -63 ") end)
-	levelexp(inst)
-
-	--level 17
-elseif inst.level >=1340 and inst.level <1510  then
-	inst.level = inst.level - 69
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -69 ") end)
-	levelexp(inst)
-
-	--level 18
-elseif inst.level >=1510 and inst.level <1690  then
-	inst.level = inst.level - 75
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -75 ") end)
-	levelexp(inst)
-
-	--level 19
-elseif inst.level >=1690 and inst.level <1880  then
-	inst.level = inst.level - 81
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -81 ") end)
-	levelexp(inst)
-
-	--level 20
-elseif inst.level >=1880 and inst.level <2080  then
-	inst.level = inst.level - 87
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -87 ") end)
-	levelexp(inst)
-
-	--level 21
-elseif inst.level >=2080 and inst.level <2290  then
-	inst.level = inst.level - 94
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -94 ") end)
-	levelexp(inst)
-
-	--level 22
-elseif inst.level >=2290 and inst.level <2500  then
-	inst.level = inst.level - 111
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -111 ") end)
-	levelexp(inst)
-
-	--level 23
-elseif inst.level >=2500 and inst.level <2850  then
-	inst.level = inst.level - 118
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -118 ") end)
-	levelexp(inst)
-
-	--level 24
-elseif inst.level >=2850 and inst.level <3200  then
-	inst.level = inst.level - 125
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -125 ") end)
-	levelexp(inst)
-
-	--level 25
-elseif inst.level >=3200 and inst.level <3700  then
-	inst.level = inst.level - 132
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -132 ") end)
-	levelexp(inst)
-
-	--level 26
-elseif inst.level >=3700 and inst.level <4200  then
-	inst.level = inst.level - 140
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -140 ") end)
-	levelexp(inst)
-
-	--level 27
-elseif inst.level >=4200 and inst.level <4700  then
-	inst.level = inst.level - 150
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -150 ") end)
-	levelexp(inst)
-
-	--level 28
-elseif inst.level >=4700 and inst.level <5500 then
-	inst.level = inst.level - 160
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -160 ") end)
-	levelexp(inst)
-
-	--level 29
-elseif inst.level >=5500 and inst.level <7000 then
-	inst.level = inst.level - 170
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -170 ") end)
-	levelexp(inst)
-
-	-- level 30
-elseif inst.level >=7000  then
-	inst.level = inst.level - 200
-	inst:DoTaskInTime( 4.5, function() inst.components.talker:Say(STRINGS.MUSHA_DEATH_PENALTY.." -200 ") end)
-	levelexp(inst)
-end end
+	MushaDeath.ApplyPenalty(inst, levelexp, STRINGS)
 end
 
 local function onnewstate(inst)
@@ -5564,51 +5385,16 @@ end
 
 
 function onpreload(inst, data)
-	if data ~= nil then
-		if data.yamche_egg_hunted ~= nil then
-		inst.yamche_egg_hunted = true
-		end
-		if data.arong_egg_hunted ~= nil then
-		inst.arong_egg_hunted = true
-		end
-				if data.treasure ~= nil then
-			inst.treasure = data.treasure
-			treasure_hunt(inst)
-				end
-				if data.count_w ~= nil then
-			inst.count_w = data.count_w
-			count_wil(inst)
-				end
-				if data.music ~= nil then
-			inst.music = data.music
-			fullcharged_music(inst)
-				end
-
-				if data.level ~= nil then
-			inst.level = data.level
-			levelexp(inst)
-			if data.health and data.health.health then inst.components.health.currenthealth = data.health.health end
-			if data.sanity and data.sanity.current then inst.components.sanity.current = data.sanity.current end
-			inst.components.health:DoDelta(0)
-			inst.components.sanity:DoDelta(0)
-				end
-
-	end
+	MushaSave.OnPreLoad(inst, data, {
+		treasure_hunt = treasure_hunt,
+		count_wil = count_wil,
+		fullcharged_music = fullcharged_music,
+		levelexp = levelexp,
+	})
 end
 
 function onsave(inst, data)
-
-	if data ~= nil and data.level then
-	data.level = inst.level:GetSaveRecord()
-	end
-
-	data.level = inst.level > 0 and inst.level or nil
-	data.music = inst.music or nil
-	data.count_w = inst.count_w or nil
-	data.treasure = inst.treasure or nil
-	data.yamche_egg_hunted = inst.yamche_egg_hunted or nil
-	data.arong_egg_hunted = inst.arong_egg_hunted or nil
-
+	MushaSave.OnSave(inst, data)
 end
 
 --------------------------------------------------------------
