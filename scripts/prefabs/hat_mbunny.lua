@@ -564,7 +564,7 @@ inst.boost = false
 	if inst.task ~= nil then inst.task:Cancel() inst.task = nil end
 	
 		UpgradeArmor(inst)
-		owner.AnimState:OverrideSymbol("swap_hat", "hat_mbunny", "swap_hat")
+		EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mbunny", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")
@@ -608,7 +608,7 @@ end
 if inst.boost then
 
 
-		owner.AnimState:OverrideSymbol("swap_hat", "hat_mbunny2", "swap_hat")
+		EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mbunny2", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")
@@ -635,6 +635,7 @@ local function onunequip(inst, owner)
     inst:RemoveEventCallback("attacked", inst.expfn, owner)
     if inst.task then inst.task:Cancel() inst.task = nil end
 
+        EquipUtils.ClearEquipSymbol(owner, "swap_hat")
         owner.AnimState:Hide("HAT")
         owner.AnimState:Hide("HAT_HAIR")
         owner.AnimState:Show("HAIR_NOHAT")
@@ -659,13 +660,13 @@ if owner ~= nil then
 	ChangeInsulation(inst)	
 
 	if not inst.boost then
-        owner.AnimState:OverrideSymbol("swap_hat", "hat_mbunny", "swap_hat")
+        EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mbunny", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")
         owner.AnimState:Hide("HAIR")
 	elseif inst.boost then	
-		owner.AnimState:OverrideSymbol("swap_hat", "hat_mbunny2", "swap_hat")
+		EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mbunny2", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")

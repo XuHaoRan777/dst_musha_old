@@ -436,7 +436,7 @@ inst.boost = false
 	inst.components.equippable.walkspeedmult = 1
 	inst.SoundEmitter:PlaySound("dontstarve/common/fireOut")
     if inst.task ~= nil then inst.task:Cancel() inst.task = nil end
-        owner.AnimState:OverrideSymbol("swap_hat", "hat_mbunnya", "swap_hat")
+        EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mbunnya", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")
@@ -470,7 +470,7 @@ if inst.broken then
 	owner.components.talker:Say(STRINGS.MUSHA_WEAPON_BROKEN_TALK)
 	inst.components.talker:Say(STRINGS.MUSHA_HAT_BROKEN.."\n"..STRINGS.MUSHA_ITEM_DUR.." (0)\n"..STRINGS.MUSHA_ITEM_SPEED.."(0)")
   
-        owner.AnimState:OverrideSymbol("swap_hat", "hat_mbunnya", "swap_hat")
+        EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mbunnya", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")
@@ -540,7 +540,7 @@ inst.components.talker:Say(STRINGS.MUSHA_ITEM_SPEED.."(VI)\n"..STRINGS.MUSHA_ITE
 	
 	--owner.components.talker:Say("Goggle on !")
     inst.task = inst:DoPeriodicTask(1, function() consume(inst, owner) end)
-        owner.AnimState:OverrideSymbol("swap_hat", "hat_mbunnya2", "swap_hat")
+        EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mbunnya2", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")
@@ -563,6 +563,7 @@ inst.components.fueled:StopConsuming()
     inst:RemoveEventCallback("attacked", inst.expfn, owner)
     if inst.task ~= nil then inst.task:Cancel() inst.task = nil end
 
+        EquipUtils.ClearEquipSymbol(owner, "swap_hat")
         owner.AnimState:Hide("HAT")
         owner.AnimState:Hide("HAT_HAIR")
         owner.AnimState:Show("HAIR_NOHAT")
@@ -589,14 +590,14 @@ local function onequip(inst, owner)
 inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
 if not inst.boost then
 --inst.Light:Enable(false)
-        owner.AnimState:OverrideSymbol("swap_hat", "hat_mbunnya", "swap_hat")
+        EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mbunnya", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")
         owner.AnimState:Hide("HAIR")
 elseif inst.boost then
 --inst.Light:Enable(true)
-        owner.AnimState:OverrideSymbol("swap_hat", "hat_mbunnya2", "swap_hat")
+        EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mbunnya2", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")

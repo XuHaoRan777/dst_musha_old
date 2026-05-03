@@ -696,6 +696,7 @@ local function onunequip(inst, owner)
 		return
 	end
     owner.frost = false
+    owner.AnimState:ClearOverrideSymbol("swap_object")
     owner.AnimState:Hide("ARM_carry") 
     owner.AnimState:Show("ARM_normal") 
 		--owner:RemoveTag("phoenixblade") 

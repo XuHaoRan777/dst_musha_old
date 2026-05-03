@@ -533,6 +533,7 @@ owner.fire = false
 	inst.boost = false 
     if inst.task then inst.task:Cancel() inst.task = nil end
     if inst.sanity then inst.sanity:Cancel() inst.sanity = nil end
+    owner.AnimState:ClearOverrideSymbol("swap_object")
     owner.AnimState:Hide("ARM_carry") 
     owner.AnimState:Show("ARM_normal") 
 

@@ -764,6 +764,7 @@ inst.cost_on = false
     inst:RemoveComponent("spellcaster")
  	end
     if inst.task then inst.task:Cancel() inst.task = nil end
+    owner.AnimState:ClearOverrideSymbol("swap_object")
      owner.AnimState:Hide("ARM_carry") 
     owner.AnimState:Show("ARM_normal") 
     if inst.components.container ~= nil then

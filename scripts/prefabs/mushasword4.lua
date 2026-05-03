@@ -821,6 +821,7 @@ local function onunequip(inst, owner)
 		end
    Upgradedamage(inst)
    	owner.fire = false
+    owner.AnimState:ClearOverrideSymbol("swap_object")
     owner.AnimState:Hide("ARM_carry") 
     owner.AnimState:Show("ARM_normal") 
 

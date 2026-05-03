@@ -485,13 +485,13 @@ local function onequip(inst, owner)
 
 inst.components.fueled:StartConsuming()        
 	if inst.boost then
-        owner.AnimState:OverrideSymbol("swap_hat", "hat_mphoenix", "swap_hat")
+        EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mphoenix", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")
         owner.AnimState:Hide("HAIR")
 	elseif not inst.boost then
-        owner.AnimState:OverrideSymbol("swap_hat", "hat_mphoenix2", "swap_hat")
+        EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mphoenix2", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")
@@ -576,6 +576,7 @@ inst.components.fueled:StopConsuming()
     inst:RemoveEventCallback("attacked", inst.gasfn, owner)
     inst:RemoveEventCallback("attacked", inst.expfn, owner)
 	if owner ~= nil then
+        EquipUtils.ClearEquipSymbol(owner, "swap_hat")
         owner.AnimState:Hide("HAT")
         owner.AnimState:Hide("HAT_HAIR")
         owner.AnimState:Show("HAIR_NOHAT")
@@ -594,7 +595,7 @@ UpgradeArmor(inst)
 	
     inst:RemoveEventCallback("attacked", inst.gasfn, owner)
     inst:RemoveEventCallback("attacked", inst.expfn, owner)
-		owner.AnimState:OverrideSymbol("swap_hat", "hat_mphoenix2", "swap_hat")
+		EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mphoenix2", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")
@@ -612,7 +613,7 @@ if owner and not inst.boost then
 	inst.boost = true 
 	UpgradeArmor(inst)
 	
-        owner.AnimState:OverrideSymbol("swap_hat", "hat_mphoenix", "swap_hat")
+        EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mphoenix", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")

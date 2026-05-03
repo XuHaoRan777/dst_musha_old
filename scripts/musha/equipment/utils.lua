@@ -50,6 +50,27 @@ function EquipUtils.HasSanityAtLeast(owner, value)
         and owner.components.sanity.current >= value
 end
 
+function EquipUtils.ApplyEquipSymbol(owner, inst, symbol, build, source_symbol)
+    if owner == nil or owner.AnimState == nil then
+        return
+    end
+
+    local skin_build = inst ~= nil and inst.GetSkinBuild ~= nil and inst:GetSkinBuild() or nil
+    local source = source_symbol or symbol
+
+    if skin_build ~= nil and skin_build ~= "" then
+        owner.AnimState:OverrideItemSkinSymbol(symbol, skin_build, source, inst.GUID, build or source)
+    else
+        owner.AnimState:OverrideSymbol(symbol, build or source, source)
+    end
+end
+
+function EquipUtils.ClearEquipSymbol(owner, symbol)
+    if owner ~= nil and owner.AnimState ~= nil then
+        owner.AnimState:ClearOverrideSymbol(symbol)
+    end
+end
+
 function EquipUtils.GetEquippedExtraBackpack(owner)
     local inventory = owner ~= nil and owner.components ~= nil and owner.components.inventory or nil
     if inventory == nil then

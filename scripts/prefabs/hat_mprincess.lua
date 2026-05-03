@@ -379,7 +379,7 @@ inst.healing1 = false
 	end
 	   UpgradeArmor(inst)
 	   	inst.components.fueled:StartConsuming() 
-     owner.AnimState:OverrideSymbol("swap_hat", "hat_mprincess", "swap_hat")
+     EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mprincess", "swap_hat")
      owner.AnimState:Show("HAT")
        owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")
@@ -388,7 +388,7 @@ inst.healing1 = false
 	inst.components.equippable.dapperness = TUNING.DAPPERNESS_TINY
 	elseif inst.level >=1200 then	--1400 LV21
 	inst.healing1 = true
-     owner.AnimState:OverrideSymbol("swap_hat", "hat_mcrown", "swap_hat")
+     EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mcrown", "swap_hat")
         owner.AnimState:Show("HAT")
         owner.AnimState:Show("HAT_HAIR")
         owner.AnimState:Hide("HAIR_NOHAT")
@@ -464,6 +464,7 @@ if data and data.attacker and math.random() < expchance and inst.level < 4010 th
 	inst.healing1 = false
 
 	inst.components.fueled:StopConsuming()
+        EquipUtils.ClearEquipSymbol(owner, "swap_hat")
         owner.AnimState:Hide("HAT")
         owner.AnimState:Hide("HAT_HAIR")
         owner.AnimState:Show("HAIR_NOHAT")

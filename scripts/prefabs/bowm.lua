@@ -593,6 +593,7 @@ local function onunequip(inst, owner)
     Upgradedamage(inst)
 	--inst.boost = false 
   
+    owner.AnimState:ClearOverrideSymbol("swap_object")
     owner.AnimState:Hide("ARM_carry") 
     owner.AnimState:Show("ARM_normal") 
 	
