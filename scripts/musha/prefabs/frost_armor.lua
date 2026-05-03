@@ -1,4 +1,5 @@
 local FrostArmor = {}
+local EquipUtils = require("musha/equipment/utils")
 
 function FrostArmor.OnBlocked(owner)
     owner.SoundEmitter:PlaySound("dontstarve/wilson/hit_armour")
@@ -11,6 +12,20 @@ end
 function FrostArmor.OpenContainer(inst, owner)
     if inst.components.container ~= nil and owner ~= nil then
         inst.components.container:Open(owner)
+    end
+end
+
+function FrostArmor.CloseContainer(inst, owner)
+    if inst.components.container ~= nil then
+        inst.components.container:Close(owner)
+    end
+end
+
+function FrostArmor.RefreshContainer(inst, owner)
+    if EquipUtils.ShouldAutoOpenArmorContainer(owner) then
+        FrostArmor.OpenContainer(inst, owner)
+    else
+        FrostArmor.CloseContainer(inst, owner)
     end
 end
 

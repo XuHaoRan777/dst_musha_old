@@ -16,6 +16,8 @@ local function IsBackpackLikeItem(item)
             or (item.HasTag ~= nil and item:HasTag("backpack")))
 end
 
+EquipUtils.IsBackpackLikeItem = IsBackpackLikeItem
+
 function EquipUtils.GetEquippedExtraBackpack(owner)
     local inventory = owner ~= nil and owner.components ~= nil and owner.components.inventory or nil
     if inventory == nil then

@@ -429,7 +429,7 @@ end
 
 local OnBlocked = FrostArmor.OnBlocked
 local OnOpen = FrostArmor.OnOpen
-local OpenFrostArmorContainer = FrostArmor.OpenContainer
+local RefreshFrostArmorContainer = FrostArmor.RefreshContainer
 local OnClose = FrostArmor.OnClose
 
 local function OnLoad(inst, data)
@@ -469,7 +469,7 @@ inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
 	elseif inst.level >=750 then	
 	 	inst.components.equippable.dapperness = TUNING.DAPPERNESS_SMALL
 	end 
-	OpenFrostArmorContainer(inst, owner)
+	RefreshFrostArmorContainer(inst, owner)
 	
 if inst.task1 then inst.task1:Cancel() inst.task1 = nil end
 inst.task1 = inst:DoPeriodicTask(0.2, function() Release_Frost(inst, owner) end)
@@ -572,7 +572,6 @@ if data and data.attacker and math.random() < expchance and inst.level < 4010 th
 	
 end
 local function onuseshield(inst,owner)
-	OpenFrostArmorContainer(inst, owner)
 	if inst.shield then
 		return
 	end
