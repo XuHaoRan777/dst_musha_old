@@ -396,6 +396,38 @@ local function OnClose(inst)
 	 	inst.SoundEmitter:PlaySound("dontstarve/common/fireOut")
 end 
 
+local function IsValidContainerOpener(opener)
+	return opener ~= nil
+		and opener:IsValid()
+		and opener.replica ~= nil
+end
+
+local function CleanReplicaContainerOpeners(inst)
+	local replica = inst ~= nil and inst.replica ~= nil and inst.replica.container or nil
+	if replica == nil or replica.openers == nil then
+		return
+	end
+
+	for i = #replica.openers, 1, -1 do
+		if not IsValidContainerOpener(replica.openers[i]) then
+			table.remove(replica.openers, i)
+		end
+	end
+end
+
+local function WrapContainerClose(inst)
+	if inst.components == nil or inst.components.container == nil or inst._musha_clean_close_wrapped then
+		return
+	end
+
+	inst._musha_clean_close_wrapped = true
+	local old_close = inst.components.container.Close
+	inst.components.container.Close = function(container, doer, ...)
+		CleanReplicaContainerOpeners(inst)
+		return old_close(container, doer, ...)
+	end
+end
+
 local function ApplyPirateBodyVisual(inst, owner)
 	if inst.Pirate then
 		owner.AnimState:OverrideSymbol("swap_body", "armor_pirate", "swap_body")
@@ -713,6 +745,7 @@ local function fn()
     inst.components.container:WidgetSetup("krampus_sack")
 	inst.components.container.onopenfn = OnOpen
     inst.components.container.onclosefn = OnClose
+	WrapContainerClose(inst)
 	
    --[[ inst:AddComponent("container")
     inst.components.container:SetNumSlots(#slotpos)

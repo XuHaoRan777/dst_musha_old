@@ -42,6 +42,33 @@ local function RefreshYamcheMapIcon(yamche)
 	end
 end
 
+local function GetLeader(owner)
+	return owner ~= nil and owner.components ~= nil and owner.components.leader or nil
+end
+
+local function IsOwnedFollower(owner, companion)
+	local leader = GetLeader(owner)
+	local follower = companion ~= nil and companion.components ~= nil and companion.components.follower or nil
+
+	return leader ~= nil
+		and follower ~= nil
+		and (follower.leader == owner or leader:IsFollower(companion))
+end
+
+local function CountFollowers(owner, tag)
+	local leader = GetLeader(owner)
+	return leader ~= nil and leader:CountFollowers(tag) or 0
+end
+
+local function FindNearbyTagged(owner, the_sim, tag, radius)
+	if owner == nil or owner.Transform == nil or the_sim == nil then
+		return {}
+	end
+
+	local x, y, z = owner.Transform:GetWorldPosition()
+	return the_sim:FindEntities(x, y, z, radius or 25, { tag })
+end
+
 local function RegisterDall(deps)
 	local CompanionStates = deps.CompanionStates
 	local STRINGS = deps.STRINGS
@@ -273,9 +300,9 @@ local function RegisterYamcheFollow(deps)
 
 		local commandable_yamche = find_commandable(inst)
 		local owned_yamche = find_owned(inst)
-		local has_yamche_follower = inst.components.leader:CountFollowers(YAMCHE_TAG) > 0
+		local has_yamche_follower = CountFollowers(inst, YAMCHE_TAG) > 0
 
-		if commandable_yamche ~= nil and commandable_yamche.components.follower.leader == inst then
+		if commandable_yamche ~= nil and IsOwnedFollower(inst, commandable_yamche) then
 			has_yamche_follower = true
 		end
 		if owned_yamche ~= nil then
@@ -318,12 +345,16 @@ local function RegisterYamcheBattle(deps)
 			return
 		end
 
-		local x, y, z = inst.Transform:GetWorldPosition()
-		local ents = TheSim:FindEntities(x, y, z, 25, { "yamche" })
+		local ents = FindNearbyTagged(inst, TheSim, "yamche", YAMCHE_RADIUS)
+		local is_ghost = inst:HasTag("playerghost")
+		local is_berserk = inst.berserks or inst.fberserk
+		local yamche_count = CountFollowers(inst, YAMCHE_TAG)
+
 		for _, v in pairs(ents) do
-			if not inst.components.leader:IsFollower(v) and v:HasTag(YAMCHE_TAG) and not inst:HasTag("playerghost") and inst.components.leader:CountFollowers(YAMCHE_TAG) == 0 then
+			local owned = IsOwnedFollower(inst, v)
+			if not owned and v:HasTag(YAMCHE_TAG) and not is_ghost and yamche_count == 0 then
 				Say(inst, STRINGS.MUSHA_TALK_ORDER_ARONG_SLEEPY)
-			elseif v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and not v.peace and not v.active_hunt and not v.defense and not inst:HasTag("playerghost") and not inst.berserks and not inst.fberserk then
+			elseif owned and not v.peace and not v.active_hunt and not v.defense and not is_ghost and not is_berserk then
 				v.yamche = true
 				if v:HasTag(YAMCHE_TAG) then
 					Say(inst, STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNT)
@@ -333,7 +364,7 @@ local function RegisterYamcheBattle(deps)
 					v.defense = false
 					v.crazyness = false
 				end
-			elseif v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and not v.peace and v.active_hunt and not v.defense and inst.components.leader:IsFollower(v) and not inst:HasTag("playerghost") and not inst.berserks and not inst.fberserk then
+			elseif owned and not v.peace and v.active_hunt and not v.defense and not is_ghost and not is_berserk then
 				v.yamche = true
 				if v:HasTag(YAMCHE_TAG) then
 					Say(inst, STRINGS.MUSHA_TALK_ORDER_YAMCHE_RETREAT)
@@ -343,7 +374,7 @@ local function RegisterYamcheBattle(deps)
 					v.defense = true
 					v.crazyness = true
 				end
-			elseif v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and v.peace and not v.active_hunt and v.defense and inst.components.leader:IsFollower(v) and not inst:HasTag("playerghost") and not inst.berserks and not inst.fberserk then
+			elseif owned and v.peace and not v.active_hunt and v.defense and not is_ghost and not is_berserk then
 				v.yamche = true
 				if v:HasTag(YAMCHE_TAG) then
 					Say(inst, STRINGS.MUSHA_TALK_ORDER_YAMCHE_PROTECT)
@@ -353,7 +384,7 @@ local function RegisterYamcheBattle(deps)
 					v.defense = false
 					v.crazyness = false
 				end
-			elseif v.components.follower and v.components.follower.leader and v.peace and inst.components.leader:IsFollower(v) and not inst:HasTag("playerghost") and (inst.berserks or inst.fberserk) then
+			elseif owned and v.peace and not is_ghost and is_berserk then
 				Say(inst, STRINGS.MUSHA_TALK_ORDER_YAMCHE_BERSERK)
 				v.yamche = true
 				if v:HasTag(YAMCHE_TAG) then
@@ -363,7 +394,7 @@ local function RegisterYamcheBattle(deps)
 					v.defense = true
 					v.crazyness = true
 				end
-			elseif v.components.follower and v.components.follower.leader and not v.peace and inst.components.leader:IsFollower(v) and inst:HasTag("playerghost") and not inst.berserks and not inst.fberserk then
+			elseif owned and not v.peace and is_ghost and not is_berserk then
 				v.yamche = true
 				if v:HasTag(YAMCHE_TAG) then
 					Say(inst, STRINGS.MUSHA_TALK_ORDER_YAMCHE_GHOST)
@@ -373,7 +404,7 @@ local function RegisterYamcheBattle(deps)
 					v.defense = true
 					v.crazyness = false
 				end
-			elseif v.components.follower and v.components.follower.leader and v.peace and inst.components.leader:IsFollower(v) and inst:HasTag("playerghost") and not inst.berserks and not inst.fberserk then
+			elseif owned and v.peace and is_ghost and not is_berserk then
 				Say(inst, STRINGS.MUSHA_TALK_GHOST_OOOOHHHH)
 				v.yamche = true
 				if v:HasTag(YAMCHE_TAG) then
@@ -409,14 +440,17 @@ local function RegisterYamcheGather(deps)
 			return
 		end
 
-		local x, y, z = inst.Transform:GetWorldPosition()
-		local ents = TheSim:FindEntities(x, y, z, 25, { YAMCHE_TAG })
+		local ents = FindNearbyTagged(inst, TheSim, YAMCHE_TAG, YAMCHE_RADIUS)
+		local is_ghost = inst:HasTag("playerghost")
+		local yamche_count = CountFollowers(inst, YAMCHE_TAG)
+
 		for _, v in pairs(ents) do
+			local owned = IsOwnedFollower(inst, v)
 			if not v.removinv then
-				if v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and not inst:HasTag("playerghost") and v.level1 then
+				if owned and not is_ghost and v.level1 then
 					Say(inst, STRINGS.MUSHA_TALK_ORDER_YAMCHE_LEVEL1)
 					v.yamche = true
-				elseif not v.level1 and v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and not inst:HasTag("playerghost") and v.components.container and v.item_max_full then
+				elseif not v.level1 and owned and not is_ghost and v.components.container and v.item_max_full then
 					v.working_food = false
 					v.pick1 = false
 					v.drop = true
@@ -427,7 +461,7 @@ local function RegisterYamcheGather(deps)
 
 					SpawnPrefab("dr_warm_loop_2").Transform:SetPosition(v:GetPosition():Get())
 					SayYamcheInventoryState(v, STRINGS, STRINGS.MUSHA_TALK_ORDER_YAMCHE_LIGHT, "(x8)", "(x1)")
-				elseif not v.level1 and v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and not v.pick1 and not inst:HasTag("playerghost") and not v.item_max_full then
+				elseif not v.level1 and owned and not v.pick1 and not is_ghost and not v.item_max_full then
 					Say(inst, STRINGS.MUSHA_TALK_ORDER_YAMCHE_GATHER)
 					RunEmote(MushaCommands, "cheer", inst)
 					v.working_food = true
@@ -440,16 +474,16 @@ local function RegisterYamcheGather(deps)
 					else
 						Say(v, STRINGS.MUSHA_TALK_ORDER_YAMCHE_LIGHT .. "+" .. STRINGS.MUSHA_TALK_ORDER_YAMCHE_STUFF .. "\n" .. STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY .. "(x14)")
 					end
-				elseif not v.level1 and v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and v.pick1 and not inst:HasTag("playerghost") and not v.item_max_full then
+				elseif not v.level1 and owned and v.pick1 and not is_ghost and not v.item_max_full then
 					Say(inst, STRINGS.MUSHA_TALK_ORDER_YAMCHE_GATHER_STOP)
 					v.working_food = false
 					v.pick1 = false
 					v.drop = true
 					v.yamche = true
 					SayYamcheInventoryState(v, STRINGS, STRINGS.MUSHA_TALK_ORDER_YAMCHE_LIGHT, "(x8)", "(x1)")
-				elseif not v.level1 and not inst.components.leader:IsFollower(v) and not inst:HasTag("playerghost") and inst.components.leader:CountFollowers(YAMCHE_TAG) == 0 then
+				elseif not v.level1 and not owned and not is_ghost and yamche_count == 0 then
 					Say(inst, STRINGS.MUSHA_TALK_ORDER_YAMCHE_EGG)
-				elseif v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and not v.pick1 and inst:HasTag("playerghost") then
+				elseif owned and not v.pick1 and is_ghost then
 					Say(inst, STRINGS.MUSHA_TALK_GHOST_GATHER)
 					v.working_food = true
 					v.pick1 = true
@@ -461,7 +495,7 @@ local function RegisterYamcheGather(deps)
 					else
 						Say(v, STRINGS.MUSHA_TALK_ORDER_YAMCHE_LIGHT .. "+" .. STRINGS.MUSHA_TALK_ORDER_YAMCHE_STUFF .. "\n" .. STRINGS.MUSHA_TALK_ORDER_YAMCHE_HUNGRY .. "(x14)")
 					end
-				elseif not v.level1 and v.components.follower and v.components.follower.leader and inst.components.leader:IsFollower(v) and v.pick1 and inst:HasTag("playerghost") then
+				elseif not v.level1 and owned and v.pick1 and is_ghost then
 					Say(inst, STRINGS.MUSHA_TALK_GHOST_STOP)
 					v.working_food = false
 					v.pick1 = false
@@ -471,34 +505,40 @@ local function RegisterYamcheGather(deps)
 			end
 		end
 
-		local critters = TheSim:FindEntities(x, y, z, 25, { "critter" })
+		local critters = FindNearbyTagged(inst, TheSim, "critter", YAMCHE_RADIUS)
 		for _, v in pairs(critters) do
-			if v.components.follower.leader and inst.components.leader:IsFollower(v) and v.components.container ~= nil and v.critter_musha and inst.components.leader:CountFollowers(YAMCHE_TAG) == 0 then
-				if v.components.container:IsFull() then
-					if v.components.locomotor ~= nil then
-						v.components.locomotor:StopMoving()
+			local components = v.components
+			local owned = IsOwnedFollower(inst, v)
+			if components ~= nil and components.follower ~= nil and owned and components.container ~= nil and v.critter_musha and yamche_count == 0 then
+				if components.container:IsFull() then
+					if components.locomotor ~= nil then
+						components.locomotor:StopMoving()
 					end
 					RunEmote(MushaCommands, "annoyed", inst)
 					v.AnimState:PlayAnimation("distress")
-					v.components.machine:TurnOff()
+					if components.machine ~= nil then
+						components.machine:TurnOff()
+					end
 					v.working_on = false
 					v.item_ready_drop = false
 					v.working_food = false
 					v.pick1 = false
 					v.collect_off = true
 				elseif not v.pick1 and not v.working_food then
-					if v.components.container ~= nil then
-						v.components.container:Close()
+					if components.container ~= nil then
+						components.container:Close()
 						v.collect_work = true
 					end
 
 					Say(inst, STRINGS.CRITTER_GATHERING)
 					RunEmote(MushaCommands, "cheer", inst)
-					v.components.machine:TurnOn()
+					if components.machine ~= nil then
+						components.machine:TurnOn()
+					end
 					v.working_on = true
 					v.item_ready_drop = true
-					if v.components.locomotor ~= nil then
-						v.components.locomotor:StopMoving()
+					if components.locomotor ~= nil then
+						components.locomotor:StopMoving()
 					end
 					if math.random(1, 2) == 1 then
 						v.sg:GoToState("playful")
@@ -510,16 +550,18 @@ local function RegisterYamcheGather(deps)
 					v.working_food = true
 					v.pick1 = true
 				elseif v.pick1 or v.working_food then
-					if v.components.container ~= nil then
+					if components.container ~= nil then
 						v.collect_work = false
 					end
 
 					Say(inst, STRINGS.CRITTER_STOP_GATHER)
-					v.components.machine:TurnOff()
+					if components.machine ~= nil then
+						components.machine:TurnOff()
+					end
 					v.working_on = false
 
-					if v.components.locomotor ~= nil then
-						v.components.locomotor:StopMoving()
+					if components.locomotor ~= nil then
+						components.locomotor:StopMoving()
 					end
 					if v.prefab == "critter_lamb" then
 						v.AnimState:PlayAnimation("distress")
@@ -532,7 +574,7 @@ local function RegisterYamcheGather(deps)
 					v.working_food = false
 					v.pick1 = false
 				end
-			elseif v.components.follower.leader and inst.components.leader:IsFollower(v) and v.components.container ~= nil and v.critter_musha and inst.components.leader:CountFollowers(YAMCHE_TAG) >= 1 then
+			elseif components ~= nil and components.follower ~= nil and owned and components.container ~= nil and v.critter_musha and yamche_count >= 1 then
 				v.follow_yamche = true
 			end
 		end

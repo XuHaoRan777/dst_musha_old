@@ -1,4 +1,5 @@
 local EquipmentPostInit = {}
+local EquipUtils = require("musha/equipment/utils")
 
 local BACK_VISUAL_FLAGS = {
 	Bmm = "Bmm",
@@ -34,7 +35,58 @@ local function RegisterBackVisual(add_prefab_post_init, prefab, value)
 	end)
 end
 
+local function RegisterTalkerCleanup(add_prefab_post_init, prefab)
+	add_prefab_post_init(prefab, function(inst)
+		if inst.components == nil or inst.components.equippable == nil or inst._musha_talker_cleanup_wrapped then
+			return
+		end
+
+		inst._musha_talker_cleanup_wrapped = true
+
+		local old_onequip = inst.components.equippable.onequipfn
+		local old_onunequip = inst.components.equippable.onunequipfn
+
+		inst.components.equippable:SetOnEquip(function(item, owner)
+			EquipUtils.PrepareEquipTalker(item, owner)
+			if old_onequip ~= nil then
+				old_onequip(item, owner)
+			end
+		end)
+
+		inst.components.equippable:SetOnUnequip(function(item, owner)
+			if old_onunequip ~= nil then
+				old_onunequip(item, owner)
+			end
+			EquipUtils.ReleaseEquipTalker(item, owner)
+		end)
+	end)
+end
+
 function EquipmentPostInit.Register(config, add_prefab_post_init)
+	local talker_cleanup_prefabs =
+	{
+		"mushasword_base",
+		"mushasword",
+		"mushasword_frost",
+		"mushasword4",
+		"phoenixspear",
+		"bowm",
+		"frosthammer",
+		"broken_frosthammer",
+		"hat_mbunny",
+		"hat_mbunnya",
+		"hat_mphoenix",
+		"hat_mprincess",
+		"hat_mwildcat",
+		"armor_mushaa",
+		"armor_mushab",
+		"pirateback",
+	}
+
+	for _, prefab in ipairs(talker_cleanup_prefabs) do
+		RegisterTalkerCleanup(add_prefab_post_init, prefab)
+	end
+
 	RegisterBackVisual(add_prefab_post_init, "armor_mushaa", config.avisual_musha)
 	RegisterBackVisual(add_prefab_post_init, "armor_mushab", config.avisual_princess)
 	RegisterBackVisual(add_prefab_post_init, "pirateback", config.avisual_pirate)

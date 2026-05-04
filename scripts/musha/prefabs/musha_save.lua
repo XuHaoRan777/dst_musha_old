@@ -1,5 +1,12 @@
 local MushaSave = {}
 
+local function SafeNumber(value, fallback)
+    if type(value) == "number" then
+        return value
+    end
+    return fallback
+end
+
 function MushaSave.OnPreLoad(inst, data, callbacks)
     if data == nil then
         return
@@ -13,40 +20,54 @@ function MushaSave.OnPreLoad(inst, data, callbacks)
     end
     if data.treasure ~= nil then
         inst.treasure = data.treasure
-        callbacks.treasure_hunt(inst)
+        if callbacks ~= nil and callbacks.treasure_hunt ~= nil then
+            callbacks.treasure_hunt(inst)
+        end
     end
     if data.count_w ~= nil then
         inst.count_w = data.count_w
-        callbacks.count_wil(inst)
+        if callbacks ~= nil and callbacks.count_wil ~= nil then
+            callbacks.count_wil(inst)
+        end
     end
     if data.music ~= nil then
         inst.music = data.music
-        callbacks.fullcharged_music(inst)
+        if callbacks ~= nil and callbacks.fullcharged_music ~= nil then
+            callbacks.fullcharged_music(inst)
+        end
     end
 
-    if data.level ~= nil then
-        inst.level = data.level
-        callbacks.levelexp(inst)
-        if data.health and data.health.health then
+    local level = SafeNumber(data.level, nil)
+    if level ~= nil then
+        inst.level = level
+        if callbacks ~= nil and callbacks.levelexp ~= nil then
+            callbacks.levelexp(inst)
+        end
+        if data.health and data.health.health and inst.components ~= nil and inst.components.health ~= nil then
             inst.components.health.currenthealth = data.health.health
         end
-        if data.sanity and data.sanity.current then
+        if data.sanity and data.sanity.current and inst.components ~= nil and inst.components.sanity ~= nil then
             inst.components.sanity.current = data.sanity.current
         end
-        inst.components.health:DoDelta(0)
-        inst.components.sanity:DoDelta(0)
+        if inst.components ~= nil and inst.components.health ~= nil then
+            inst.components.health:DoDelta(0)
+        end
+        if inst.components ~= nil and inst.components.sanity ~= nil then
+            inst.components.sanity:DoDelta(0)
+        end
     end
 end
 
 function MushaSave.OnSave(inst, data)
-    if data ~= nil and data.level then
-        data.level = inst.level:GetSaveRecord()
+    if data == nil then
+        return
     end
 
-    data.level = inst.level > 0 and inst.level or nil
-    data.music = inst.music or nil
-    data.count_w = inst.count_w or nil
-    data.treasure = inst.treasure or nil
+    local level = SafeNumber(inst.level, 0)
+    data.level = level > 0 and level or nil
+    data.music = SafeNumber(inst.music, nil)
+    data.count_w = SafeNumber(inst.count_w, nil)
+    data.treasure = SafeNumber(inst.treasure, nil)
     data.yamche_egg_hunted = inst.yamche_egg_hunted or nil
     data.arong_egg_hunted = inst.arong_egg_hunted or nil
 end

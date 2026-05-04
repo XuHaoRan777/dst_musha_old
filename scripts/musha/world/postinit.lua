@@ -19,7 +19,6 @@ function WorldPostInit.Register(add_prefab_post_init, is_server)
 		end
 	end
 
-	add_prefab_post_init("hound", hound_hit_symbol)
 	add_prefab_post_init("firehound", hound_hit_symbol)
 	add_prefab_post_init("icehound", hound_hit_symbol)
 

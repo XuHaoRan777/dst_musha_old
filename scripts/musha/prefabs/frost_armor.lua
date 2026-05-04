@@ -37,7 +37,7 @@ function FrostArmor.SanityCost(inst, owner)
     if not inst.components.heater and inst.shield then
         inst:AddComponent("heater")
     end
-    if owner.components.sanity and inst.shield then
+    if owner ~= nil and owner.components ~= nil and owner.components.sanity ~= nil and inst.shield then
         owner.components.sanity:DoDelta(-1, false)
         inst.components.heater:SetThermics(false, true)
         inst.components.heater.equippedheat = -2
@@ -46,26 +46,34 @@ function FrostArmor.SanityCost(inst, owner)
 end
 
 function FrostArmor.ConsumeFuel(inst)
-    if not inst.broken and inst.shield then
+    if inst.components ~= nil and inst.components.fueled ~= nil and not inst.broken and inst.shield then
         inst.components.fueled:DoDelta(-20000)
     end
-    if inst.broken and inst.shield then
+    if inst.components ~= nil and inst.components.fueled ~= nil and inst.broken and inst.shield then
         inst.components.fueled:DoDelta(0)
     end
 end
 
 function FrostArmor.StartShield(inst, owner)
     if inst.shield and not inst.broken then
-        inst.components.talker:Say(STRINGS.MUSHA_ITEM_SHIELD .. "\n" .. STRINGS.MUSHA_ARMOR .. "(100)\n" .. STRINGS.MUSHA_ITEM_COOL)
-        inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 1)
+        if inst.components.talker ~= nil then
+            inst.components.talker:Say(STRINGS.MUSHA_ITEM_SHIELD .. "\n" .. STRINGS.MUSHA_ARMOR .. "(100)\n" .. STRINGS.MUSHA_ITEM_COOL)
+        end
+        if inst.components.armor ~= nil then
+            inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 1)
+        end
         if inst.consume then
             inst.consume:Cancel()
             inst.consume = nil
         end
         inst.consume = inst:DoPeriodicTask(1, function() FrostArmor.ConsumeFuel(inst, owner) end)
     elseif inst.shield and inst.broken then
-        inst.components.talker:Say(STRINGS.MUSHA_ITEM_SHIELD_BROKEN .. "\n" .. STRINGS.MUSHA_ARMOR .. "(0)")
-        inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0)
+        if inst.components.talker ~= nil then
+            inst.components.talker:Say(STRINGS.MUSHA_ITEM_SHIELD_BROKEN .. "\n" .. STRINGS.MUSHA_ARMOR .. "(0)")
+        end
+        if inst.components.armor ~= nil then
+            inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0)
+        end
         if inst.consume then
             inst.consume:Cancel()
             inst.consume = nil
@@ -89,7 +97,8 @@ end
 
 function FrostArmor.StopUsingShield(inst, data)
     local hat = inst.components.inventory and inst.components.inventory:GetEquippedItem(EQUIPSLOTS.BODY)
-    if hat and not (data.statename == "shell_idle" or data.statename == "shell_hit" or data.statename == "shell_enter") then
+    local statename = data ~= nil and data.statename or nil
+    if hat ~= nil and hat.components ~= nil and hat.components.useableitem ~= nil and statename ~= "shell_idle" and statename ~= "shell_hit" and statename ~= "shell_enter" then
         inst.shield = false
         hat.components.useableitem:StopUsingItem()
     end

@@ -71,6 +71,61 @@ function EquipUtils.ClearEquipSymbol(owner, symbol)
     end
 end
 
+function EquipUtils.ClearEquipTalker(item)
+    if item ~= nil
+        and item.components ~= nil
+        and item.components.talker ~= nil
+        and item.components.talker.ShutUp ~= nil
+    then
+        item.components.talker:ShutUp()
+    end
+end
+
+function EquipUtils.GetTalkerGroup(item)
+    local equippable = item ~= nil and item.components ~= nil and item.components.equippable or nil
+    if equippable == nil then
+        return nil
+    end
+
+    return equippable.equipslot
+end
+
+function EquipUtils.GetOwnerTalkerState(owner)
+    if owner == nil then
+        return nil
+    end
+
+    if owner._musha_talker_state == nil then
+        owner._musha_talker_state = {}
+    end
+
+    return owner._musha_talker_state
+end
+
+function EquipUtils.PrepareEquipTalker(item, owner)
+    local group = EquipUtils.GetTalkerGroup(item)
+    local state = EquipUtils.GetOwnerTalkerState(owner)
+    if group == nil or state == nil then
+        return
+    end
+
+    local active = state[group]
+    if active ~= nil and active ~= item then
+        EquipUtils.ClearEquipTalker(active)
+    end
+
+    state[group] = item
+end
+
+function EquipUtils.ReleaseEquipTalker(item, owner)
+    local group = EquipUtils.GetTalkerGroup(item)
+    local state = owner ~= nil and owner._musha_talker_state or nil
+    if group ~= nil and state ~= nil and state[group] == item then
+        state[group] = nil
+    end
+    EquipUtils.ClearEquipTalker(item)
+end
+
 function EquipUtils.GetEquippedExtraBackpack(owner)
     local inventory = owner ~= nil and owner.components ~= nil and owner.components.inventory or nil
     if inventory == nil then

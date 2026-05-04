@@ -29,23 +29,66 @@ AddPrefabPostInit( "pirateback", Tropical)
 end]]
 
 
-local oldwidgetsetup = containers.widgetsetup
-containers.widgetsetup = function(container, prefab)
+local container_widget_params = {}
+local container_widgetsetup_custom = nil
+local container_max_item_slots = containers.MAXITEMSLOTS or 0
 
-if not prefab and container.inst.prefab == "bowm" then
-prefab = "slingshot" end
-if not prefab and container.inst.prefab == "armor_mushaa" then
-prefab = "backpack" end
-if not prefab and container.inst.prefab == "broken_frosthammer" then
-prefab = "backpack" end
-if not prefab and container.inst.prefab == "armor_mushab" then
-prefab = "piggyback" end
-if not prefab and container.inst.prefab == "pirateback" then
-prefab = "krampus_sack" end
+local widget_prefab_aliases =
+{
+	bowm = "slingshot",
+	armor_mushaa = "backpack",
+	broken_frosthammer = "backpack",
+	armor_mushab = "piggyback",
+	pirateback = "krampus_sack",
+	musha_tall3 = "chester",
+	musha_tallrrr1 = "chester",
+	musha_tallrrr2 = "chester",
+	musha_tallrrr3 = "chester",
+	musha_tallrrr4 = "chester",
+	musha_tallrrr5 = "chester",
+	musha_tallrrrice = "chester",
+	musha_small_super = "chester",
+}
 
-  if not prefab and container.inst.prefab == "musha_tall3" then  prefab = "chester" end   if not prefab and container.inst.prefab == "musha_tallrrr1" then  prefab = "chester" end   if not prefab and container.inst.prefab == "musha_tallrrr2" then  prefab = "chester" end   if not prefab and container.inst.prefab == "musha_tallrrr3" then  prefab = "chester" end   if not prefab and container.inst.prefab == "musha_tallrrr4" then  prefab = "chester" end   if not prefab and container.inst.prefab == "musha_tallrrr5" then  prefab = "chester" end   if not prefab and container.inst.prefab == "musha_tallrrrice" then  prefab = "chester" end if not prefab and container.inst.prefab == "musha_small_super" then  prefab = "chester" end 
-oldwidgetsetup(container, prefab)
+local function ApplyContainerWidget(container, data)
+	for k, v in pairs(data) do
+		container[k] = v
+	end
+	container:SetNumSlots(data.widget ~= nil and data.widget.slotpos ~= nil and #data.widget.slotpos or 0)
 end
+
+local function InstallContainerWidgetSetup(base_widgetsetup)
+	local base = base_widgetsetup or containers.widgetsetup
+	containers.widgetsetup = function(container, prefab)
+		local inst_prefab = container ~= nil and container.inst ~= nil and container.inst.prefab or nil
+		local setup_name = prefab or inst_prefab
+		local data = container_widget_params[setup_name]
+		if data ~= nil then
+			ApplyContainerWidget(container, data)
+			return
+		end
+
+		base(container, prefab or widget_prefab_aliases[inst_prefab])
+	end
+	container_widgetsetup_custom = containers.widgetsetup
+end
+
+local function RegisterContainerWidget(name, data)
+	container_widget_params[name] = data
+	container_max_item_slots = math.max(container_max_item_slots, data.widget ~= nil and data.widget.slotpos ~= nil and #data.widget.slotpos or 0)
+	containers.MAXITEMSLOTS = math.max(containers.MAXITEMSLOTS or 0, container_max_item_slots)
+end
+
+InstallContainerWidgetSetup(containers.widgetsetup)
+
+AddPrefabPostInit("world_network", function(inst)
+	if containers.widgetsetup ~= container_widgetsetup_custom then
+		InstallContainerWidgetSetup(containers.widgetsetup)
+	end
+	if containers.MAXITEMSLOTS < container_max_item_slots then
+		containers.MAXITEMSLOTS = container_max_item_slots
+	end
+end)
 
 
 
@@ -128,7 +171,8 @@ if extraequipslot == 1 then
 ACTIONS.RUMMAGE.strfn = function(act)
     local targ = act.target or act.invobject
     return targ ~= nil
-        and (   targ.replica.container ~= nil and
+        and (   targ.replica ~= nil and
+                targ.replica.container ~= nil and
                 targ.replica.container:IsOpenedBy(act.doer) and
                 "CLOSE" or
                 (   act.target ~= nil and
@@ -176,7 +220,9 @@ end
 function share_items(inst)
 if IsServer then
 	if share_item == 0 then
- 	inst:AddComponent("characterspecific_musha")	
+	if inst.components.characterspecific_musha == nil then
+		inst:AddComponent("characterspecific_musha")
+	end
 	inst.components.characterspecific_musha:SetOwner("musha")
 	inst.components.characterspecific_musha:SetStorable(false)
 	end
@@ -208,7 +254,7 @@ AddPrefabPostInit("pirateback", share_items)
 function backpack_incontainer(inst)
 if IsServer then
 	if in_container == 1 then
-	if inst.components.inventoryitem then
+	if inst.components ~= nil and inst.components.inventoryitem ~= nil then
 	inst.components.inventoryitem.cangoincontainer = true
 	end
 	end
@@ -223,11 +269,11 @@ AddPrefabPostInit("icepack", backpack_incontainer)
 function musha_incontainer(inst)
 if IsServer then
 	if musha_in_container == 0 then
-	if inst.components.inventoryitem then
+	if inst.components ~= nil and inst.components.inventoryitem ~= nil then
 	inst.components.inventoryitem.cangoincontainer = false
 	end
 	elseif musha_in_container == 1 then
-	if inst.components.inventoryitem then
+	if inst.components ~= nil and inst.components.inventoryitem ~= nil then
 	inst.components.inventoryitem.cangoincontainer = true
 	end
 	end
@@ -495,24 +541,6 @@ end)
 AddPrefabPostInit("armor_mushab", armor_princess)
 end]]
 
---small icebox1
-local params = {}
-local OVERRIDE_WIDGETSETUP = false
-local containers_widgetsetup_base = containers.widgetsetup
-function containers.widgetsetup(container, prefab)
-    local t = params[prefab or container.inst.prefab]
-    if t ~= nil then
-        for k, v in pairs(t) do
-            container[k] = v
-        end
-        container:SetNumSlots(container.widget.slotpos ~= nil and #container.widget.slotpos or 0)
-        if OVERRIDE_WIDGETSETUP then
-            container.type = "frostsmall"
-        end
-    else
-        containers_widgetsetup_base(container, prefab)
-    end
-end
 local function frostsmall()
     local container =
     {
@@ -529,30 +557,12 @@ local function frostsmall()
     }
     
 	for y = 0, 3 do
-		table.insert(container.widget.slotpos, GLOBAL.Vector3(-162, -y * 75 + 114, 0))
-		table.insert(container.widget.slotpos, GLOBAL.Vector3(-87, -y * 75 + 114, 0))
+        table.insert(container.widget.slotpos, GLOBAL.Vector3(-162, -y * 75 + 114, 0))
+        table.insert(container.widget.slotpos, GLOBAL.Vector3(-87, -y * 75 + 114, 0))
 	end
     return container
 end
-params.frostsmall = frostsmall()
-for k, v in pairs(params) do
-    containers.MAXITEMSLOTS = math.max(containers.MAXITEMSLOTS, v.widget.slotpos ~= nil and #v.widget.slotpos or 0)
-end
-local containers_widgetsetup_custom = containers.widgetsetup
-local MAXITEMSLOTS = containers.MAXITEMSLOTS
-AddPrefabPostInit("world_network", function(inst)
-    if containers.widgetsetup ~= containers_widgetsetup_custom then
-        OVERRIDE_WIDGETSETUP = true
-        local containers_widgetsetup_base2 = containers.widgetsetup
-        function containers.widgetsetup(container, prefab)
-            containers_widgetsetup_base2(container, prefab)
-            if container.type == "frostsmall" then
-                container.type = "side_inv_behind"
-            end end end
-    if containers.MAXITEMSLOTS < MAXITEMSLOTS then
-        containers.MAXITEMSLOTS = MAXITEMSLOTS
-    end
-end)
+RegisterContainerWidget("frostsmall", frostsmall())
 
 --[[function params.frostsmall.itemtestfn(container, item, slot)
     return not item:HasTag("heatrock") 
@@ -561,24 +571,6 @@ end]]
 
 --------------------------------------------------
 
---box1
-local params = {}
-local OVERRIDE_WIDGETSETUP = false
-local containers_widgetsetup_base = containers.widgetsetup
-function containers.widgetsetup(container, prefab)
-    local t = params[prefab or container.inst.prefab]
-    if t ~= nil then
-        for k, v in pairs(t) do
-            container[k] = v
-        end
-        container:SetNumSlots(container.widget.slotpos ~= nil and #container.widget.slotpos or 0)
-        if OVERRIDE_WIDGETSETUP then
-            container.type = "chest_yamche0"
-        end
-    else
-        containers_widgetsetup_base(container, prefab)
-    end
-end
 local function chest_yamche0()
     local container =
     {
@@ -595,47 +587,12 @@ local function chest_yamche0()
     for y = 1, 0, -1 do
         table.insert(container.widget.slotpos, GLOBAL.Vector3(74*y-74*2+70, 0))
  
-end
+    end
     return container
 end
-params.chest_yamche0 = chest_yamche0()
-for k, v in pairs(params) do
-    containers.MAXITEMSLOTS = math.max(containers.MAXITEMSLOTS, v.widget.slotpos ~= nil and #v.widget.slotpos or 0)
-end
-local containers_widgetsetup_custom = containers.widgetsetup
-local MAXITEMSLOTS = containers.MAXITEMSLOTS
-AddPrefabPostInit("world_network", function(inst)
-    if containers.widgetsetup ~= containers_widgetsetup_custom then
-        OVERRIDE_WIDGETSETUP = true
-        local containers_widgetsetup_base2 = containers.widgetsetup
-        function containers.widgetsetup(container, prefab)
-            containers_widgetsetup_base2(container, prefab)
-            if container.type == "chest_yamche0" then
-                container.type = "chest"
-            end end end
-    if containers.MAXITEMSLOTS < MAXITEMSLOTS then
-        containers.MAXITEMSLOTS = MAXITEMSLOTS
-    end
-end)
+RegisterContainerWidget("chest_yamche0", chest_yamche0())
 ---------------------------------------------------------------
 --box2
-local params = {}
-local OVERRIDE_WIDGETSETUP = false
-local containers_widgetsetup_base = containers.widgetsetup
-function containers.widgetsetup(container, prefab)
-    local t = params[prefab or container.inst.prefab]
-    if t ~= nil then
-        for k, v in pairs(t) do
-            container[k] = v
-        end
-        container:SetNumSlots(container.widget.slotpos ~= nil and #container.widget.slotpos or 0)
-        if OVERRIDE_WIDGETSETUP then
-            container.type = "chest_yamche1"
-        end
-    else
-        containers_widgetsetup_base(container, prefab)
-    end
-end
 local function chest_yamche1()
     local container =
     {
@@ -653,47 +610,12 @@ local function chest_yamche1()
     for x = 0, 1 do
         table.insert(container.widget.slotpos, GLOBAL.Vector3(80*x-80*2+78, 80*y-80*2+80,0))
     end
-end
+    end
     return container
 end
-params.chest_yamche1 = chest_yamche1()
-for k, v in pairs(params) do
-    containers.MAXITEMSLOTS = math.max(containers.MAXITEMSLOTS, v.widget.slotpos ~= nil and #v.widget.slotpos or 0)
-end
-local containers_widgetsetup_custom = containers.widgetsetup
-local MAXITEMSLOTS = containers.MAXITEMSLOTS
-AddPrefabPostInit("world_network", function(inst)
-    if containers.widgetsetup ~= containers_widgetsetup_custom then
-        OVERRIDE_WIDGETSETUP = true
-        local containers_widgetsetup_base2 = containers.widgetsetup
-        function containers.widgetsetup(container, prefab)
-            containers_widgetsetup_base2(container, prefab)
-            if container.type == "chest_yamche1" then
-                container.type = "chest"
-            end end end
-    if containers.MAXITEMSLOTS < MAXITEMSLOTS then
-        containers.MAXITEMSLOTS = MAXITEMSLOTS
-    end
-end)
+RegisterContainerWidget("chest_yamche1", chest_yamche1())
 ---------------------------------------------------------------
 --box3
-local params = {}
-local OVERRIDE_WIDGETSETUP = false
-local containers_widgetsetup_base = containers.widgetsetup
-function containers.widgetsetup(container, prefab)
-    local t = params[prefab or container.inst.prefab]
-    if t ~= nil then
-        for k, v in pairs(t) do
-            container[k] = v
-        end
-        container:SetNumSlots(container.widget.slotpos ~= nil and #container.widget.slotpos or 0)
-        if OVERRIDE_WIDGETSETUP then
-            container.type = "chest_yamche2"
-        end
-    else
-        containers_widgetsetup_base(container, prefab)
-    end
-end
 local function chest_yamche2()
     local container =
     {
@@ -712,47 +634,12 @@ for y = 2, 0, -1 do
     for x = 0, 1 do
         table.insert(container.widget.slotpos, GLOBAL.Vector3(80*x-76*2+78, 80*y-78*2+78,0))
     end
-end
+    end
     return container
 end
-params.chest_yamche2 = chest_yamche2()
-for k, v in pairs(params) do
-    containers.MAXITEMSLOTS = math.max(containers.MAXITEMSLOTS, v.widget.slotpos ~= nil and #v.widget.slotpos or 0)
-end
-local containers_widgetsetup_custom = containers.widgetsetup
-local MAXITEMSLOTS = containers.MAXITEMSLOTS
-AddPrefabPostInit("world_network", function(inst)
-    if containers.widgetsetup ~= containers_widgetsetup_custom then
-        OVERRIDE_WIDGETSETUP = true
-        local containers_widgetsetup_base2 = containers.widgetsetup
-        function containers.widgetsetup(container, prefab)
-            containers_widgetsetup_base2(container, prefab)
-            if container.type == "chest_yamche2" then
-                container.type = "chest"
-        end end end
-    if containers.MAXITEMSLOTS < MAXITEMSLOTS then
-        containers.MAXITEMSLOTS = MAXITEMSLOTS
-    end
-end)
+RegisterContainerWidget("chest_yamche2", chest_yamche2())
 ---------------------------------------------------------------
 --box5
-local params = {}
-local OVERRIDE_WIDGETSETUP = false
-local containers_widgetsetup_base = containers.widgetsetup
-function containers.widgetsetup(container, prefab)
-    local t = params[prefab or container.inst.prefab]
-    if t ~= nil then
-        for k, v in pairs(t) do
-            container[k] = v
-        end
-        container:SetNumSlots(container.widget.slotpos ~= nil and #container.widget.slotpos or 0)
-        if OVERRIDE_WIDGETSETUP then
-            container.type = "chest_yamche4"
-        end
-    else
-        containers_widgetsetup_base(container, prefab)
-    end
-end
 local function chest_yamche4()
     local container =
     {
@@ -770,50 +657,15 @@ for y = 3, 0, -1 do
     for x = 0, 3 do
         table.insert(container.widget.slotpos, GLOBAL.Vector3(60*x-60*2+30, 60*y-60*2+30,0))
     end
-end
+    end
     return container
 end
-params.chest_yamche4 = chest_yamche4()
-for k, v in pairs(params) do
-    containers.MAXITEMSLOTS = math.max(containers.MAXITEMSLOTS, v.widget.slotpos ~= nil and #v.widget.slotpos or 0)
-end
-local containers_widgetsetup_custom = containers.widgetsetup
-local MAXITEMSLOTS = containers.MAXITEMSLOTS
-AddPrefabPostInit("world_network", function(inst)
-    if containers.widgetsetup ~= containers_widgetsetup_custom then
-        OVERRIDE_WIDGETSETUP = true
-        local containers_widgetsetup_base2 = containers.widgetsetup
-        function containers.widgetsetup(container, prefab)
-            containers_widgetsetup_base2(container, prefab)
-            if container.type == "chest_yamche4" then
-                container.type = "chest"
-    end end end
-    if containers.MAXITEMSLOTS < MAXITEMSLOTS then
-        containers.MAXITEMSLOTS = MAXITEMSLOTS
-    end
-end)
+RegisterContainerWidget("chest_yamche4", chest_yamche4())
 
 ---------------------------------------------------------------
 ---------------------------------------------------------------
 --box6-1
-local params = {}
-local OVERRIDE_WIDGETSETUP = false
-local containers_widgetsetup_base = containers.widgetsetup
-function containers.widgetsetup(container, prefab)
-    local t = params[prefab or container.inst.prefab]
-    if t ~= nil then
-        for k, v in pairs(t) do
-            container[k] = v
-        end
-        container:SetNumSlots(container.widget.slotpos ~= nil and #container.widget.slotpos or 0)
-        if OVERRIDE_WIDGETSETUP then
-            container.type = "chest_yamche5"
-        end
-    else
-        containers_widgetsetup_base(container, prefab)
-    end
-end
-function chest_yamche5()
+local function chest_yamche5()
     local container =
     {
         widget =
@@ -830,49 +682,14 @@ for y = 4, 0, -1 do
     for x = 0, 3 do
         table.insert(container.widget.slotpos, GLOBAL.Vector3(60*x-60*2+30, 60*y-60*2+2,0))
     end
-end
+    end
     return container
 end
-params.chest_yamche5 = chest_yamche5()
-for k, v in pairs(params) do
-    containers.MAXITEMSLOTS = math.max(containers.MAXITEMSLOTS, v.widget.slotpos ~= nil and #v.widget.slotpos or 0)
-end
-local containers_widgetsetup_custom = containers.widgetsetup
-local MAXITEMSLOTS = containers.MAXITEMSLOTS
-AddPrefabPostInit("world_network", function(inst)
-    if containers.widgetsetup ~= containers_widgetsetup_custom then
-        OVERRIDE_WIDGETSETUP = true
-        local containers_widgetsetup_base2 = containers.widgetsetup
-        function containers.widgetsetup(container, prefab)
-            containers_widgetsetup_base2(container, prefab)
-            if container.type == "chest_yamche5" then
-                container.type = "chest"
-    end end end
-    if containers.MAXITEMSLOTS < MAXITEMSLOTS then
-        containers.MAXITEMSLOTS = MAXITEMSLOTS
-    end
-end)
+RegisterContainerWidget("chest_yamche5", chest_yamche5())
 
 ---------------------------------------------------------------
 ---------------------------------------------------------------
 --box7
-local params = {}
-local OVERRIDE_WIDGETSETUP = false
-local containers_widgetsetup_base = containers.widgetsetup
-function containers.widgetsetup(container, prefab)
-    local t = params[prefab or container.inst.prefab]
-    if t ~= nil then
-        for k, v in pairs(t) do
-            container[k] = v
-        end
-        container:SetNumSlots(container.widget.slotpos ~= nil and #container.widget.slotpos or 0)
-        if OVERRIDE_WIDGETSETUP then
-            container.type = "chest_yamche6"
-        end
-    else
-        containers_widgetsetup_base(container, prefab)
-    end
-end
 local function chest_yamche6()
     local container =
     {
@@ -890,28 +707,10 @@ for y = 5, 0, -1 do
     for x = 0, 14 do
         table.insert(container.widget.slotpos, GLOBAL.Vector3(60*x-60*2+-150, 60*y-60*2+10,0))
     end
-end
+    end
     return container
 end
-params.chest_yamche6 = chest_yamche6()
-for k, v in pairs(params) do
-    containers.MAXITEMSLOTS = math.max(containers.MAXITEMSLOTS, v.widget.slotpos ~= nil and #v.widget.slotpos or 0)
-end
-local containers_widgetsetup_custom = containers.widgetsetup
-local MAXITEMSLOTS = containers.MAXITEMSLOTS
-AddPrefabPostInit("world_network", function(inst)
-    if containers.widgetsetup ~= containers_widgetsetup_custom then
-        OVERRIDE_WIDGETSETUP = true
-        local containers_widgetsetup_base2 = containers.widgetsetup
-        function containers.widgetsetup(container, prefab)
-            containers_widgetsetup_base2(container, prefab)
-            if container.type == "chest_yamche6" then
-                container.type = "chest"
-    end end end
-    if containers.MAXITEMSLOTS < MAXITEMSLOTS then
-        containers.MAXITEMSLOTS = MAXITEMSLOTS
-    end
-end)
+RegisterContainerWidget("chest_yamche6", chest_yamche6())
 
 ---------------------------------------------------------------
 --visual

@@ -59,3 +59,13 @@
      - [x] 第一轮：容器打开/关闭、常开入口和格挡音效辅助已抽到 `scripts/musha/prefabs/frost_armor.lua`。
      - [x] 第二轮：右键防御开启/关闭、理智消耗和护盾燃料消耗已收敛到 `frost_armor.lua`；冰冻反击和等级成长由 prefab 入口继续编排。
    - [x] 清理第三阶段兼容壳：第三阶段没有创建旧路径兼容壳，无需清理。
+
+## 代码审查待办
+
+1. [x] 修补明显的 `nil` 风险点，优先检查 `scripts/musha_adds_actions.lua` 中的 follower / machine / container 直接解引用。
+2. [x] 收敛冰霜护甲与额外背包的联动逻辑，减少 `containers.widgetsetup` 多层重写带来的兼容风险。
+3. [x] 复查冰霜护甲右键防御、开关容器、理智消耗的状态切换，避免事件重复触发或互相打架。
+4. [x] 复查 `scripts/musha/prefabs/musha_save.lua` 的保存/读取逻辑，清掉旧分支和可疑死代码。
+5. [x] 复查 `scripts/musha/world/postinit.lua` 的 hit symbol 覆盖顺序，确认没有被后写逻辑意外覆盖。
+6. [x] 复查 Dall / Arong / Yamche 的命令链路，尽量减少重复 `FindEntities` 扫描和状态残留。
+7. [x] 统一装备、人物状态、召唤物和贴图同步的入口，避免以后再出现“补丁叠补丁”的写法。

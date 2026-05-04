@@ -57,9 +57,9 @@ end
 
 ACTIONS.TURNON.fn = function(act)
     local tar = act.target or act.invobject
-	local owner = act.target.components.follower and act.target.components.follower.leader
+	local owner = tar ~= nil and tar.components.follower ~= nil and tar.components.follower.leader or nil
 	
-	if tar:HasTag("musha_items") then
+	if tar ~= nil and tar:HasTag("musha_items") then
 	return false
 	end
 	
@@ -120,12 +120,12 @@ ACTIONS.TURNON.fn = function(act)
 		
 			return
 		elseif not tar.woby then
-	if tar.components.machine and not tar.components.machine:IsOn() and owner == act.doer and not tar.components.container:IsFull() then
+	if tar.components.machine and not tar.components.machine:IsOn() and owner == act.doer and tar.components.container ~= nil and not tar.components.container:IsFull() then
 		if not tar:HasTag("musha_items") then
 		tar.components.machine:TurnOn(tar)
         return true
 		end
-	elseif tar.components.machine and not tar.components.machine:IsOn() and owner == act.doer and tar.components.container:IsFull() then
+	elseif tar.components.machine and not tar.components.machine:IsOn() and owner == act.doer and tar.components.container ~= nil and tar.components.container:IsFull() then
 		tar.components.talker:Say(STRINGS.CRITTER_INV_FULL)
 		act.doer.components.talker:Say(STRINGS.CRITTER_REFUSE_INV)
         return false	
@@ -206,7 +206,7 @@ if targ ~= nil and targ.components.container ~= nil and not targ:HasTag("critter
         end
  end   
 if targ ~= nil and targ.components.container ~= nil and (targ:HasTag("critter") or targ:HasTag("yamcheb")) then
-    local leader = targ.components.follower.leader
+    local leader = targ.components.follower ~= nil and targ.components.follower.leader or nil
 	if act.doer == leader then
         if targ.components.container:IsOpenedBy(act.doer) then
             targ.components.container:Close(act.doer)
@@ -301,12 +301,12 @@ if not act.doer.critter_musha and not act.doer:HasTag("yamcheb") then
             if trainer ~= nil and trainer ~= act.doer then
                 return false, "NOTMINE_YOTC"
             end
-		elseif act.doer.components.inventory.noheavylifting and act.target:HasTag("heavy") then
+		elseif act.doer.components.inventory ~= nil and act.doer.components.inventory.noheavylifting and act.target:HasTag("heavy") then
 			return false, "NO_HEAVY_LIFTING"
         end
 
         if (act.target:HasTag("spider") and act.doer:HasTag("spiderwhisperer")) and 
-           (act.target.components.follower.leader ~= nil and act.target.components.follower.leader ~= act.doer) then
+           (act.target.components.follower ~= nil and act.target.components.follower.leader ~= nil and act.target.components.follower.leader ~= act.doer) then
             return false, "NOTMINE_SPIDER"
         end
 
