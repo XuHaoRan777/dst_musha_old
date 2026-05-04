@@ -1,17 +1,12 @@
 local function Fatigue_sleep_statusdisplays(self)
 	if self.owner:HasTag("musha") then
+		local HasCombinedStatus = GLOBAL.require "musha_combinedstatus"
 		local Fatigue_sleepBadge = GLOBAL.require "widgets/fatigue_sleepbadge"
 		self.fatigue_sleep = self:AddChild(Fatigue_sleepBadge(self.owner))
 		self.owner.fatigue_sleepbadge = self.fatigue_sleep
 		self._custombadge = self.fatigue_sleep 
 		
-		local AlwaysOnStatus = false
-		for k,v in ipairs(GLOBAL.KnownModIndex:GetModsToLoad()) do 
-			local Mod = GLOBAL.KnownModIndex:GetModInfo(v).name
-			if Mod == "Combined Status" then 
-				AlwaysOnStatus = true
-			end
-		end
+		local AlwaysOnStatus = HasCombinedStatus(GLOBAL.KnownModIndex)
 		if AlwaysOnStatus and not self.owner:HasTag("bearded") then
 			self.fatigue_sleep:SetPosition(-115, -15, 0)
 		elseif AlwaysOnStatus and self.owner:HasTag("bearded") then

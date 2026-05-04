@@ -1,18 +1,13 @@
 local function Spellpower_statusdisplays(self)
 	if self.owner:HasTag("musha") or self.owner:HasTag("spellpower") then
+		local HasCombinedStatus = GLOBAL.require "musha_combinedstatus"
 		local SpellpowerBadge = GLOBAL.require "widgets/spellpowerbadge"
 		self.spellpower = self:AddChild(SpellpowerBadge(self.owner))
 		self.owner.spellpowerbadge = self.spellpower
 		self._custombadge = self.spellpower 
 		local badge_boatmeter = self.boatmeter:GetPosition()
 		local badge_brain = self.brain:GetPosition()
-		local AlwaysOnStatus = false
-		for k,v in ipairs(GLOBAL.KnownModIndex:GetModsToLoad()) do 
-			local Mod = GLOBAL.KnownModIndex:GetModInfo(v).name
-			if Mod == "Combined Status" then 
-				AlwaysOnStatus = true
-			end
-		end
+		local AlwaysOnStatus = HasCombinedStatus(GLOBAL.KnownModIndex)
 			
 		if AlwaysOnStatus then
 			--self.spellpower:SetPosition(-60, -54, 0)

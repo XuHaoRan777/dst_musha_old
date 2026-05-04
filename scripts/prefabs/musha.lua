@@ -2764,6 +2764,36 @@ if not other:HasTag("smashable") and not other:HasTag("structure") and not other
 	end end end
 end
 
+local function ApplyBerserkVisual(inst)
+	if inst == nil or not inst:IsValid() or inst:HasTag("playerghost") then
+		return
+	end
+
+	inst.musha_full = false
+	inst.musha_normal = false
+	inst.musha_battle = false
+	inst.musha_hunger = true
+	inst.soundsname = "wendy"
+
+	if inst.visual_cos then
+		MushaAnim.SetBuild(inst, "musha_hunger")
+	elseif not inst.change_visual then
+		local build = MushaAnim.GetBuildForForm(inst, "berserk")
+		if build ~= nil then
+			MushaAnim.SetBuild(inst, build)
+		end
+	end
+end
+
+local function SyncMoonBerserkVisual(inst)
+	if TheWorld.state.isfullmoon and not inst.valkyrie and not inst.sleep_on and not inst.tiny_sleep then
+		inst.fullmoon = true
+		inst.berserks = true
+		inst.strength = "berserk"
+		ApplyBerserkVisual(inst)
+	end
+end
+
 local function moon_berserk(inst)
 	if not TheWorld.state.isfullmoon and not inst:HasTag("playerghost") then
 			if inst.fberserk or inst.berserks then
@@ -2888,6 +2918,7 @@ end
 
 local function berserk_changer(inst)
 if TheWorld.state.isnight and TheWorld.state.isfullmoon and not inst.tiny_sleep and not inst.sleep_on then
+	SyncMoonBerserkVisual(inst)
 	if not inst.berserk then
 		--inst.moon_berserks = true
 		inst.changed_moon = true

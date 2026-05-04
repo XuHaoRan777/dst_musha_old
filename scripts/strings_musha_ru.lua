@@ -334,6 +334,7 @@ STRINGS.MUSHA_TALK_FOOD_BUG_2 = "От него во рту ужасный при
 STRINGS.MUSHA_TALK_FOOD_BUG_3 = "Почему Муша ест жуков?"
 STRINGS.MUSHA_TALK_FOOD_MONSTER_1 = "Мясо монстра мне не по вкусу..."
 STRINGS.MUSHA_TALK_FOOD_MONSTER_2 = "Муше не нравится мясо монстров..."
+STRINGS.MUSHA_TALK_FOOD_FULL = "Я больше не могу есть."
 STRINGS.MUSHA_TALK_FOOD_VEGE = "... Можно даже есть овощи."
 STRINGS.MUSHA_TALK_FOOD_MEAT = "... Можно даже есть мясо."
 
