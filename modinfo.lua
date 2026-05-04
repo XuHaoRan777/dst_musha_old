@@ -15,7 +15,7 @@ local function LanguageHover()
     return "If your server has a cave, you have to select a language."
 end
 
-name = T("[DST]Musha：维护版", "[DST]Musha: Maintained Fork")
+name = "[DST]Musha: Maintained Fork"
 version = "T 14.2.4-maint.2"
 description = T(
     "[ 维护版 | 版本 : T 14.2.4-maint.2 ]\n原作者: Sunnyyyyholic\n-------------------------\n基于 Musha 的维护版本，保留原玩法逻辑，修复问题并改善兼容性。",
