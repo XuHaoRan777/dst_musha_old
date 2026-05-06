@@ -1,6 +1,16 @@
 STRINGS = GLOBAL.STRINGS
+STRINGS.CHARACTER_SURVIVABILITY.musha = STRINGS.CHARACTER_SURVIVABILITY.wilson or "Slim"
 
 STRINGS.NAMES.MUSHA = "Муша"
+STRINGS.SKIN_NAMES.musha_none = "Musha-princess"
+STRINGS.SKIN_DESCRIPTIONS.musha_none = "Let's go!"
+STRINGS.SKIN_QUOTES.musha_none = "Let's go!"
+STRINGS.SKIN_NAMES.musha_battle_skin_none = "Musha-survivor"
+STRINGS.SKIN_DESCRIPTIONS.musha_battle_skin_none = "Pick up the weapon. It's time to go."
+STRINGS.SKIN_QUOTES.musha_battle_skin_none = "Pick up the weapon. It's time to go."
+STRINGS.SKIN_NAMES.musha_old_skin_none = "Musha-peach"
+STRINGS.SKIN_DESCRIPTIONS.musha_old_skin_none = "Let's play together?"
+STRINGS.SKIN_QUOTES.musha_old_skin_none = "Let's play together?"
 STRINGS.CHARACTER_TITLES.musha = "Принцесса щенок Муша [DST]"
 STRINGS.CHARACTER_NAMES.musha = "Муша"
 STRINGS.CHARACTER_DESCRIPTIONS.musha = "[Расти и открывай навыки]\nСтатус(L) Навык(K) Форма(P)\nВалькирия(R) Тень(G) Щит(C) Музыка(X) Сон(T) Ямши(Z,V,B))"

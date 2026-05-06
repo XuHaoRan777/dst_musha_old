@@ -5,6 +5,7 @@ local MushaAnim = require("musha/utils/anim")
 local MushaTasks = require("musha/utils/task")
 local MushaSave = require("musha/prefabs/musha_save")
 local MushaDeath = require("musha/prefabs/musha_death")
+require("musha/skin_defs").Register()
 --local easing = require("easing")
 local assets = {
   Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
@@ -19,7 +20,14 @@ local assets = {
         Asset( "ANIM", "anim/musha.zip" ),
         Asset( "ANIM", "anim/musha_normal.zip" ),
 		Asset( "ANIM", "anim/musha_hunger.zip" ),
+		Asset( "ANIM", "anim/musha_battle_old_full.zip" ),
 		Asset( "ANIM", "anim/ghost_musha_build.zip" ),
+		Asset( "IMAGE", "bigportraits/musha_none.tex" ),
+		Asset( "ATLAS", "bigportraits/musha_none.xml" ),
+		Asset( "IMAGE", "bigportraits/musha_battle_skin_none.tex" ),
+		Asset( "ATLAS", "bigportraits/musha_battle_skin_none.xml" ),
+		Asset( "IMAGE", "bigportraits/musha_old_skin_none.tex" ),
+		Asset( "ATLAS", "bigportraits/musha_old_skin_none.xml" ),
 
 }
 

@@ -1,6 +1,16 @@
 
 STRINGS = GLOBAL.STRINGS
+STRINGS.CHARACTER_SURVIVABILITY.musha = STRINGS.CHARACTER_SURVIVABILITY.wilson or "Slim"
 STRINGS.NAMES.MUSHA = "Musha"
+STRINGS.SKIN_NAMES.musha_none = "Elven Princess"
+STRINGS.SKIN_DESCRIPTIONS.musha_none = "Let's go!"
+STRINGS.SKIN_QUOTES.musha_none = "Let's go!"
+STRINGS.SKIN_NAMES.musha_battle_skin_none = "Royal Princess"
+STRINGS.SKIN_DESCRIPTIONS.musha_battle_skin_none = "Pick up the weapon. It's time to go."
+STRINGS.SKIN_QUOTES.musha_battle_skin_none = "Pick up the weapon. It's time to go."
+STRINGS.SKIN_NAMES.musha_old_skin_none = "Next-door Princess"
+STRINGS.SKIN_DESCRIPTIONS.musha_old_skin_none = "Let's play together?"
+STRINGS.SKIN_QUOTES.musha_old_skin_none = "Let's play together?"
 STRINGS.CHARACTER_TITLES.musha = "The Puppy Princess, Musha"
 STRINGS.CHARACTER_NAMES.musha = "Musha"
 STRINGS.CHARACTER_DESCRIPTIONS.musha = "Level(L) Skill(K) Visual(P) Sleep(T) Shield(C) Valkyrie(V) Strike(R) Music(U) Shadow(G) Yamche(X) Battle(Z) Gather(B) Dall(N) Arong(Y)"

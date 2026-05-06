@@ -1,6 +1,16 @@
 --translated by deloquac
 STRINGS = GLOBAL.STRINGS
+STRINGS.CHARACTER_SURVIVABILITY.musha = STRINGS.CHARACTER_SURVIVABILITY.wilson or "渺茫"
 STRINGS.NAMES.MUSHA = "Musha"
+STRINGS.SKIN_NAMES.musha_none = "精灵公主"
+STRINGS.SKIN_DESCRIPTIONS.musha_none = "让我们出发吧！"
+STRINGS.SKIN_QUOTES.musha_none = "让我们出发吧！"
+STRINGS.SKIN_NAMES.musha_battle_skin_none = "皇家公主"
+STRINGS.SKIN_DESCRIPTIONS.musha_battle_skin_none = "拿起武器，该出发了。"
+STRINGS.SKIN_QUOTES.musha_battle_skin_none = "拿起武器，该出发了。"
+STRINGS.SKIN_NAMES.musha_old_skin_none = "邻家公主"
+STRINGS.SKIN_DESCRIPTIONS.musha_old_skin_none = "一起来玩吗？"
+STRINGS.SKIN_QUOTES.musha_old_skin_none = "一起来玩吗？"
 STRINGS.CHARACTER_TITLES.musha = "精灵公主Musha联机版"
 STRINGS.CHARACTER_NAMES.musha = "Musha"
 STRINGS.CHARACTER_DESCRIPTIONS.musha = "[升级能解锁技能]\n状态(L) 技能(K) 外貌(P)\n女武神(R) 影子(G) 护盾(C) 音乐(X) 睡觉(T) Yamche(Z,V,B)"

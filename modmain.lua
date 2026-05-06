@@ -21,7 +21,11 @@ local SleepSkill = require("musha/skills/sleep")
 local ShadowSkill = require("musha/skills/shadow")
 local MusicSkill = require("musha/skills/music")
 local VisualCommands = require("musha_visual_commands")
+local SkinSelect = require("musha/skin_select")
 local Config = MushaConfig.Load(GetModConfigData, TUNING)
+
+require("musha/skin_defs").Register()
+require("musha/config/character_select").Register(TUNING)
 
 ACTIONS.GIVE.priority = 2
 ACTIONS.ADDFUEL.priority = 4
@@ -72,6 +76,13 @@ else
 end
 
 require("musha/utils/name_fallbacks").Register(STRINGS)
+
+SkinSelect.Register({
+	AddClassPostConstruct = AddClassPostConstruct,
+	AddComponentPostInit = AddComponentPostInit,
+	GLOBAL = GLOBAL,
+	MushaAnim = MushaAnim,
+})
 
 modimport("scripts/musha_adds_states.lua")
 

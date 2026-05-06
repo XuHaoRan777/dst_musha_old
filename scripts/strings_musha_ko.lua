@@ -1,6 +1,16 @@
 
 STRINGS = GLOBAL.STRINGS
+STRINGS.CHARACTER_SURVIVABILITY.musha = STRINGS.CHARACTER_SURVIVABILITY.wilson or "Slim"
 STRINGS.NAMES.MUSHA = "뮤샤"
+STRINGS.SKIN_NAMES.musha_none = "Musha-princess"
+STRINGS.SKIN_DESCRIPTIONS.musha_none = "Let's go!"
+STRINGS.SKIN_QUOTES.musha_none = "Let's go!"
+STRINGS.SKIN_NAMES.musha_battle_skin_none = "Musha-survivor"
+STRINGS.SKIN_DESCRIPTIONS.musha_battle_skin_none = "Pick up the weapon. It's time to go."
+STRINGS.SKIN_QUOTES.musha_battle_skin_none = "Pick up the weapon. It's time to go."
+STRINGS.SKIN_NAMES.musha_old_skin_none = "Musha-peach"
+STRINGS.SKIN_DESCRIPTIONS.musha_old_skin_none = "Let's play together?"
+STRINGS.SKIN_QUOTES.musha_old_skin_none = "Let's play together?"
 STRINGS.CHARACTER_TITLES.musha = "[DST] 강아지 공주 뮤샤"
 STRINGS.CHARACTER_NAMES.musha = "뮤샤"
 STRINGS.CHARACTER_DESCRIPTIONS.musha = "[레벨업하고 스킬을 배우세요]\n스탯(L) 스킬(K)외모(P)\n발키리(R) 그림자(G) 쉴드(C) 음악(X) 수면(T) 얌체(Z,V,B))"

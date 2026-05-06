@@ -817,8 +817,6 @@ local bowm = GLOBAL.State(
 			local weapon = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
 			if weapon and weapon:HasTag("bowm") then
 			inst.AnimState:OverrideSymbol("swap_object", "swap_bowm_boost", "bowm")
-			elseif weapon and not weapon:HasTag("bowm") and not weapon.broken then
-			inst.AnimState:OverrideSymbol("swap_object", "swap_bowm", "bowm")
 			end end) end)
             --inst.AnimState:PushAnimation("slingshot", false)
             
@@ -947,11 +945,6 @@ local bowm = GLOBAL.State(
 			local weapon = inst.components.combat and inst.components.combat:GetWeapon()
 			if weapon and weapon:HasTag("bowm") then
 			inst.AnimState:OverrideSymbol("swap_object", "swap_bowm_boost", "bowm")
-			elseif weapon and not weapon:HasTag("bowm") and not weapon.broken then
-			inst.AnimState:OverrideSymbol("swap_object", "swap_bowm", "bowm")
-			elseif weapon and not weapon:HasTag("bowm") and weapon.broken then
-			inst.AnimState:OverrideSymbol("swap_object", "swap_bowm_broken", "bowm")
-			
 			end
         end,
     }
@@ -1543,8 +1536,6 @@ local bowm_c = GLOBAL.State(
 			local weapon = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
 			if weapon and weapon:HasTag("bowm") then
 			inst.AnimState:OverrideSymbol("swap_object", "swap_bowm_boost", "bowm")
-			elseif weapon and not weapon:HasTag("bowm") and not weapon.broken then
-			inst.AnimState:OverrideSymbol("swap_object", "swap_bowm", "bowm")
 			end end) end)
             --inst.AnimState:PushAnimation("slingshot", false)
 
@@ -1638,16 +1629,12 @@ local bowm_c = GLOBAL.State(
         },
 
         onexit = function(inst)
-            if inst.sg:HasStateTag("abouttoattack") and inst.replica.combat ~= nil then
+			if inst.sg:HasStateTag("abouttoattack") and inst.replica.combat ~= nil then
                 inst.replica.combat:CancelAttack()
             end
 			local weapon = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
 			if weapon and weapon:HasTag("bowm") then
 			inst.AnimState:OverrideSymbol("swap_object", "swap_bowm_boost", "bowm")
-			elseif weapon and not weapon:HasTag("bowm") and not weapon.broken then
-			inst.AnimState:OverrideSymbol("swap_object", "swap_bowm", "bowm")
-			elseif weapon and not weapon:HasTag("bowm") and weapon.broken then
-			inst.AnimState:OverrideSymbol("swap_object", "swap_bowm_broken", "bowm")	
 			end
         end,
     }

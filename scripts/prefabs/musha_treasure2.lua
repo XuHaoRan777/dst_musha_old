@@ -1230,7 +1230,7 @@ local function fn(Sim)
 		
     inst.AnimState:SetBank("x_marks_spot")
     inst.AnimState:SetBuild("x_marks_spot")
-    inst.AnimState:PlayAnimation("anim")
+    inst.AnimState:PlayAnimation("idle")
 	
 	--inst.MiniMapEntity:SetPriority(10)
 	inst.MiniMapEntity:SetDrawOverFogOfWar(true)
