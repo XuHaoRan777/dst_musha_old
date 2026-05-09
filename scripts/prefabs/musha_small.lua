@@ -2729,7 +2729,17 @@ local function OnGetItemFromPlayer(inst, giver, item)
 	end
 end
 
+local function ResetYamcheCampfireComponents(inst)
+	if inst.components ~= nil and inst.components.fueled ~= nil then
+		inst:RemoveComponent("fueled")
+	end
+	if inst.components ~= nil and inst.components.burnable ~= nil then
+		inst:RemoveComponent("burnable")
+	end
+end
+
 local function yamche_campfire(inst)
+ResetYamcheCampfireComponents(inst)
 if not inst.components.burnable then
 inst:AddComponent("burnable")
 end
@@ -2815,6 +2825,27 @@ local tynychance = 0.2
 local tynyychance = 0.1
 local eggchance = 1.0
 
+local YAMCHE_VALID_BUILDS =
+{
+	musha_small = true,
+	musha_teen = true,
+	musha_tall = true,
+	musha_tall2 = true,
+	musha_tall3 = true,
+	musha_tall4 = true,
+	musha_tall5 = true,
+}
+
+local function SetYamcheFireBuild(inst, build, doctor)
+	if YAMCHE_VALID_BUILDS[build] then
+		inst.yamche_saved_build = build
+		if inst.AnimState ~= nil then
+			inst.AnimState:SetBuild(build)
+		end
+	end
+	inst.doctor = doctor == true
+end
+
 local function OnEat(inst, food, item, spawn)
  --inst.components.health:Kill()
  
@@ -2836,8 +2867,8 @@ end
 if (food.prefab == "icecream" or food.prefab =="watermelonicle") and not inst.iceyamche then
 inst.changed = true
 inst.iceyamche = true
+inst.yamche_element_overridden = true
 
-inst:RemoveComponent("burnable")
 yamche_campfire(inst)
 inst:AddTag("fridge")
 inst.doctor = false
@@ -2854,7 +2885,7 @@ elseif food.prefab == "hotchili" and inst.iceyamche then
 inst.changed = true
 
 inst.iceyamche = false
-inst:RemoveComponent("burnable")
+inst.yamche_element_overridden = true
 yamche_campfire(inst)
 inst:RemoveTag("fridge")
 if inst.changed then
@@ -2866,29 +2897,21 @@ SpawnPrefab("lightning_blue").Transform:SetPosition(inst.Transform:GetWorldPosit
 end
 
 if math.random() < 0.25 then
-inst.AnimState:SetBuild("musha_small")
-inst.doctor = true
+SetYamcheFireBuild(inst, "musha_small", true)
 elseif math.random() < 0.5 then
-inst.AnimState:SetBuild("musha_teen")
-inst.doctor = false
+SetYamcheFireBuild(inst, "musha_teen", false)
 elseif math.random() < 0.5 then
-inst.AnimState:SetBuild("musha_tall")
-inst.doctor = false
+SetYamcheFireBuild(inst, "musha_tall", false)
 elseif math.random() < 0.5 then
-inst.AnimState:SetBuild("musha_tall2")
-inst.doctor = false
+SetYamcheFireBuild(inst, "musha_tall2", false)
 elseif math.random() < 0.5 then
-inst.AnimState:SetBuild("musha_tall3")
-inst.doctor = false
+SetYamcheFireBuild(inst, "musha_tall3", false)
 elseif math.random() < 0.25 then
-inst.AnimState:SetBuild("musha_tall4")
-inst.doctor = false
+SetYamcheFireBuild(inst, "musha_tall4", false)
 elseif math.random() < 0.25 then
-inst.AnimState:SetBuild("musha_tall5")
-inst.doctor = false
+SetYamcheFireBuild(inst, "musha_tall5", false)
 else
-inst.AnimState:SetBuild("musha_tall")
-inst.doctor = false
+SetYamcheFireBuild(inst, "musha_tall", false)
 end
 end
 
@@ -4675,6 +4698,22 @@ local function create_chester(inst)
    return inst
 end
 
+local function ApplySavedYamcheElement(inst)
+	if inst.iceyamche then
+		inst:AddTag("fridge")
+		if inst.AnimState ~= nil then
+			inst.AnimState:SetBuild("musha_ice")
+		end
+	else
+		inst:RemoveTag("fridge")
+		if inst.yamche_saved_build ~= nil and YAMCHE_VALID_BUILDS[inst.yamche_saved_build] and inst.AnimState ~= nil then
+			inst.AnimState:SetBuild(inst.yamche_saved_build)
+		end
+	end
+
+	yamche_campfire(inst)
+end
+
 local function onpreload(inst, data)
 	if data ~= nil then
 		if data.level then
@@ -4686,9 +4725,18 @@ local function onpreload(inst, data)
 		inst.picked = data.picked
 		end
 		
-		--[[if data.iceyamche then
-		inst.iceyamche = data.iceyamche
+		if data.yamche_element_overridden ~= nil then
+		inst.yamche_element_overridden = data.yamche_element_overridden
+		inst.iceyamche = data.iceyamche == true
+		if data.yamche_saved_build ~= nil and YAMCHE_VALID_BUILDS[data.yamche_saved_build] then
+		inst.yamche_saved_build = data.yamche_saved_build
 		end
+		if data.doctor ~= nil then
+		inst.doctor = data.doctor == true
+		end
+		inst:DoTaskInTime(0, ApplySavedYamcheElement)
+		end
+		--[[
 		if data.doctor then
 		inst.doctor = data.doctor
 		end]]
@@ -4698,7 +4746,14 @@ end
 local function onsave(inst, data)
 	data.level = inst.level
 	data.picked = inst.picked
-	--data.iceyamche = inst.iceyamche
+	if inst.yamche_element_overridden ~= nil then
+		data.yamche_element_overridden = inst.yamche_element_overridden
+		data.iceyamche = inst.iceyamche == true
+		if inst.yamche_saved_build ~= nil and YAMCHE_VALID_BUILDS[inst.yamche_saved_build] then
+		data.yamche_saved_build = inst.yamche_saved_build
+		end
+		data.doctor = inst.doctor == true
+	end
 	--data.doctor = inst.doctor
 
 end

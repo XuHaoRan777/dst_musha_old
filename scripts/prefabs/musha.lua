@@ -1621,6 +1621,21 @@ end
 end
 end
 	--auto shadow lightning strike
+local function AttachLightningHitFx(inst, target, fx)
+	if fx == nil or target == nil then
+		return
+	end
+
+	local combat = target.components ~= nil and target.components.combat or nil
+	if combat == nil or combat.hiteffectsymbol == nil then
+		return
+	end
+
+	local follower = fx.entity:AddFollower()
+	inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
+	follower:FollowSymbol(target.GUID, combat.hiteffectsymbol, 0, 0, 0)
+end
+
 local function on_hitLightnings_1(inst, data)
 inst.vl1 = false
 	local other = data.target
@@ -1638,9 +1653,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			local shocking = SpawnPrefab("musha_spin_fx")
 		shocking.Transform:SetPosition(other:GetPosition():Get())
 		if shocking then
-		local follower = shocking.entity:AddFollower()
-		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
+		AttachLightningHitFx(inst, other, shocking)
 			end
 inst.components.combat:SetRange(2)
 
@@ -1678,9 +1691,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			local shocking = SpawnPrefab("musha_spin_fx")
 		shocking.Transform:SetPosition(other:GetPosition():Get())
 		if shocking then
-		local follower = shocking.entity:AddFollower()
-		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
+		AttachLightningHitFx(inst, other, shocking)
 		end
 inst.components.combat:SetRange(2)
 
@@ -1716,9 +1727,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			local shocking = SpawnPrefab("musha_spin_fx")
 		shocking.Transform:SetPosition(other:GetPosition():Get())
 		if shocking then
-		local follower = shocking.entity:AddFollower()
-		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
+		AttachLightningHitFx(inst, other, shocking)
 		end
 inst.components.combat:SetRange(2)
 
@@ -1756,9 +1765,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			local shocking = SpawnPrefab("musha_spin_fx")
 		shocking.Transform:SetPosition(other:GetPosition():Get())
 		if shocking then
-		local follower = shocking.entity:AddFollower()
-		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
+		AttachLightningHitFx(inst, other, shocking)
 		end
 inst.components.combat:SetRange(2)
 
@@ -1796,9 +1803,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			local shocking = SpawnPrefab("musha_spin_fx")
 		shocking.Transform:SetPosition(other:GetPosition():Get())
 		if shocking then
-		local follower = shocking.entity:AddFollower()
-		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
+		AttachLightningHitFx(inst, other, shocking)
 		end
 inst.components.combat:SetRange(2)
 
@@ -1836,9 +1841,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			local shocking = SpawnPrefab("musha_spin_fx")
 		shocking.Transform:SetPosition(other:GetPosition():Get())
 		if shocking then
-		local follower = shocking.entity:AddFollower()
-		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
+		AttachLightningHitFx(inst, other, shocking)
 		end
 inst.components.combat:SetRange(2)
 
@@ -1877,9 +1880,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			local shocking = SpawnPrefab("musha_spin_fx")
 		shocking.Transform:SetPosition(other:GetPosition():Get())
 		if shocking then
-		local follower = shocking.entity:AddFollower()
-		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
+		AttachLightningHitFx(inst, other, shocking)
 		end
 inst.components.combat:SetRange(2)
 
@@ -1918,9 +1919,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			local shocking = SpawnPrefab("musha_spin_fx")
 		shocking.Transform:SetPosition(other:GetPosition():Get())
 		if shocking then
-		local follower = shocking.entity:AddFollower()
-		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
+		AttachLightningHitFx(inst, other, shocking)
 		end
 inst.components.combat:SetRange(2)
 
@@ -1960,9 +1959,7 @@ if other and not other:HasTag("stalkerminion") and not other:HasTag("smashable")
 			local shocking = SpawnPrefab("musha_spin_fx")
 		shocking.Transform:SetPosition(other:GetPosition():Get())
 		if shocking then
-		local follower = shocking.entity:AddFollower()
-		inst.SoundEmitter:PlaySound("dontstarve/maxwell/shadowmax_appear")
-		follower:FollowSymbol(other.GUID, other.components.combat.hiteffectsymbol, 0, 0, 0 )
+		AttachLightningHitFx(inst, other, shocking)
 		end
 inst.components.combat:SetRange(2)
 
