@@ -13,7 +13,7 @@
 
 ## 本地 Skill 调用
 
-本机已有 DST 人物模组开发 skill：`$dst-character-mod-development`。当需求涉及 Musha 或其他 DST 人物 Mod 的开发、修复、审查、重构、测试、日志排查或创意工坊发布时，用户可以在消息里显式写上 `$dst-character-mod-development`，以强制启用该通用检查清单。
+本机已有 DST 人物模组开发 skill：`$dst-mod-development`。当需求涉及 Musha 或其他 DST 人物 Mod 的开发、修复、审查、重构、测试、日志排查或创意工坊发布时，用户可以在消息里显式写上 `$dst-character-mod-development`，以强制启用该通用检查清单。
 
 `AGENTS.md` 负责记录本项目事实、目录索引、本机路径、历史踩坑点和 Musha 特有约束；`$dst-character-mod-development` 负责通用 DST 人物 Mod 开发方法。两者重复时，以本文件里的 Musha 项目约束和本机路径为准。
 

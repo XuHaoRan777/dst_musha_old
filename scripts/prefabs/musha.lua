@@ -57,6 +57,32 @@ local max_music = 100
 local music = math.min(inst.music, max_music)
 end
 
+-- Musha keeps the bloomness component for compatibility with Wormwood-style
+-- food effects, but does not use Wormwood's bee beacon, full-bloom stats or
+-- skin stages. Keep these callbacks local so DST strict mode never looks for
+-- undeclared globals when another mod changes bloomness.
+local function EnableBeeBeacon(inst, enabled)
+end
+
+local function EnableFullBloom(inst, enabled)
+end
+
+local function SetStatsLevel(inst, stage)
+end
+
+local function SetUserFlagLevel(inst, stage)
+end
+
+local function SetSkinType(inst, skin_mode, build)
+	return false
+end
+
+local function SpawnBloomFX(inst)
+end
+
+local function OnStopGhostBuildInState(inst)
+end
+
 local function OnNewSGState(inst)
 	if not inst.sg:HasStateTag("nomorph") then
 		inst:UpdateBloomStage()
