@@ -44,6 +44,8 @@ local function create_light(eater, lightprefab)
         else
             eater.wormlight.components.spell:OnFinish()
         end
+    elseif eater:HasTag("wormlight") then
+        eater:RemoveTag("wormlight")
     end
 
     local light = SpawnPrefab(lightprefab)
@@ -165,7 +167,6 @@ local function light_ontarget(inst, target)
 
     target.wormlight = inst
     inst.Follower:FollowSymbol(target.GUID, "", 0, 0, 0)
-    target:AddTag(inst.components.spell.spellname)
     inst.fx.entity:SetParent(target.entity)
     inst:ListenForEvent("onremove", forceremove, target)
 
@@ -185,8 +186,10 @@ end
 local function light_onfinish(inst)
     local target = inst.components.spell.target
     if target ~= nil then
-        target.wormlight = nil
-        
+        if target.wormlight == inst then
+            target.wormlight = nil
+        end
+        target:RemoveTag(inst.components.spell.spellname)
     end
 end
 

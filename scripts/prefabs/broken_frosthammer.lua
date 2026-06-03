@@ -1,6 +1,8 @@
 local FrostArmor = require("musha/prefabs/frost_armor")
 local EquipUtils = require("musha/equipment/utils")
 
+local FROST_ARMOR_PRESERVER_MULT = 0.1
+
 local assets=
 {
 	Asset("ANIM", "anim/swap_frostpocket.zip"),
@@ -709,8 +711,8 @@ inst.components.armor:InitCondition(99999999999999999999999999999999999999999999
 	inst.components.container.onclosefn = OnClose
 
 	inst:AddComponent("preserver")
-	inst.components.preserver:SetPerishRateMultiplier(TUNING.PERISH_FRIDGE_MULT)
-	inst.components.preserver:SetTemperatureRateMultiplier(TUNING.PERISH_FRIDGE_MULT)
+	inst.components.preserver:SetPerishRateMultiplier(FROST_ARMOR_PRESERVER_MULT)
+	inst.components.preserver:SetTemperatureRateMultiplier(FROST_ARMOR_PRESERVER_MULT)
 	
 	inst:AddComponent("machine")
     inst.components.machine.turnonfn = onuseshield

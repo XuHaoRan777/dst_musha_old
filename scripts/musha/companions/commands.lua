@@ -372,7 +372,10 @@ local function RegisterYamcheBattle(deps)
 					v.peace = true
 					v.active_hunt = false
 					v.defense = true
-					v.crazyness = true
+					v.crazyness = false
+					if v.components.combat ~= nil then
+						v.components.combat:GiveUp()
+					end
 				end
 			elseif owned and v.peace and not v.active_hunt and v.defense and not is_ghost and not is_berserk then
 				v.yamche = true

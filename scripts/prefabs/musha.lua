@@ -2771,6 +2771,17 @@ end
 end end
 end
 
+local function IsBerserkAreaWall(target)
+	return target ~= nil
+		and (target:HasTag("wall")
+			or target:HasTag("alignwall")
+			or (target.prefab ~= nil and string.sub(target.prefab, 1, 5) == "wall_"))
+end
+
+local function BerserkAreaHitCheck(target)
+	return not IsBerserkAreaWall(target)
+end
+
 local function berserk_hit(inst, data)
 if not inst.berserk then
 inst.components.combat:SetRange(2)
@@ -5058,9 +5069,9 @@ elseif inst.hardscores then
 	if inst.strength == "berserk" then
 			inst.soundsname = "wendy"
 			if weapon and weapon:HasTag("frost_hammer") and not weapon.boost then
-			inst.components.combat:SetAreaDamage(4, .5)
+			inst.components.combat:SetAreaDamage(4, .5, BerserkAreaHitCheck)
 			else
-			inst.components.combat:SetAreaDamage(2.5, .5)
+			inst.components.combat:SetAreaDamage(2.5, .5, BerserkAreaHitCheck)
 			end
 			inst.components.combat:SetRange(2)
 			--inst.components.health:StartRegen(1, 1)
@@ -5376,6 +5387,32 @@ local function KillPet(pet)
 
 end	end
 
+local function RemoveDuplicateArongPet(inst, pet)
+    if pet == nil
+        or pet.components == nil
+        or pet.components.uniqueid == nil
+        or pet.components.uniqueid.id == nil then
+        return
+    end
+
+    pet.musha_migration_owner = inst
+    pet.musha_migration_owner_userid = inst.userid
+
+    local pet_id = pet.components.uniqueid.id
+    pet:DoTaskInTime(0, function()
+        for _, ent in pairs(Ents) do
+            if ent ~= pet
+                and ent.prefab == pet.prefab
+                and ent.components ~= nil
+                and ent.components.uniqueid ~= nil
+                and ent.components.uniqueid.id == pet_id
+                and (ent:HasTag("Arongb") or ent:HasTag("arongb")) then
+                ent:Remove()
+            end
+        end
+    end)
+end
+
 local function OnSpawnPet(inst, pet)
     if pet:HasTag("shadowminion") then
         --Delayed in case we need to relocate for migration spawning
@@ -5400,6 +5437,8 @@ local function OnSpawnPet(inst, pet)
         inst.follow_arong = true
         inst.arong_follow = true
         pet.musha_migration_companion = true
+        pet.musha_migration_owner = inst
+        pet.musha_migration_owner_userid = inst.userid
         pet.yamche = true
         pet.mount = true
         pet.command_sleep = false
@@ -5408,6 +5447,7 @@ local function OnSpawnPet(inst, pet)
         pet.sleep_on = false
         pet.follow = true
         pet.persists = false
+        RemoveDuplicateArongPet(inst, pet)
     elseif inst._OnSpawnPet ~= nil then
         inst:_OnSpawnPet(pet)
     end
@@ -5977,9 +6017,20 @@ local x,y,z = inst.Transform:GetWorldPosition()
 local yamche = TheSim:FindEntities(x,y,z, 20, {"yamche"})
 for k,v in pairs(yamche) do
 if v.components.follower and v.components.follower.leader and  inst.components.leader:IsFollower(v) then
+	local is_arong = v:HasTag("Arongb") or v:HasTag("arongb")
 	if inst.berserks or inst.fberserk then
 		if not v.crazyness then
 		v.crazyness = true
+		end
+		if is_arong then
+			v.peace = true
+			if v.components.combat ~= nil then
+				v.components.combat:GiveUp()
+			end
+		end
+	elseif is_arong then
+		if v.crazyness then
+		v.crazyness = false
 		end
 	elseif not inst.berserks and not inst.fberserk and not v.peace then
 		if v.crazyness then

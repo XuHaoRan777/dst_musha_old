@@ -13,7 +13,6 @@ local assets=
 }
 ---------------------------
 
-
 local function levelexp(inst,data)
 
 	local max_exp = 4100
@@ -98,8 +97,33 @@ local function onsave(inst, data)
 	data.charge_time = inst.charge_time
 end
 
+local function EnablePhoenixSpearOar(inst)
+	if inst.components.oar == nil then
+		inst:AddComponent("oar")
+	end
+	inst.components.oar.force = TUNING.BOAT.OARS.MALBATROSS.FORCE
+	inst.components.oar.max_velocity = TUNING.BOAT.OARS.MALBATROSS.MAX_VELOCITY
+	inst:AddTag("allow_action_on_impassable")
+end
+
+local function DisablePhoenixSpearOar(inst)
+	if inst.components.oar ~= nil then
+		inst:RemoveComponent("oar")
+	end
+	inst:RemoveTag("allow_action_on_impassable")
+end
+
+local function SetPhoenixSpearCarrySymbol(owner, build, symbol)
+	if owner ~= nil and owner.AnimState ~= nil then
+		owner.AnimState:OverrideSymbol("swap_object", build, symbol or "phoenixspear")
+		owner.AnimState:Show("ARM_carry")
+		owner.AnimState:Hide("ARM_normal")
+	end
+end
+
 local function OnDurability(inst, data)
 inst.broken = true
+DisablePhoenixSpearOar(inst)
     inst.components.weapon:SetDamage(1)
 	inst.components.talker:Say(STRINGS.MUSHA_WEAPON_BROKEN.." \n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (1)")
 end
@@ -156,8 +180,14 @@ local function StartBlinkWeaponTask(inst, owner)
 		return
 	end
 
+	local current_owner = GetBlinkOwner(inst, owner)
+	if current_owner == nil or current_owner.components == nil or current_owner.components.sanity == nil then
+		return
+	end
+
+	RefreshBlinkStaff(inst, current_owner)
 	inst.blink_weapon = inst:DoPeriodicTask(1, function()
-		local current_owner = GetBlinkOwner(inst, owner)
+		current_owner = GetBlinkOwner(inst, owner)
 		if current_owner == nil or current_owner.components == nil or current_owner.components.sanity == nil then
 			StopBlinkWeaponTask(inst)
 			return
@@ -194,6 +224,7 @@ if inst.broken then
 	if inst.components.blinkstaff ~= nil then
 	inst:RemoveComponent("blinkstaff")
 	end
+	DisablePhoenixSpearOar(inst)
 elseif not inst.broken then
 
 if inst.boost then
@@ -634,6 +665,7 @@ local function onequip(inst, owner)
 	if owner == nil or owner.AnimState == nil then
 		Upgradedamage(inst)
 		StopBlinkWeaponTask(inst)
+		DisablePhoenixSpearOar(inst)
 		return
 	end
 
@@ -653,10 +685,9 @@ local function onequip(inst, owner)
 	owner.frost = true
 	inst.boost = true
 	inst.red = false
-    owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixspear2", "phoenixspear")
-    owner.AnimState:Show("ARM_carry") 
-    owner.AnimState:Hide("ARM_normal") 
+	SetPhoenixSpearCarrySymbol(owner, "swap_phoenixspear2")
 	inst:AddTag("frost_spear")
+	EnablePhoenixSpearOar(inst)
 	else
 		local change_fx = SpawnPrefab("firesplash_fx")
 		change_fx.Transform:SetScale(0.2, 0.2, 0.2)
@@ -666,10 +697,9 @@ local function onequip(inst, owner)
 	owner.fire = false
 	inst.red = true
 	inst.blue = false
-	owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixspear", "phoenixspear")
-    owner.AnimState:Show("ARM_carry") 
-    owner.AnimState:Hide("ARM_normal") 
+	SetPhoenixSpearCarrySymbol(owner, "swap_phoenixspear")
 	inst:RemoveTag("frost_spear")
+	DisablePhoenixSpearOar(inst)
 	end
 	
 	elseif inst.broken then
@@ -678,10 +708,9 @@ local function onequip(inst, owner)
 	inst.boost = false
 	inst.red = true
 	inst.blue = false
-	owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixspear_broken", "phoenixspear")
-    owner.AnimState:Show("ARM_carry") 
-    owner.AnimState:Hide("ARM_normal") 
+	SetPhoenixSpearCarrySymbol(owner, "swap_phoenixspear_broken")
 	inst:RemoveTag("frost_spear")
+	DisablePhoenixSpearOar(inst)
 	end
 
 	
@@ -691,6 +720,7 @@ end
 
 local function onunequip(inst, owner) 
    Upgradedamage(inst)
+	DisablePhoenixSpearOar(inst)
 	if owner == nil or owner.AnimState == nil then
 		StopBlinkWeaponTask(inst)
 		return
@@ -709,6 +739,7 @@ local function off_boost(inst, data)
 local owner = inst.components.inventoryitem.owner 
 if owner ~= nil then
 	StopBlinkWeaponTask(inst)
+	DisablePhoenixSpearOar(inst)
 	inst.boost = false 
 	owner.fire = true
 	owner.frost = false
@@ -727,22 +758,19 @@ if owner ~= nil then
 		follower:FollowSymbol( owner.GUID, "swap_object", 1, -150, 1 )
 		
 	inst.SoundEmitter:PlaySound("dontstarve/common/fireAddFuel") 	
-	owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixspear", "phoenixspear")
-    owner.AnimState:Show("ARM_carry") 
-    owner.AnimState:Hide("ARM_normal") 
+	SetPhoenixSpearCarrySymbol(owner, "swap_phoenixspear")
 	
 	elseif inst.broken then
 
 	Upgradedamage(inst)
 	
 	inst.components.talker:Say("-"..STRINGS.MUSHA_WEAPON.."\n"..STRINGS.MUSHA_ITEM_DUR.." (0)")
-    owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixspear_broken", "phoenixspear")
-    owner.AnimState:Show("ARM_carry") 
-    owner.AnimState:Hide("ARM_normal") 
+	SetPhoenixSpearCarrySymbol(owner, "swap_phoenixspear_broken")
         
 	end
 --onequip(inst, owner)
 Upgradedamage(inst)	
+StartBlinkWeaponTask(inst, owner)
 end
 end
 
@@ -752,6 +780,7 @@ local owner = inst.components.inventoryitem.owner
 if owner ~= nil then
 if inst.broken then
 	StopBlinkWeaponTask(inst)
+	DisablePhoenixSpearOar(inst)
 	Upgradedamage(inst)
 	--inst.boost = false 	
 	--inst.red = true	
@@ -759,9 +788,7 @@ if inst.broken then
 	--inst:RemoveTag("frost_spear")
 
 	inst.components.talker:Say("-"..STRINGS.MUSHA_WEAPON.."\n"..STRINGS.MUSHA_ITEM_DUR.." (0)")
-    owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixspear_broken", "phoenixspear")
-    owner.AnimState:Show("ARM_carry") 
-    owner.AnimState:Hide("ARM_normal") 
+	SetPhoenixSpearCarrySymbol(owner, "swap_phoenixspear_broken")
         
 end
 
@@ -777,13 +804,12 @@ if not inst.boost and not inst.broken then
 	inst.components.tool:SetAction(ACTIONS.DIG)
 	Upgradedamage(inst)
 	inst:AddTag("frost_spear")
+	EnablePhoenixSpearOar(inst)
 	inst.blue = true	
 	inst.red = false
 	
 	inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
-    owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixspear2", "phoenixspear")
-    owner.AnimState:Show("ARM_carry") 
-    owner.AnimState:Hide("ARM_normal") 
+	SetPhoenixSpearCarrySymbol(owner, "swap_phoenixspear2")
 	
 StartBlinkWeaponTask(inst, owner)
 

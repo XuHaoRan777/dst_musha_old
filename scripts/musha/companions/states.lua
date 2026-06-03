@@ -126,6 +126,8 @@ function CompanionStates.AttachMigrationPet(owner, companion)
     end
 
     companion.musha_migration_companion = true
+    companion.musha_migration_owner = owner
+    companion.musha_migration_owner_userid = owner.userid
     companion.persists = false
     return true
 end
@@ -142,6 +144,8 @@ function CompanionStates.DetachMigrationPet(owner, companion)
     end
 
     companion.musha_migration_companion = nil
+    companion.musha_migration_owner = nil
+    companion.musha_migration_owner_userid = nil
     companion.persists = true
     return true
 end

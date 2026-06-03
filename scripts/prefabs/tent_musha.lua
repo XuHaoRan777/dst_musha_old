@@ -71,9 +71,37 @@ local function onfinishedsound(inst)
     inst.SoundEmitter:PlaySound("dontstarve/common/tent_dis_twirl")
 end
 
+local function CancelLightTask(inst)
+	if inst.lighttask ~= nil then
+		inst.lighttask:Cancel()
+		inst.lighttask = nil
+	end
+end
+
+local function CancelSleepDurationTask(inst)
+	if inst.sleepdurationtask ~= nil then
+		inst.sleepdurationtask:Cancel()
+		inst.sleepdurationtask = nil
+	end
+end
+
+local function CancelSleepTickTask(inst)
+	if inst.sleeptask ~= nil then
+		inst.sleeptask:Cancel()
+		inst.sleeptask = nil
+	end
+end
+
+local function CancelTentUseTasks(inst)
+	CancelLightTask(inst)
+	CancelSleepDurationTask(inst)
+	CancelSleepTickTask(inst)
+end
+
 local function OnDurability(inst,sleeper)
     if not inst.broken and not inst:HasTag("burnt") then
 	inst.broken = true
+	CancelTentUseTasks(inst)
 --inst.SoundEmitter:PlaySound("dontstarve/common/minerhatOut")
 inst.Light:Enable(false)
 inst.light_on = false
@@ -93,6 +121,22 @@ inst.light_on = false
 		  inst.AnimState:PlayAnimation("place") inst.AnimState:PushAnimation("idle", true)
 	end)
     end
+end
+
+local function StartLightTask(inst)
+	CancelLightTask(inst)
+	inst.lighttask = inst:DoPeriodicTask(2.5, function()
+		if inst.broken or not inst.light_on then
+			CancelLightTask(inst)
+			return
+		end
+		if inst.duration > 0 then
+			inst.duration = inst.duration - 0.01
+			duration_light(inst)
+		else
+			OnDurability(inst)
+		end
+	end)
 end
 
 local function onbuilt(inst)
@@ -141,16 +185,12 @@ inst.light_on = false
 end
 if not inst.using_on then
 inst.SoundEmitter:PlaySound("dontstarve/common/minerhatAddFuel")
-inst:DoPeriodicTask(2.5, function() if inst.light_on and inst.duration > 0 then
-inst.duration = inst.duration - 0.01
-duration_light(inst) 
-elseif inst.light_on and inst.duration <= 0 then
-OnDurability(inst)
-end
- end) end end end
+StartLightTask(inst)
+end end end
  -----------
 local function off_light_tent(inst, data)
  if not inst.broken and not inst.using_on then
+CancelLightTask(inst)
 inst.SoundEmitter:PlaySound("dontstarve/common/minerhatOut")
 inst.Light:Enable(false)
 inst.light_on = false
@@ -164,21 +204,22 @@ end end
 
 local function onwake(inst, sleeper, nostatechange)
 		inst.using_on = false
+		CancelSleepDurationTask(inst)
 		--inst.components.machine:TurnOff()
 		inst.Light:Enable(true)
 		inst.light_on = true
 		inst.AnimState:SetBuild("tent_musha_on")
 if inst.duration <= 0 then
+CancelLightTask(inst)
 inst.components.machine:TurnOff()
 inst.Light:Enable(false)
 inst.light_on = false
 	inst.AnimState:SetBuild("tent_musha")
+elseif not inst.broken then
+StartLightTask(inst)
 end
 
-	if inst.sleeptask ~= nil then
-        inst.sleeptask:Cancel()
-        inst.sleeptask = nil
-    end
+	CancelSleepTickTask(inst)
 
     inst:StopWatchingWorldState("phase", wakeuptest)
     sleeper:RemoveEventCallback("onignite", onignite, inst)
@@ -226,6 +267,33 @@ local function onsleeptick(inst, sleeper)
     end
 end
 
+local function StartSleepDurationTask(inst, sleeper)
+	CancelSleepDurationTask(inst)
+	inst.sleepdurationtask = inst:DoPeriodicTask(2.5, function()
+		if inst.broken or not inst.using_on then
+			CancelSleepDurationTask(inst)
+			return
+		end
+		if inst.duration > 0 then
+			inst.duration = inst.duration - 0.2
+			inst.components.machine:TurnOn()
+			inst.Light:Enable(true)
+			inst.light_on = true
+			if sleeper ~= nil and sleeper:IsValid() and sleeper:HasTag("musha") then
+				musha_sleep(inst)
+			else
+				duration_light(inst)
+			end
+		else
+			if sleeper ~= nil and sleeper:IsValid() and sleeper:HasTag("musha") then
+				sleeper.sleep_on = false
+				sleeper.sleepcheck = false
+			end
+			OnDurability(inst, sleeper)
+		end
+	end)
+end
+
 local function onsleep(inst, sleeper)
 if not inst.broken then
     inst:WatchWorldState("phase", wakeuptest)
@@ -233,6 +301,7 @@ if not inst.broken then
 	--inst.AnimState:SetBuild("tent_musha_on")
 	inst.SoundEmitter:PlaySound("dontstarve/common/minerhatAddFuel")
 	inst.using_on = true
+	CancelLightTask(inst)
 	--inst.light_on = true
 	--inst.Light:Enable(true)
     if inst.sleep_anim ~= nil then
@@ -244,23 +313,7 @@ if not inst.broken then
 		end
     inst.sleeptask = inst:DoPeriodicTask(TUNING.SLEEP_TICK_PERIOD, onsleeptick, nil, sleeper)
 
-inst:DoPeriodicTask(2.5, function() if inst.using_on and inst.duration > 0 then
-inst.duration = inst.duration - 0.2
-inst.components.machine:TurnOn()
-inst.Light:Enable(true)
-inst.light_on = true
-if sleeper:HasTag("musha") then
-musha_sleep(inst)
-elseif not sleeper:HasTag("musha") then
-duration_light(inst)
-end
-elseif inst.using_on and inst.duration <= 0 then
-if sleeper:HasTag("musha") then
-sleeper.sleep_on = false
-sleeper.sleepcheck = false
-end
-OnDurability(inst)
-end end) 
+StartSleepDurationTask(inst, sleeper)
 end 
 end
 			
@@ -277,6 +330,7 @@ local function TakeItem(inst, item, data)
 	duration_light(inst)
 	end    end
 	if inst.broken then 
+	CancelTentUseTasks(inst)
 	inst.AnimState:PlayAnimation("destroy")
 	inst.broken = false
    		scheduler:ExecuteInTime(2, function()

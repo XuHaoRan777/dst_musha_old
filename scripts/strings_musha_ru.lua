@@ -353,6 +353,7 @@ STRINGS.MUSHA_TALK_FORGE_OFF = "[Кузница]-(Выкл)"
 
 STRINGS.MUSHA_TALK_CANNOT1 = "Муша не может это сделать сейчас."
 STRINGS.MUSHA_TALK_CANNOT2 = "Муша не может это сделать сейчас.\n[Ледяные Щупальца]:Максимальное количество"
+STRINGS.MUSHA_TALK_CANNOT3 = "Муша не может это сделать сейчас.\n[Огненный дух]:Максимальное количество"
 --Items
 STRINGS.MUSHA_TALK_FORGE_LUCKY = "[Кузня ]"
 STRINGS.MUSHA_ITEM_GROWPOINTS = "Очки Роста☆"

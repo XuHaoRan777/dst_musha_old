@@ -9,10 +9,58 @@ local HasManaForAction
 local AddActionOnce
 local CanShowPowerAttack
 local AddMushaSceneActions
+local IsPowerAttackTarget
+local IsProtectedPowerAttackTarget
 
 local targets = {  "pigman", "bunnyman", "perd", "spider", "spider_warrior", "spiderqueen", "spider_spitter", "spider_dropper", "frog", "monkey", "bat", "hound", "firehound", "icehound", "warg", "tentacle", "walrus", "merm", "knight", "rook", "minotaur", "bishop", "krampus", "mossling", "tallbird", "deerclopse", "bearger", "dragonfly", "moose", "spat", "birchnutdrake", "deerclops", "toadstool", "beequeen", "klaus", "stalker", "antlion", "beefalo", 
 "character", "eyeofterror", "twinofterror1", "twinofterror2", "stalker_forest", "stalker", "stalker_atrium", "ancient_herald", "leif", "leif_sparse", "lordfruitfly", "fruitfly", "pugalisk", "treeguard",
 }
+
+local function IsWallTarget(target)
+	return target ~= nil
+		and (target:HasTag("wall")
+			or target:HasTag("alignwall")
+			or (target.prefab ~= nil and string.sub(target.prefab, 1, 5) == "wall_"))
+end
+
+local function NoWallAreaHitCheck(target)
+	return not IsWallTarget(target)
+end
+
+function IsPowerAttackTarget(target)
+	return target ~= nil
+		and (target:HasTag("character") or target:HasTag("pig") or target:HasTag("monster") or target:HasTag("animal"))
+end
+
+function IsProtectedPowerAttackTarget(doer, target)
+	if target == nil or target == doer then
+		return true
+	end
+
+	if target:HasTag("companion")
+		or target:HasTag("yamche")
+		or target:HasTag("yamcheb")
+		or target:HasTag("arongb")
+		or target:HasTag("Arongb")
+		or target:HasTag("dall")
+		or target:HasTag("ghound")
+		or target:HasTag("moondrake")
+		or target:HasTag("moondrake2")
+		or target:HasTag("frost_tentacle")
+		or target.musha_migration_companion then
+		return true
+	end
+
+	local follower = target.components ~= nil and target.components.follower or nil
+	if follower ~= nil and follower.leader ~= nil and follower.leader:HasTag("musha") then
+		return true
+	end
+
+	return doer ~= nil
+		and doer.components ~= nil
+		and doer.components.leader ~= nil
+		and doer.components.leader:IsFollower(target)
+end
 
 
 
@@ -51,10 +99,10 @@ AddAction("POWERATTACK", STRINGS.MUSHA_MYPOWER_SMITE, function(act)
 	local doer = act.doer
 	local target = act.target
 	local weapon = doer ~= nil and doer.components ~= nil and doer.components.inventory ~= nil and doer.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS) or nil
-	if doer ~= nil and target ~= nil and target ~= doer and doer:HasTag("player") and doer.components.mypower_musha and weapon ~= nil and weapon.components.weapon ~= nil and (target:HasTag("character") or target:HasTag("pig") or target:HasTag("monster") or target:HasTag("animal")) then
+	if doer ~= nil and target ~= nil and target ~= doer and doer:HasTag("player") and doer.components.mypower_musha and weapon ~= nil and weapon.components.weapon ~= nil and IsPowerAttackTarget(target) and not IsProtectedPowerAttackTarget(doer, target) then
 		if SkillDefs.HasMana(doer, "power_attack_required", false) then
 			doer.components.mypower_musha:Lightning(target)
-			doer.components.combat:SetAreaDamage(3.5, 1)
+			doer.components.combat:SetAreaDamage(3.5, 1, doer.berserk and NoWallAreaHitCheck or nil)
 			doer.components.combat:DoAttack(target)
 		else
 			doer.components.combat:SetAreaDamage(0, 0)
@@ -90,7 +138,8 @@ function CanShowPowerAttack(inst, doer)
 		and doer ~= nil
 		and inst ~= doer
 		and doer:HasTag("musha")
-		and (inst:HasTag("character") or inst:HasTag("pig") or inst:HasTag("monster") or inst:HasTag("animal"))
+		and IsPowerAttackTarget(inst)
+		and not IsProtectedPowerAttackTarget(doer, inst)
 end
 
 function AddMushaSceneActions(inst, doer, actions, right)

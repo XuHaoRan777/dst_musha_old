@@ -93,29 +93,72 @@ end
 
 local function createlight(staff, target, pos)
     local caster = staff.components.inventoryitem.owner
-if not EquipUtils.HasSanity(caster) then
-	return
-end
-if EquipUtils.HasSanityAtLeast(caster, 35) then
-
-    local light = SpawnPrefab("lightning")
-    --local light2 = SpawnPrefab("stafflight")
-	local light2 = SpawnPrefab("musha_spore_fire")
-
-    light.Transform:SetPosition(pos.x, pos.y, pos.z)
-    light2.Transform:SetPosition(pos.x, pos.y, pos.z)
-	light2.components.follower:SetLeader(caster)
-	
-        caster.components.sanity:DoDelta(-20)
-        --caster.components.sanity:DoDelta(-TUNING.SANITY_HUGE)
-
-    elseif not EquipUtils.HasSanityAtLeast(caster, 30) then
-	local fail1 = SpawnPrefab("statue_transition")
-    local fail2 = SpawnPrefab("statue_transition_2")
-
-    fail1.Transform:SetPosition(pos.x, pos.y, pos.z)
-    fail2.Transform:SetPosition(pos.x, pos.y, pos.z)
+    if caster == nil or pos == nil or not EquipUtils.HasSanity(caster) then
+        return
     end
+
+    local x, y, z = caster.Transform:GetWorldPosition()
+    local spores = TheSim:FindEntities(x, y, z, 40, { "musha_fire_spore" }, { "INLIMBO" })
+    local owned_spores = 0
+    for _, spore in ipairs(spores) do
+        local leader = spore.components.follower ~= nil and spore.components.follower.leader or spore._owner
+        if leader == caster then
+            owned_spores = owned_spores + 1
+        end
+    end
+
+    if owned_spores >= 2 then
+        if staff.components.talker ~= nil then
+            staff.components.talker:Say(STRINGS.MUSHA_TALK_CANNOT3 or STRINGS.MUSHA_TALK_CANNOT1)
+        end
+        return
+    end
+
+    if EquipUtils.HasSanityAtLeast(caster, 35) then
+        local light = SpawnPrefab("lightning")
+        local light2 = SpawnPrefab("musha_spore_fire")
+
+        if light ~= nil then
+            light.Transform:SetPosition(pos.x, pos.y, pos.z)
+        end
+        if light2 ~= nil then
+            light2.Transform:SetPosition(pos.x, pos.y, pos.z)
+            if light2.SetFireSporeOwner ~= nil then
+                light2:SetFireSporeOwner(caster)
+            elseif light2.components.follower ~= nil then
+                light2.components.follower:SetLeader(caster)
+            end
+        end
+
+        caster.components.sanity:DoDelta(-20)
+    else
+        local fail1 = SpawnPrefab("statue_transition")
+        local fail2 = SpawnPrefab("statue_transition_2")
+
+        if fail1 ~= nil then
+            fail1.Transform:SetPosition(pos.x, pos.y, pos.z)
+        end
+        if fail2 ~= nil then
+            fail2.Transform:SetPosition(pos.x, pos.y, pos.z)
+        end
+    end
+end
+
+local function AddFireSporeCaster(inst)
+	if inst.components.blinkstaff ~= nil then
+		inst:RemoveComponent("blinkstaff")
+	end
+	if not inst.components.spellcaster then
+		inst:AddComponent("spellcaster")
+	end
+	inst.components.spellcaster:SetSpellFn(createlight)
+	inst.components.spellcaster.canuseonpoint = true
+end
+
+local function RemoveFireSporeCaster(inst)
+	if inst.components.spellcaster ~= nil then
+		inst:RemoveComponent("spellcaster")
+	end
 end
 
 local function onpreload(inst, data)
@@ -159,30 +202,13 @@ inst.pick = false
 inst.axe = true
 inst.boost = false
 inst:RemoveTag("phoenix_axe")
+RemoveFireSporeCaster(inst)
+if inst.components.blinkstaff ~= nil then
+	inst:RemoveComponent("blinkstaff")
+end
     inst.components.weapon:SetDamage(1)
 	inst.components.talker:Say(STRINGS.MUSHA_WEAPON_BROKEN.." \n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (1)")
 end
-
-local function onblink(staff, pos, caster)
-
-    if caster.components.sanity ~= nil then
-        caster.components.sanity:DoDelta(-6)
-    end
-end
-
-local function blinkstaff_reticuletargetfn()
-    local player = ThePlayer
-	local rotation = player.Transform:GetRotation() * DEGREES
-    local pos = player:GetPosition()
-    for r = 13, 1, -1 do
-        local numtries = 2 * PI * r
-        local pt = FindWalkableOffset(pos, rotation, r, numtries)
-        if pt ~= nil then
-            return pt + pos
-        end
-    end
-end
-
 
 local function Upgradedamage(inst,data)
 if inst.components.fueled:IsEmpty() then
@@ -756,11 +782,7 @@ local owner = inst.components.inventoryitem.owner
     owner.AnimState:Hide("ARM_normal") 
 	inst:AddTag("phoenix_axe")
 	inst.boost = true
-	--[[if not inst.components.spellcaster then
-	inst:AddComponent("spellcaster")
-    inst.components.spellcaster:SetSpellFn(createlight)
-    inst.components.spellcaster.canuseonpoint = true
-	end]]
+	AddFireSporeCaster(inst)
 	else
 	inst.components.weapon:SetRange(0)
 	SetPhoenixAxeToolMode(inst, ACTIONS.CHOP, 2, true)
@@ -770,6 +792,7 @@ local owner = inst.components.inventoryitem.owner
     owner.AnimState:Show("ARM_carry") 
     owner.AnimState:Hide("ARM_normal") 
 	inst:RemoveTag("phoenix_axe")
+	RemoveFireSporeCaster(inst)
 	end
 	elseif inst.broken then
 	inst.components.weapon:SetRange(0)
@@ -780,6 +803,7 @@ local owner = inst.components.inventoryitem.owner
     owner.AnimState:Show("ARM_carry") 
     owner.AnimState:Hide("ARM_normal") 
 	inst:RemoveTag("phoenix_axe")
+	RemoveFireSporeCaster(inst)
 	end
 
 	--owner:AddTag("phoenixblade")
@@ -787,26 +811,8 @@ local owner = inst.components.inventoryitem.owner
 		inst.blink_weapon:Cancel()
 		inst.blink_weapon = nil
 	end
-	if EquipUtils.HasSanity(owner) then
-	inst.blink_weapon = inst:DoPeriodicTask(1, function()
-	if not inst.broken and inst.boost then
-		if not EquipUtils.HasSanity(owner) then
-			if inst.components.blinkstaff ~= nil then
-				inst:RemoveComponent("blinkstaff")
-			end
-			return
-		end
-		if not inst.components.blinkstaff and EquipUtils.HasSanityAtLeast(owner, 10) then
-			inst:AddComponent("blinkstaff")
-			inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
-			inst.components.blinkstaff.onblinkfn = onblink
-		elseif inst.components.blinkstaff and not EquipUtils.HasSanityAtLeast(owner, 10) then
-			if inst.components.blinkstaff ~= nil then
-			inst:RemoveComponent("blinkstaff")
-			end
-		end
-	end
-	end)
+	if inst.components.blinkstaff ~= nil then
+		inst:RemoveComponent("blinkstaff")
 	end
 	
 end
@@ -828,9 +834,7 @@ local function onunequip(inst, owner)
 		--owner:RemoveTag("phoenixblade") 
 		inst:RemoveTag("phoenix_axe")
 		
-    --[[if inst.components.spellcaster ~= nil then
-	inst:RemoveComponent("spellcaster")
-	end]]
+	RemoveFireSporeCaster(inst)
 	
 	 if inst.blood then 
         inst.blood:Remove()
@@ -847,12 +851,10 @@ if owner ~= nil then
 		if inst:HasTag("phoenix_axe") then
 		inst:RemoveTag("phoenix_axe")
 		end
-	--[[if inst.components.spellcaster ~= nil then
-	inst:RemoveComponent("spellcaster")
-	end]]
 		if inst.components.blinkstaff ~= nil then
 			inst:RemoveComponent("blinkstaff")
 		end
+	RemoveFireSporeCaster(inst)
 	if not inst.broken then
 
 	SetPhoenixAxeToolMode(inst, ACTIONS.CHOP, 2, true)
@@ -882,16 +884,9 @@ end
 local function on_boost(inst, data, owner)
 local owner = inst.components.inventoryitem.owner
 
-	
---[[local change_fx = SpawnPrefab("small_puff")
-        local puff = change_fx.entity:AddFollower()
-				puff:FollowSymbol( owner.GUID, "swap_object", 1, -150, 0.5 )]]
-				
 if owner ~= nil and inst.broken then
 	inst.boost = false 
-	--[[if inst.components.spellcaster ~= nil then
-	inst:RemoveComponent("spellcaster")
-	end]]
+	RemoveFireSporeCaster(inst)
 	if inst.components.blinkstaff ~= nil then
 		inst:RemoveComponent("blinkstaff")
 	end
@@ -909,11 +904,7 @@ end
 
 if owner ~= nil and not inst.boost and not inst.broken then
 	inst.boost = true
-	--[[if not inst.components.spellcaster then
-	inst:AddComponent("spellcaster")
-    inst.components.spellcaster:SetSpellFn(createlight)
-    inst.components.spellcaster.canuseonpoint = true
-	end]]
+	AddFireSporeCaster(inst)
 	SetPhoenixAxeToolMode(inst, ACTIONS.MINE, 2, true)
 
 	Upgradedamage(inst)
@@ -931,32 +922,9 @@ if owner ~= nil and not inst.boost and not inst.broken then
     
 boostFX(inst)
 
-	if not inst.components.blinkstaff and EquipUtils.HasSanityAtLeast(owner, 10) and not inst.broken then
-	inst:AddComponent("blinkstaff")
-	inst.components.blinkstaff:SetFX("sand_puff_large_front", "sand_puff_large_back")
-	inst.components.blinkstaff.onblinkfn = onblink
+	if inst.components.blinkstaff ~= nil then
+		inst:RemoveComponent("blinkstaff")
 	end
---[[elseif owner and inst.boost and not inst.broken then
-
-	inst.boost = false 	 
-	if inst.components.spellcaster ~= nil then
-	inst:RemoveComponent("spellcaster")
-	end
-	inst.components.tool:OnRemoveFromEntity()
-	inst.components.tool:SetAction(ACTIONS.CHOP)
-	Upgradedamage(inst)
-	inst.axe = true
-	inst.pick = false
-	inst:RemoveTag("phoenix_axe")
-	inst.components.weapon:SetRange(0)
-
- inst.SoundEmitter:PlaySound("dontstarve/common/fireAddFuel") 
-
-    owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixaxe", "phoenixaxe")
-    owner.AnimState:Show("ARM_carry") 
-    owner.AnimState:Hide("ARM_normal") 
-
-boostFX(inst)]]
 end
 end
 

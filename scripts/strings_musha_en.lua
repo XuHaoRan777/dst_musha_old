@@ -353,6 +353,7 @@ STRINGS.MUSHA_TALK_FORGE_OFF = "[Forge]-(OFF)"
 
 STRINGS.MUSHA_TALK_CANNOT1 = "Musha can't do it right now."
 STRINGS.MUSHA_TALK_CANNOT2 = "Musha can't do it right now.\n[Frost Tentacle]:Limited Summoned"
+STRINGS.MUSHA_TALK_CANNOT3 = "Musha can't do it right now.\n[Fire Wisp]:Limited Summoned"
 --Items
 STRINGS.MUSHA_TALK_FORGE_LUCKY = "[Forge] "
 STRINGS.MUSHA_ITEM_GROWPOINTS = "GP☆"

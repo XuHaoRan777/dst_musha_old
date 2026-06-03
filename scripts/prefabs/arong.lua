@@ -197,6 +197,14 @@ fns.ClearBellOwner = function(inst)
         return
     end
 
+    if inst.musha_migration_companion then
+        if inst.components.rideable ~= nil then
+            inst.components.rideable:SetShouldSave(false)
+        end
+        inst.persists = false
+        return
+    end
+
     fns.RemoveName(inst)
 
     local bell_leader = inst.components.follower:GetLeader()

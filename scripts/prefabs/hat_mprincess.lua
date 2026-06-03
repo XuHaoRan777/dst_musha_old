@@ -474,7 +474,7 @@ if data and data.attacker and math.random() < expchance and inst.level < 4010 th
             owner.AnimState:Hide("HEAD_HAIR")
 	inst.shield = false
 		if inst.consume then inst.consume:Cancel() inst.consume = nil end
-	    if inst.healowner then inst.healowner:Cancel() inst.healowner = nil end
+	    if inst.heal then inst.heal:Cancel() inst.heal = nil end
 		   
 inst:RemoveEventCallback("attacked", inst.expfn, owner)
 inst:RemoveEventCallback("newstate", stopusingshield, owner) 

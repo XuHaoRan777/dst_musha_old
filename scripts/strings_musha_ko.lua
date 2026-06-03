@@ -357,6 +357,7 @@ STRINGS.MUSHA_TALK_FORGE_OFF = "[대장간]-(끄기)"
 
 STRINGS.MUSHA_TALK_CANNOT1 = "뮤샤는 지금 할 수 없어.."
 STRINGS.MUSHA_TALK_CANNOT2 = "뮤샤는 지금은 할 수 없어.\n[서리 촉수]:소환 한계"
+STRINGS.MUSHA_TALK_CANNOT3 = "뮤샤는 지금은 할 수 없어.\n[불의 정령]:소환 한계"
 --Items
 STRINGS.MUSHA_TALK_FORGE_LUCKY = "[대장간 ]"
 STRINGS.MUSHA_ITEM_GROWPOINTS = "성장☆"

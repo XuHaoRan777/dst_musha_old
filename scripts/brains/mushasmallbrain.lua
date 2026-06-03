@@ -309,7 +309,19 @@ local function BattleCommand(inst, target)
     return inst.fightn and not inst.components.trader:IsTryingToTradeWithMe(target)
 end
 local function Peace(inst, target)
-    return inst.peace and not inst.components.trader:IsTryingToTradeWithMe(target)
+    if not inst.peace or inst.components.trader:IsTryingToTradeWithMe(target) then
+        return false
+    end
+
+    local leader = inst.components.follower ~= nil and inst.components.follower.leader or nil
+    local target_combat = target ~= nil and target.components ~= nil and target.components.combat or nil
+    local leader_combat = leader ~= nil and leader.components ~= nil and leader.components.combat or nil
+
+    return target_combat ~= nil
+        and (target_combat:TargetIs(inst)
+            or (leader ~= nil and target_combat:TargetIs(leader))
+            or target_combat:HasTarget()
+            or (leader_combat ~= nil and leader_combat:IsRecentTarget(target)))
 end
 local function Peace_check(inst)
 	if inst.peace then
@@ -382,6 +394,35 @@ local function GetHomePos(inst)
     local home = GetHome(inst)
     return home and home:GetPosition(GetReturnPos)
 end
+
+local function IsNormalFollowState(inst)
+    return inst.components ~= nil
+        and inst.components.follower ~= nil
+        and inst.components.follower.leader ~= nil
+        and not inst.fightn
+        and not inst.pick1
+        and not inst.working_food
+        and not inst.active_hunt
+        and not inst.peace
+        and not inst.defense
+        and not inst.crazyness
+end
+
+local function ClearCombatAvoidance(self)
+    if self.runawayfrom ~= nil then
+        self.inst:PushEvent("critter_avoidcombat", {avoid=false})
+        self.runawayfrom = nil
+    end
+end
+
+local function ShouldRunCombatAvoidance(self)
+    if IsNormalFollowState(self.inst) then
+        ClearCombatAvoidance(self)
+        return false
+    end
+
+    return true
+end
 -------------------------------------------------------------------------------
 --  Combat Avoidance
 local COMBAT_TOO_CLOSE_DIST = 5                 -- distance for find enitities check
@@ -430,6 +471,10 @@ end
 
 local function CombatAvoidanceFindEntityCheck(self)
     return function(ent)
+            if not ShouldRunCombatAvoidance(self) then
+                return false
+            end
+
             if _avoidtargetfn(self, ent) then
                 self.inst:PushEvent("critter_avoidcombat", {avoid=true})
                 self.runawayfrom = ent
@@ -440,6 +485,10 @@ local function CombatAvoidanceFindEntityCheck(self)
 end
 
 local function ValidateCombatAvoidance(self)
+    if not ShouldRunCombatAvoidance(self) then
+        return false
+    end
+
     if self.runawayfrom == nil then
         return false
     end
@@ -486,7 +535,7 @@ function mushasmallbrain:OnStart()
 					--ChaseAndAttack(self.inst, 10,14),
 					
 					PriorityNode{
-                    RunAway(self.inst, {tags={"_combat", "_health"}, notags={"wall", "INLIMBO"}, fn=CombatAvoidanceFindEntityCheck(self)}, COMBAT_TOO_CLOSE_DIST, COMBAT_SAFE_TO_WATCH_FROM_DIST),
+                    RunAway(self.inst, {tags={"_combat", "_health"}, notags={"wall", "INLIMBO"}, fn=CombatAvoidanceFindEntityCheck(self)}, COMBAT_TOO_CLOSE_DIST, COMBAT_SAFE_TO_WATCH_FROM_DIST, function() return ShouldRunCombatAvoidance(self) end),
                     WhileNode( function() return ValidateCombatAvoidance(self) end, "Is Near Combat",
                         FaceEntity(self.inst, GetOwner, KeepFaceTargetFn)),
 			                },
