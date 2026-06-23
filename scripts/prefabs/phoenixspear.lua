@@ -13,10 +13,25 @@ local assets=
 }
 ---------------------------
 
+local PLANAR_DAMAGE_LEVEL = 3000
+local PLANAR_DAMAGE_VALUE = 35
+
+local function RefreshPlanarDamage(inst)
+if inst.level ~= nil and inst.level >= PLANAR_DAMAGE_LEVEL and not inst.broken then
+	if inst.components.planardamage == nil then
+		inst:AddComponent("planardamage")
+	end
+	inst.components.planardamage:SetBaseDamage(PLANAR_DAMAGE_VALUE)
+elseif inst.components.planardamage ~= nil then
+	inst:RemoveComponent("planardamage")
+end
+end
+
 local function levelexp(inst,data)
 
 	local max_exp = 4100
 	local exp = math.min(inst.level, max_exp)
+	RefreshPlanarDamage(inst)
 
 if inst.level >= 4005 then
 --inst.components.talker:Say("-[Phoenix Blade]-\n[Grow Points]".. (inst.level))
@@ -124,6 +139,7 @@ end
 local function OnDurability(inst, data)
 inst.broken = true
 DisablePhoenixSpearOar(inst)
+RefreshPlanarDamage(inst)
     inst.components.weapon:SetDamage(1)
 	inst.components.talker:Say(STRINGS.MUSHA_WEAPON_BROKEN.." \n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (1)")
 end
@@ -415,6 +431,7 @@ end
 end	
 
 end
+RefreshPlanarDamage(inst)
 end
 -------- --------
 -------- --------
@@ -544,6 +561,7 @@ local damagedur4 = 1
 
 if math.random() < expchance and not inst.broken and inst.level < 4000 then
 	inst.level = inst.level + 1
+	RefreshPlanarDamage(inst)
 	inst.components.talker:Say(STRINGS.MUSHA_WEAPON..":GP+1")
 	--levelexp(inst)
 end

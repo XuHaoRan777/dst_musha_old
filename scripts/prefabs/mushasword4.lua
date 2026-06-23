@@ -11,6 +11,20 @@ local assets=
  
 }
 ---------------------------
+local PLANAR_DAMAGE_LEVEL = 3000
+local PLANAR_DAMAGE_VALUE = 35
+
+local function RefreshPlanarDamage(inst)
+if inst.level ~= nil and inst.level >= PLANAR_DAMAGE_LEVEL and not inst.broken then
+	if inst.components.planardamage == nil then
+		inst:AddComponent("planardamage")
+	end
+	inst.components.planardamage:SetBaseDamage(PLANAR_DAMAGE_VALUE)
+elseif inst.components.planardamage ~= nil then
+	inst:RemoveComponent("planardamage")
+end
+end
+
 local function boostFX(inst)
 local owner = inst.components.inventoryitem.owner
 	if owner ~= nil then
@@ -24,6 +38,7 @@ local function levelexp(inst,data)
 
 	local max_exp = 4100
 	local exp = math.min(inst.level, max_exp)
+	RefreshPlanarDamage(inst)
 
 if inst.level >= 4005 then
 --inst.components.talker:Say(STRINGS.MUSHA_ITEM_BLADE_A.."[]-\n[Grow Points]".. (inst.level))
@@ -206,6 +221,7 @@ RemoveFireSporeCaster(inst)
 if inst.components.blinkstaff ~= nil then
 	inst:RemoveComponent("blinkstaff")
 end
+RefreshPlanarDamage(inst)
     inst.components.weapon:SetDamage(1)
 	inst.components.talker:Say(STRINGS.MUSHA_WEAPON_BROKEN.." \n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (1)")
 end
@@ -413,6 +429,7 @@ end
 
 
 end
+RefreshPlanarDamage(inst)
 end
 
 
@@ -522,6 +539,59 @@ local function OnLoad(inst, data)
     Upgradedamage(inst)
 end
 
+local function ClearPoisonState(inst, target, poison)
+	if target ~= nil and target:IsValid() then
+		if target.components.locomotor ~= nil then
+			target.components.locomotor.groundspeedmultiplier = 1
+		end
+		target:RemoveTag("slow_poison")
+	end
+	if poison ~= nil and poison:IsValid() then
+		poison:Remove()
+	end
+	if inst.blood ~= nil and inst.blood:IsValid() then
+		inst.blood:Remove()
+	end
+	inst.blood = nil
+end
+
+local function StartPoisonTask(inst, attacker, target, poison, damage)
+	local poison_task = nil
+	poison_task = TheWorld:DoPeriodicTask(3, function()
+		if target == nil
+			or not target:IsValid()
+			or not target:HasTag("slow_poison")
+			or target.components.health == nil
+			or target.components.health:IsDead() then
+			if poison_task ~= nil then
+				poison_task:Cancel()
+				poison_task = nil
+			end
+			return
+		end
+		if attacker ~= nil and attacker:IsValid() and attacker.components.health ~= nil then
+			attacker.components.health:DoDelta(damage)
+		end
+		if target.components.combat ~= nil then
+			if target:HasTag("epic") then
+				target.components.health:DoDelta(-damage)
+			else
+				target.components.combat:GetAttacked(inst, damage)
+			end
+		end
+		if target.SoundEmitter ~= nil and damage > 4 then
+			target.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
+		end
+	end)
+	TheWorld:DoTaskInTime(15, function()
+		if poison_task ~= nil then
+			poison_task:Cancel()
+			poison_task = nil
+		end
+		ClearPoisonState(inst, target, poison)
+	end)
+end
+
 
 local function onattack_FRAME(inst, attacker, target)
 local owner = inst.components.inventoryitem.owner
@@ -542,6 +612,7 @@ local damagedur4 = 1
 
 if math.random() < expchance and not inst.broken and inst.level < 4000 then
 	inst.level = inst.level + 1
+	RefreshPlanarDamage(inst)
 	inst.components.talker:Say(STRINGS.MUSHA_WEAPON..":GP+1")
 	--levelexp(inst)
 end
@@ -643,27 +714,7 @@ local pos = Vector3(target.Transform:GetWorldPosition())
 			follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -10, 0.5 )
 			end
 		end
-		TheWorld:DoPeriodicTask(3, function() 
-		if target:HasTag("slow_poison") and not target.components.health:IsDead() then 
-				attacker.components.health:DoDelta(4)
-			if target:HasTag("slow_poison") and target.components.combat and not target.components.health:IsDead() and not target:HasTag("epic") then			
-				target.components.combat:GetAttacked(inst, 4)
-			elseif target:HasTag("slow_poison") and target.components.combat and not target.components.health:IsDead() and target:HasTag("epic") then	
-				target.components.health:DoDelta(-4)
-			end
-
-		elseif poison and target.components.health:IsDead() then
-				poison:Remove()
-		end	end)
-		
-		
-		TheWorld:DoTaskInTime(15, function() 
-		if target ~= nil and target.components.locomotor and poison then
-		target.components.locomotor.groundspeedmultiplier = 1 target:RemoveTag("slow_poison") poison:Remove() 
-		end 
-		if inst.blood then 
-		inst.blood:Remove() inst.blood = nil 
-		end end)
+		StartPoisonTask(inst, attacker, target, poison, 4)
 		
 	elseif math.random() < poisone_2 and inst.boost and inst.level >=250 and inst.level <1400 and not target:HasTag("slow_poison")  then
         
@@ -684,25 +735,7 @@ local pos = Vector3(target.Transform:GetWorldPosition())
 			follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -10, 0.5 )
 			end
 		end
-		TheWorld:DoPeriodicTask(3, function() 
-		if target:HasTag("slow_poison") and not target.components.health:IsDead() then 
-				attacker.components.health:DoDelta(7)
-			if target:HasTag("slow_poison") and target.components.combat and not target.components.health:IsDead() and not target:HasTag("epic") then			
-				target.components.combat:GetAttacked(inst, 7)
-			elseif target:HasTag("slow_poison") and target.components.combat and not target.components.health:IsDead() and target:HasTag("epic") then	
-				target.components.health:DoDelta(-7)
-			end
-				target.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
-		elseif poison and target.components.health:IsDead() then
-				poison:Remove()
-		end	end)		
-		TheWorld:DoTaskInTime(15, function() 
-		if target ~= nil and target.components.locomotor and poison then
-		target.components.locomotor.groundspeedmultiplier = 1 target:RemoveTag("slow_poison") poison:Remove() 
-		end		
-		if inst.blood then 
-		inst.blood:Remove() inst.blood = nil 
-		end end)
+		StartPoisonTask(inst, attacker, target, poison, 7)
 	
 	elseif math.random() < poisone_3 and inst.boost and inst.level >=1400 and not target:HasTag("slow_poison") then
         
@@ -723,25 +756,7 @@ local pos = Vector3(target.Transform:GetWorldPosition())
 			follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -10, 0.5 )
 			end
 		end
-		TheWorld:DoPeriodicTask(3, function() 
-		if target:HasTag("slow_poison") and not target.components.health:IsDead() then 
-				attacker.components.health:DoDelta(9)
-			if target:HasTag("slow_poison") and target.components.combat and not target.components.health:IsDead() and not target:HasTag("epic") then			
-				target.components.combat:GetAttacked(inst, 9)
-			elseif target:HasTag("slow_poison") and target.components.combat and not target.components.health:IsDead() and target:HasTag("epic") then	
-				target.components.health:DoDelta(-9)
-			end
-				target.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
-		elseif poison and target.components.health:IsDead() then
-				poison:Remove()
-		end	end)
-		TheWorld:DoTaskInTime(15, function() 
-		if target ~= nil and target.components.locomotor and poison then
-		target.components.locomotor.groundspeedmultiplier = 1 target:RemoveTag("slow_poison") poison:Remove() 
-		end
-		if inst.blood then 
-		inst.blood:Remove() inst.blood = nil 
-		end end)
+		StartPoisonTask(inst, attacker, target, poison, 9)
 		end
 end		
 		

@@ -47,10 +47,12 @@ end
 
 function FrostArmor.ConsumeFuel(inst)
     if inst.components ~= nil and inst.components.fueled ~= nil and not inst.broken and inst.shield then
-        inst.components.fueled:DoDelta(-20000)
+        inst.components.fueled:DoDelta(-5)
+        EquipUtils.SyncArmorConditionFromFuel(inst)
     end
     if inst.components ~= nil and inst.components.fueled ~= nil and inst.broken and inst.shield then
         inst.components.fueled:DoDelta(0)
+        EquipUtils.SyncArmorConditionFromFuel(inst)
     end
 end
 
@@ -60,7 +62,7 @@ function FrostArmor.StartShield(inst, owner)
             inst.components.talker:Say(STRINGS.MUSHA_ITEM_SHIELD .. "\n" .. STRINGS.MUSHA_ARMOR .. "(100)\n" .. STRINGS.MUSHA_ITEM_COOL)
         end
         if inst.components.armor ~= nil then
-            inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 1)
+            EquipUtils.InitArmorFromFuel(inst, 7700, 1)
         end
         if inst.consume then
             inst.consume:Cancel()
@@ -72,7 +74,7 @@ function FrostArmor.StartShield(inst, owner)
             inst.components.talker:Say(STRINGS.MUSHA_ITEM_SHIELD_BROKEN .. "\n" .. STRINGS.MUSHA_ARMOR .. "(0)")
         end
         if inst.components.armor ~= nil then
-            inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0)
+            EquipUtils.InitArmorFromFuel(inst, 7700, 0)
         end
         if inst.consume then
             inst.consume:Cancel()

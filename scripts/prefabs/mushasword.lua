@@ -16,6 +16,20 @@ local assets=
 	Asset("ANIM", "anim/swap_mushasword2_boost.zip"),
 	Asset("ANIM", "anim/swap_mushasword3_boost.zip"),
 }
+local PLANAR_DAMAGE_LEVEL = 3000
+local PLANAR_DAMAGE_VALUE = 30
+
+local function RefreshPlanarDamage(inst)
+if inst.level ~= nil and inst.level >= PLANAR_DAMAGE_LEVEL and not inst.broken then
+	if inst.components.planardamage == nil then
+		inst:AddComponent("planardamage")
+	end
+	inst.components.planardamage:SetBaseDamage(PLANAR_DAMAGE_VALUE)
+elseif inst.components.planardamage ~= nil then
+	inst:RemoveComponent("planardamage")
+end
+end
+
 local function boostFX(inst)
 local owner = inst.components.inventoryitem.owner
 	if owner ~= nil and inst.boost then
@@ -29,6 +43,7 @@ local function levelexp(inst,data)
 
 	local max_exp = 4100
 	local exp = math.min(inst.level, max_exp)
+	RefreshPlanarDamage(inst)
 
 if inst.level >= 4005 then
 
@@ -236,6 +251,7 @@ elseif inst.level >=4000 then
 	inst.components.talker:Say("-"..STRINGS.MUSHA_WEAPON_SWORD_FIRE.." (Max30)\n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (64)\n"..STRINGS.MUSHA_WEAPON_FIRE.."(15D/20C)")
 end
 end
+RefreshPlanarDamage(inst)
 end
 
 
@@ -369,9 +385,10 @@ local damagedur4 = 1
 
 if math.random() < expchance and not inst.broken and inst.level <= 4000 then
 	inst.level = inst.level + 1
-		inst.components.talker:Say(STRINGS.MUSHA_WEAPON..":GP+1")
+	RefreshPlanarDamage(inst)
+	inst.components.talker:Say(STRINGS.MUSHA_WEAPON..":GP+1")
 	--levelexp(inst)
-	end
+end
     if target and not inst.broken and math.random() < damagedur1 then
 inst.components.fueled:DoDelta(-150000)
     elseif target and not inst.broken and math.random() < damagedur2 then

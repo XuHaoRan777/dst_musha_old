@@ -341,7 +341,48 @@ local function OnLoad(inst, data)
     Upgradedamage(inst)
 end
 
+local function ClearPoisonState(target, poison)
+	if target ~= nil and target:IsValid() then
+		if target.components.locomotor ~= nil then
+			target.components.locomotor.groundspeedmultiplier = 1
+		end
+		target:RemoveTag("slow_poison")
+	end
+	if poison ~= nil and poison:IsValid() then
+		poison:Remove()
+	end
+end
 
+local function StartPoisonTask(inst, target, poison, damage, duration)
+	local poison_task = nil
+	poison_task = TheWorld:DoPeriodicTask(3, function()
+		if target == nil
+			or not target:IsValid()
+			or not target:HasTag("slow_poison")
+			or target.components.health == nil
+			or target.components.health:IsDead() then
+			if poison_task ~= nil then
+				poison_task:Cancel()
+				poison_task = nil
+			end
+			return
+		end
+		if target.components.combat ~= nil then
+			if target:HasTag("epic") then
+				target.components.health:DoDelta(-damage)
+			else
+				target.components.combat:GetAttacked(inst, damage)
+			end
+		end
+	end)
+	TheWorld:DoTaskInTime(duration, function()
+		if poison_task ~= nil then
+			poison_task:Cancel()
+			poison_task = nil
+		end
+		ClearPoisonState(target, poison)
+	end)
+end
 
 
 
@@ -420,15 +461,7 @@ if target ~= nil and not target:HasTag("smashable") and not target:HasTag("compa
 			follower:FollowSymbol(target.GUID, "body", 0, -10, 0.5 )
 			end
 		end
-		TheWorld:DoPeriodicTask(3, function() 
-		if target:HasTag("slow_poison") and target.components.combat and not target.components.health:IsDead() and not target:HasTag("epic") then
-				--target.components.health:DoDelta(-4)
-				target.components.combat:GetAttacked(inst, 4)
-		elseif target:HasTag("slow_poison") and target.components.combat and not target.components.health:IsDead() and target:HasTag("epic") then			
-				target.components.health:DoDelta(-4)
-			end
-			end)
-		TheWorld:DoTaskInTime(9, function() target.components.locomotor.groundspeedmultiplier = 1 target:RemoveTag("slow_poison") poison:Remove() end)
+		StartPoisonTask(inst, target, poison, 4, 9)
 		
 	elseif math.random() < poisone_2 and not inst.boost and inst.level >=250 and inst.level <1400 and not target:HasTag("slow_poison") then
         
@@ -444,15 +477,7 @@ if target ~= nil and not target:HasTag("smashable") and not target:HasTag("compa
 			follower:FollowSymbol(target.GUID, "body", 0, -10, 0.5 )
 			end
 		end
-		TheWorld:DoPeriodicTask(3, function() 
-		if target:HasTag("slow_poison") and target.components.combat and not target.components.health:IsDead() and not target:HasTag("epic") then
-				--target.components.health:DoDelta(-8)
-				target.components.combat:GetAttacked(inst, 8)
-		elseif target:HasTag("slow_poison") and target.components.combat and not target.components.health:IsDead() and target:HasTag("epic") then			
-				target.components.health:DoDelta(-8)
-			end
-			end)		
-		TheWorld:DoTaskInTime(12, function() target.components.locomotor.groundspeedmultiplier = 1 target:RemoveTag("slow_poison") poison:Remove() end)
+		StartPoisonTask(inst, target, poison, 8, 12)
 	
 	elseif math.random() < poisone_3 and not inst.boost and inst.level >=1400 and not target:HasTag("slow_poison") then
         
@@ -468,15 +493,7 @@ if target ~= nil and not target:HasTag("smashable") and not target:HasTag("compa
 			follower:FollowSymbol(target.GUID, "body", 0, -10, 0.5 )
 			end
 		end
-		TheWorld:DoPeriodicTask(3, function() 
-		if target:HasTag("slow_poison") and target.components.combat and not target.components.health:IsDead() and not target:HasTag("epic") then
-				--target.components.health:DoDelta(-12)
-				target.components.combat:GetAttacked(inst, 12)
-		elseif target:HasTag("slow_poison") and target.components.combat and not target.components.health:IsDead() and target:HasTag("epic") then			
-				target.components.health:DoDelta(-12)
-			end
-			end)
-		TheWorld:DoTaskInTime(15, function() target.components.locomotor.groundspeedmultiplier = 1 target:RemoveTag("slow_poison") poison:Remove() end)
+		StartPoisonTask(inst, target, poison, 12, 15)
 		end
 	
 	elseif target.components.health and not target:HasTag("shadowcreature") and not target:HasTag("structure") and not target:HasTag("stalkerminion") and not target:HasTag("smashable") and not target:HasTag("alignwall") and not target:HasTag("shadowminion") and target.components.health and not target.components.health:IsDead() and inst.boost then

@@ -123,100 +123,100 @@ inst.broken = false
 end
 if inst.broken then
 inst.components.fueled:StopConsuming()        
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0)
+EquipUtils.InitArmorFromFuel(inst, 6417, 0)
 inst.components.talker:Say(STRINGS.MUSHA_HAT_BROKEN_C.."\n"..STRINGS.MUSHA_ARMOR.." (0)\n"..STRINGS.MUSHA_ITEM_DUR.." (0)")
   
 elseif not inst.broken and not inst.shield then
 
  if inst.level >=0 and inst.level <10 then
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.11)
+EquipUtils.InitArmorFromFuel(inst, 6417, 0.11)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV1)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(11)")
   elseif inst.level >=10 and inst.level <30 then
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.12)
+EquipUtils.InitArmorFromFuel(inst, 6417, 0.12)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV2)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(12)")
  elseif inst.level >=30 and inst.level <50 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.13)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.13)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV3)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(13)")
  elseif inst.level >=50 and inst.level <70 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.14)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.14)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV4)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(14)")
   elseif inst.level >=70 and inst.level <90 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.15)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.15)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV5)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(15)")
  elseif inst.level >=90 and inst.level <120 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.16)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.16)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV6)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(16)")
  elseif inst.level >=120 and inst.level <150 then
-  inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.17)
+  EquipUtils.InitArmorFromFuel(inst, 6417, 0.17)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV7)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(17)")
 elseif inst.level >=150 and inst.level <180 then
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.18)
+EquipUtils.InitArmorFromFuel(inst, 6417, 0.18)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV8)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(18)")
 elseif inst.level >=180 and inst.level <210 then
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.19)
+EquipUtils.InitArmorFromFuel(inst, 6417, 0.19)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV9)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(19)")
 elseif inst.level >=210 and inst.level <250 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.20)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.20)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV10)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(20)")
 elseif inst.level >=250 and inst.level <350 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.21)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.21)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV11)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(21)")
 elseif inst.level >=350 and inst.level <450 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.22)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.22)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV12)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(22)")
 elseif inst.level >=450 and inst.level <550 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.23)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.23)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV13)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(23)")
 elseif inst.level >=550 and inst.level <650 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.24)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.24)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV14)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(24)")
 elseif inst.level >=650 and inst.level <750 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.25)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.25)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV15)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(25)")
 elseif inst.level >=750 and inst.level <850 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.26)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.26)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV16)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(26)")
 elseif inst.level >=850 and inst.level <950 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.27)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.27)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV17)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(27)")
 elseif inst.level >=950 and inst.level <1050 then
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.28)
+EquipUtils.InitArmorFromFuel(inst, 6417, 0.28)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV18)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(28)")
 elseif inst.level >=1050 and inst.level <1200 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.29)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.29)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_PRINCESS.."(LV19)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Tiny)\n"..STRINGS.MUSHA_ARMOR.."(29)")
 elseif inst.level >=1200 and inst.level <1400 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.30)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.30)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_QUEEN.."(LV20)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Small)\n"..STRINGS.MUSHA_ITEM_REGEN.."(slow)\n"..STRINGS.MUSHA_ARMOR.."(30)")
 elseif inst.level >=1400 and inst.level <1600 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.32)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.32)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_QUEEN.."(LV21)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Small)\n"..STRINGS.MUSHA_ITEM_REGEN.."(slow)\n"..STRINGS.MUSHA_ARMOR.."(32)")
 elseif inst.level >=1600 and inst.level <1800 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.34)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.34)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_QUEEN.."(LV22)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Small)\n"..STRINGS.MUSHA_ITEM_REGEN.."(slow)\n"..STRINGS.MUSHA_ARMOR.."(34)")
 elseif inst.level >=1800 and inst.level <2000 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.36)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.36)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_QUEEN.."(LV23)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Small)\n"..STRINGS.MUSHA_ITEM_REGEN.."(slow)\n"..STRINGS.MUSHA_ARMOR.."(36)")
 elseif inst.level >=2000 and inst.level <2200 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.38)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.38)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_QUEEN.."(LV24)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Small)\n"..STRINGS.MUSHA_ITEM_REGEN.."(slow)\n"..STRINGS.MUSHA_ARMOR.."(38)")
 elseif inst.level >=2200 and inst.level <2400 then
- inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.40)
+ EquipUtils.InitArmorFromFuel(inst, 6417, 0.40)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_QUEEN.."(LV25)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Small)\n"..STRINGS.MUSHA_ITEM_REGEN.."(slow)\n"..STRINGS.MUSHA_ARMOR.."(40)")
 elseif inst.level >=2400 and inst.level <2600 then
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.42)
+EquipUtils.InitArmorFromFuel(inst, 6417, 0.42)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_QUEEN.."(LV26)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Small)\n"..STRINGS.MUSHA_ITEM_REGEN.."(slow)\n"..STRINGS.MUSHA_ARMOR.."(42)")
 elseif inst.level >=2600 and inst.level <2800 then
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.44)
+EquipUtils.InitArmorFromFuel(inst, 6417, 0.44)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_QUEEN.."(LV27)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Small)\n"..STRINGS.MUSHA_ITEM_REGEN.."(slow)\n"..STRINGS.MUSHA_ARMOR.."(44)")
 elseif inst.level >=2800 and inst.level <3000 then
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.46)
+EquipUtils.InitArmorFromFuel(inst, 6417, 0.46)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_QUEEN.."(LV28)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Small)\n"..STRINGS.MUSHA_ITEM_REGEN.."(slow)\n"..STRINGS.MUSHA_ARMOR.."(46)")
 elseif inst.level >=3000 and inst.level <4000 then
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.48)
+EquipUtils.InitArmorFromFuel(inst, 6417, 0.48)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_QUEEN.."(LV29)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Small)\n"..STRINGS.MUSHA_ITEM_REGEN.."(slow)\n"..STRINGS.MUSHA_ARMOR.."(48)")
 elseif inst.level >=4000 then
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.50)
+EquipUtils.InitArmorFromFuel(inst, 6417, 0.50)
 inst.components.talker:Say("["..STRINGS.MUSHA_HAT_QUEEN.."(LV30)]\n"..STRINGS.MUSHA_ITEM_SANITY_REGEN.."(Small)\n"..STRINGS.MUSHA_ITEM_REGEN.."(slow)\n"..STRINGS.MUSHA_ARMOR.."(50)")
 end
 end
@@ -256,6 +256,31 @@ inst.active_forge = false
 end end end 
 end
 -------- --------
+local function GetMushaArmorDurabilityLoss(inst, data)
+local damage = data ~= nil and data.damage or nil
+local attacker = data ~= nil and data.attacker or nil
+if attacker ~= nil and attacker.components ~= nil and attacker.components.combat ~= nil and attacker.components.combat.defaultdamage ~= nil then
+    damage = attacker.components.combat.defaultdamage
+end
+if damage == nil or damage <= 0 or inst.components.armor == nil then
+    return 0
+end
+local absorb = inst.components.armor.absorb_percent or 0
+if absorb <= 0 then
+    return 0
+end
+return math.max(1, math.ceil(damage * absorb))
+end
+
+local function ApplyMushaArmorDurabilityLoss(inst, data)
+if inst.components.fueled ~= nil and not inst.broken then
+    local loss = GetMushaArmorDurabilityLoss(inst, data)
+    if loss > 0 then
+        inst.components.fueled:DoDelta(-loss)
+        EquipUtils.SyncArmorConditionFromFuel(inst)
+    end
+end
+end
 local function TakeItem_effect(inst)
 local owner = inst.components.inventoryitem.owner
 if owner ~= nil then
@@ -269,7 +294,8 @@ local expchance0 = 1
 local expchance1 = 0.3
 local expchance2 = 0.2
 local expchance3 = 0.12
-	inst.components.fueled:DoDelta(5000000)
+	inst.components.fueled:DoDelta(1283)
+	EquipUtils.SyncArmorConditionFromFuel(inst)
 	TakeItem_effect(inst)
 inst.broken = false      
 UpgradeArmor(inst)
@@ -334,22 +360,25 @@ end
 ---------------------------------------shield on
 local function consume(inst, owner)
 if not inst.broken and inst.shield then
-inst.components.fueled:DoDelta(-20000)
+inst.components.fueled:DoDelta(-5)
+EquipUtils.SyncArmorConditionFromFuel(inst)
 end
 if inst.broken and inst.shield then
 inst.components.fueled:DoDelta(0)
+EquipUtils.SyncArmorConditionFromFuel(inst)
 end
 end
 
 local function on_shield(inst, owner)
 if inst.shield and not inst.broken then
 inst.components.talker:Say(STRINGS.MUSHA_ITEM_SHIELD.."\n"..STRINGS.MUSHA_ARMOR.."(100)")
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 1)
+EquipUtils.InitArmorFromFuel(inst, 6417, 1)
+    if inst.consume then inst.consume:Cancel() inst.consume = nil end
     inst.consume = inst:DoPeriodicTask(1, function() consume(inst, owner) end)
 	
 	elseif inst.shield and inst.broken then
 inst.components.talker:Say(STRINGS.MUSHA_ITEM_SHIELD_BROKEN.."\n"..STRINGS.MUSHA_ARMOR.."(0)")
-inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0)
+EquipUtils.InitArmorFromFuel(inst, 6417, 0)
       if inst.consume then inst.consume:Cancel() inst.consume = nil end
 end end
 
@@ -378,7 +407,7 @@ inst.healing1 = false
 		owner:DoTaskInTime(0.5, function()  owner.components.inventory:DropItem(inst) end)
 	end
 	   UpgradeArmor(inst)
-	   	inst.components.fueled:StartConsuming() 
+inst.components.fueled:StopConsuming()
      EquipUtils.ApplyEquipSymbol(owner, inst, "swap_hat", "hat_mprincess", "swap_hat")
      owner.AnimState:Show("HAT")
        owner.AnimState:Show("HAT_HAIR")
@@ -405,49 +434,7 @@ local damagedur2 = 0.5
 local damagedur3 = 0.7
 local damagedur4 = 1
 if not inst.shield then
-if data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 10 then
-inst.components.fueled:DoDelta(-50000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 10 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 20 then
-inst.components.fueled:DoDelta(-80000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 20 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 30 then
-inst.components.fueled:DoDelta(-110000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 30 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 40 then
-inst.components.fueled:DoDelta(-140000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 40 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 50 then
-inst.components.fueled:DoDelta(-170000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 50 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 60 then
-inst.components.fueled:DoDelta(-300000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 60 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 70 then
-inst.components.fueled:DoDelta(-330000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 70 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 60 then
-inst.components.fueled:DoDelta(-360000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 70 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 80 then
-inst.components.fueled:DoDelta(-390000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 80 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 90 then
-inst.components.fueled:DoDelta(-450000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 90 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 100 then
-inst.components.fueled:DoDelta(-600000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 100 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 100 then
-inst.components.fueled:DoDelta(-850000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 100 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 150 then
-inst.components.fueled:DoDelta(-1000000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 150 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 200 then
-inst.components.fueled:DoDelta(-1400000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 200 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 250 then
-inst.components.fueled:DoDelta(-1800000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 250 and data.attacker.components.combat and data.attacker.components.combat.defaultdamage <= 300 then
-inst.components.fueled:DoDelta(-2600000)
-elseif data and data.attacker and data.attacker.components.combat and data.attacker.components.combat.defaultdamage > 300 then
-inst.components.fueled:DoDelta(-3000000)
-end
-
-if data and data.attacker and math.random() < damagedur1 then
-inst.components.fueled:DoDelta(-50000)
-elseif data and data.attacker and math.random() < damagedur2 then
-inst.components.fueled:DoDelta(-30000)
-elseif data and data.attacker and math.random() < damagedur3 then
-inst.components.fueled:DoDelta(-10000)
-end
+ApplyMushaArmorDurabilityLoss(inst, data)
 
 if data and data.attacker and math.random() < expchance and inst.level < 4010 then
 	inst.level = inst.level + 1
@@ -481,6 +468,9 @@ inst:RemoveEventCallback("newstate", stopusingshield, owner)
     end
  
  local function onuseshield(inst)
+ if inst.shield then
+	return
+ end
  if not inst.broken then
 	inst.shield = true
 	on_shield(inst)
@@ -547,7 +537,7 @@ local function fn()
     inst.components.inventoryitem.atlasname = "images/inventoryimages/hat_mprincess.xml"
     inst.components.inventoryitem.foleysound = "dontstarve/movement/foley/bushhat"
     inst:AddComponent("armor")
-	inst.components.armor:InitCondition(99999999999999999999999999999999999999999999999999, 0.11)
+	EquipUtils.InitArmorFromFuel(inst, 6417, 0.11)
 	   inst:AddComponent("waterproofer")
     inst.components.waterproofer:SetEffectiveness(0)
     inst:AddComponent("equippable")
@@ -563,11 +553,11 @@ local function fn()
 
         inst:AddComponent("fueled")
        inst.components.fueled.fueltype = "CHEMICAL"
-        inst.components.fueled:InitializeFuelLevel(25000000)
+        inst.components.fueled:InitializeFuelLevel(6417)
        inst.components.fueled:SetDepletedFn(OnDurability)
         inst.components.fueled.ontakefuelfn = TakeItem
         inst.components.fueled.accepting = true
-inst.components.fueled:StartConsuming()        
+inst.components.fueled:StopConsuming()
 ----------resurrect
     inst:AddComponent("hauntable")
     inst.components.hauntable:SetHauntValue(TUNING.HAUNT_INSTANT_REZ)

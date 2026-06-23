@@ -5509,6 +5509,167 @@ local function onbecameghost(inst)
     end
 end
 
+local function SafeRemoveCombatTargetCallback(ent, event, fn, target)
+	if ent ~= nil and fn ~= nil and ent.RemoveEventCallback ~= nil then
+		pcall(ent.RemoveEventCallback, ent, event, fn, target)
+	end
+end
+
+local function GetCombatField(combat, name)
+	local fields = rawget(combat, "_")
+	local field = fields ~= nil and fields[name] or nil
+	if field ~= nil then
+		return field[1]
+	end
+	return rawget(combat, name)
+end
+
+local function SetCombatField(combat, name, value)
+	local fields = rawget(combat, "_")
+	local field = fields ~= nil and fields[name] or nil
+	if field ~= nil then
+		field[1] = value
+	else
+		rawset(combat, name, value)
+	end
+end
+
+local MUSHA_MIGRATION_COMBAT_EVENTS =
+{
+	"onremove",
+	"enterlimbo",
+	"transfercombattarget",
+	"leaderchanged",
+	"death",
+	"knockedout",
+	"attacked",
+}
+
+local function ClearCombatTargetingMusha(inst, ent)
+	if ent == nil or ent == inst or ent.components == nil then
+		return
+	end
+
+	local combat = ent.components.combat
+	if combat == nil then
+		return
+	end
+
+	local target = GetCombatField(combat, "target")
+	local lastattacker = GetCombatField(combat, "lastattacker")
+	local lasttarget = GetCombatField(combat, "lasttarget")
+	local lasttargetGUID = GetCombatField(combat, "lasttargetGUID")
+	local targets_musha = target == inst
+		or lastattacker == inst
+		or lasttarget == inst
+		or lasttargetGUID == inst.GUID
+
+	if not targets_musha then
+		return
+	end
+
+	if combat.losetargetcallback ~= nil then
+		SafeRemoveCombatTargetCallback(ent, "onremove", combat.losetargetcallback, inst)
+		SafeRemoveCombatTargetCallback(ent, "enterlimbo", combat.losetargetcallback, inst)
+		SafeRemoveCombatTargetCallback(ent, "death", combat.losetargetcallback, inst)
+		SafeRemoveCombatTargetCallback(ent, "knockedout", combat.losetargetcallback, inst)
+	end
+	if combat.transfertargetcallback ~= nil then
+		SafeRemoveCombatTargetCallback(ent, "transfercombattarget", combat.transfertargetcallback, inst)
+		SafeRemoveCombatTargetCallback(ent, "attacked", combat.transfertargetcallback, inst)
+	end
+	if combat.allycheckcallback ~= nil then
+		SafeRemoveCombatTargetCallback(ent, "leaderchanged", combat.allycheckcallback, inst)
+	end
+
+	if target == inst and ent.StopUpdatingComponent ~= nil then
+		pcall(ent.StopUpdatingComponent, ent, combat)
+	end
+
+	if target == inst then
+		SetCombatField(combat, "target", nil)
+	end
+	if lastattacker == inst then
+		SetCombatField(combat, "lastattacker", nil)
+	end
+	if lasttarget == inst then
+		SetCombatField(combat, "lasttarget", nil)
+	end
+	if lasttargetGUID == inst.GUID then
+		SetCombatField(combat, "lasttargetGUID", nil)
+	end
+end
+
+local function ClearCombatListenersTargetingMusha(inst)
+	if inst == nil or inst.event_listeners == nil then
+		return
+	end
+
+	local listeners_to_clear = nil
+	for _, event in ipairs(MUSHA_MIGRATION_COMBAT_EVENTS) do
+		local listeners = inst.event_listeners[event]
+		if listeners ~= nil then
+			for ent in pairs(listeners) do
+				if ent ~= nil and ent ~= inst and ent.components ~= nil and ent.components.combat ~= nil then
+					if listeners_to_clear == nil then
+						listeners_to_clear = {}
+					end
+					listeners_to_clear[ent] = true
+				end
+			end
+		end
+	end
+
+	if listeners_to_clear ~= nil then
+		for ent in pairs(listeners_to_clear) do
+			ClearCombatTargetingMusha(inst, ent)
+		end
+	end
+end
+
+local function ClearMushaMigrationCombatTargets(inst)
+	if inst == nil or inst.GUID == nil then
+		return
+	end
+
+	if inst.components ~= nil and inst.components.combat ~= nil then
+		-- Avoid mod-wrapped combat methods while the player entity is migrating.
+		local combat = inst.components.combat
+		SetCombatField(combat, "target", nil)
+		SetCombatField(combat, "lastattacker", nil)
+		SetCombatField(combat, "lasttarget", nil)
+		SetCombatField(combat, "lasttargetGUID", nil)
+	end
+
+	ClearCombatListenersTargetingMusha(inst)
+
+	if Ents ~= nil then
+		for _, ent in pairs(Ents) do
+			ClearCombatTargetingMusha(inst, ent)
+		end
+	end
+end
+
+local function OnMushaMigrationDespawn(inst)
+	inst.musha_is_despawning = true
+	ClearMushaMigrationCombatTargets(inst)
+end
+
+local function InstallMushaMigrationCleanup(inst)
+	if inst == nil or inst.musha_migration_cleanup_installed then
+		return
+	end
+
+	inst.musha_migration_cleanup_installed = true
+	local old_ondespawn = inst.OnDespawn
+	inst.OnDespawn = function(inst, ...)
+		OnMushaMigrationDespawn(inst)
+		if old_ondespawn ~= nil then
+			return old_ondespawn(inst, ...)
+		end
+	end
+end
+
 local function onload(inst)
 
     MushaTasks.Listen(inst, "became_human", "ms_respawnedfromghost", onbecamehuman)
@@ -5885,9 +6046,8 @@ if inst.components.petleash ~= nil then
 	inst.components.health:SetMaxHealth(80)
 	inst.components.sanity:SetMax(80)
 	inst.components.hunger:SetMax(200)
-	MushaTasks.Listen(inst, "player_despawn", "player_despawn", function(inst)
-		inst.musha_is_despawning = true
-	end)
+	InstallMushaMigrationCleanup(inst)
+	MushaTasks.Listen(inst, "player_despawn", "player_despawn", OnMushaMigrationDespawn)
 
 	inst.components.temperature.hurtrate = 0.5
 

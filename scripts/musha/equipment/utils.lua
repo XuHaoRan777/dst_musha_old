@@ -151,4 +151,47 @@ function EquipUtils.ShouldAutoOpenArmorContainer(owner)
     return not EquipUtils.HasEquippedExtraBackpack(owner)
 end
 
+function EquipUtils.InitArmorFromFuel(inst, fallback_max, absorb)
+    if inst == nil or inst.components == nil or inst.components.armor == nil then
+        return
+    end
+
+    local fueled = inst.components.fueled
+    local max = (fueled ~= nil and fueled.maxfuel) or fallback_max or 1
+    local current = max
+
+    if fueled ~= nil and fueled.currentfuel ~= nil then
+        current = fueled.currentfuel
+    end
+
+    current = math.max(0, math.min(current, max))
+    inst.components.armor:InitCondition(max, absorb)
+    if inst.components.armor.SetKeepOnFinished ~= nil then
+        inst.components.armor:SetKeepOnFinished(true)
+    end
+    EquipUtils.SyncArmorConditionFromFuel(inst)
+end
+
+function EquipUtils.SyncArmorConditionFromFuel(inst)
+    if inst == nil or inst.components == nil or inst.components.armor == nil or inst.components.fueled == nil then
+        return
+    end
+
+    local armor = inst.components.armor
+    local fueled = inst.components.fueled
+    local max = armor.maxcondition or fueled.maxfuel or 1
+    local current = math.max(0, math.min(fueled.currentfuel or max, max))
+
+    if current <= 0 then
+        armor.condition = 0
+        if inst.PushEvent ~= nil then
+            inst:PushEvent("percentusedchange", { percent = 0 })
+        end
+    elseif armor.SetCondition ~= nil then
+        armor:SetCondition(current)
+    else
+        armor.condition = current
+    end
+end
+
 return EquipUtils

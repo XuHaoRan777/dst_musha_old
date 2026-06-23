@@ -308,7 +308,8 @@ if container ~= nil and inst.burning then
 	     local item = container:GetItemInSlot(i)
 	    if item ~= nil and inst.burning then
 				if item:HasTag("musha_items") and item.components.fueled.currentfuel < item.components.fueled.maxfuel then
-				item.components.fueled:DoDelta(2500000)
+				local repair = item.components.fueled.maxfuel <= 10000 and 642 or 2500000
+				item.components.fueled:DoDelta(repair)
 					
 					if item:HasTag("musha_items") and item.level ~= nil and item.level >=4000 then
 						local fuel_gas = SpawnPrefab("firesplash_fx")

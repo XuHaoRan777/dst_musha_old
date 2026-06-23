@@ -17,6 +17,21 @@ local prefabs =
     "icespike_fx_3",
     "icespike_fx_4",
 }
+
+local PLANAR_DAMAGE_LEVEL = 3000
+local PLANAR_DAMAGE_VALUE = 50
+
+local function RefreshPlanarDamage(inst)
+if inst.level ~= nil and inst.level >= PLANAR_DAMAGE_LEVEL and not inst.broken then
+	if inst.components.planardamage == nil then
+		inst:AddComponent("planardamage")
+	end
+	inst.components.planardamage:SetBaseDamage(PLANAR_DAMAGE_VALUE)
+elseif inst.components.planardamage ~= nil then
+	inst:RemoveComponent("planardamage")
+end
+end
+
 local function boostFX(inst)
 local owner = inst.components.inventoryitem.owner
 	if owner ~= nil then
@@ -34,6 +49,7 @@ local function levelexp(inst,data)
 
 	local max_exp = 4100
 	local exp = math.min(inst.level, max_exp)
+	RefreshPlanarDamage(inst)
 
 if inst.level >= 4005 then
 --inst.components.talker:Say(STRINGS.MUSHA_ITEM_BLADE_A.."[]-\n[Grow Points]".. (inst.level))
@@ -217,6 +233,7 @@ elseif inst.level >=4000 then
 	inst.components.talker:Say("[" ..STRINGS.MUSHA_WEAPON_FROSTHAMMER.. "] \n(Max30)\n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (200)")
 end
 end
+RefreshPlanarDamage(inst)
 end
 
 local function OnDurability(inst, data)
@@ -408,7 +425,8 @@ end
 	
 if math.random() < expchance and not inst.broken and inst.level <= 4000 then
 	inst.level = inst.level + 1
-		inst.components.talker:Say(STRINGS.MUSHA_WEAPON..":GP+1")
+	RefreshPlanarDamage(inst)
+	inst.components.talker:Say(STRINGS.MUSHA_WEAPON..":GP+1")
 	--levelexp(inst)
 end
     if target and not inst.broken and math.random() < damagedur1 then

@@ -27,7 +27,8 @@ if inventory ~= nil then
 	     local item = (inventory:GetItemInSlot(i) or inventory:GetEquippedItem(EQUIPSLOTS.HANDS) or inventory:GetEquippedItem(EQUIPSLOTS.HEAD) or inventory:GetEquippedItem(EQUIPSLOTS.BODY))
 			if item ~= nil then
 				if item:HasTag("musha_items") and item.components.fueled.currentfuel < item.components.fueled.maxfuel then
-				item.components.fueled:DoDelta(5000000)
+				local repair = item.components.fueled.maxfuel <= 10000 and 1283 or 5000000
+				item.components.fueled:DoDelta(repair)
 				end
 			
 			if item:HasTag("musha_items") and item.level ~= nil and item.level <4000 then 
