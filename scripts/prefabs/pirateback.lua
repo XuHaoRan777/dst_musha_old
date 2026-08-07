@@ -597,10 +597,14 @@ inst.defense = function(attacked, data)
 	if math.random() < 0.76 then
 local shadowangle = math.random(1, 360)
 local offset = FindWalkableOffset(inst:GetPosition(), shadowangle*DEGREES, math.random(2,2), 5, false, false)
-local tentacle = SpawnPrefab("tentacle_shadow")
 local x,y,z = inst.Transform:GetWorldPosition()
 if offset ~= nil then
-tentacle.Transform:SetPosition(x + offset.x, y + offset.y, z + offset.z)
+	x = x + offset.x
+	z = z + offset.z
+end
+local tentacle = SpawnPrefab("tentacle_shadow")
+if tentacle ~= nil then
+	tentacle.Transform:SetPosition(x, y, z)
 end
 	end
 end

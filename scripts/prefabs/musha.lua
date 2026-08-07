@@ -5,6 +5,7 @@ local MushaAnim = require("musha/utils/anim")
 local MushaTasks = require("musha/utils/task")
 local MushaSave = require("musha/prefabs/musha_save")
 local MushaDeath = require("musha/prefabs/musha_death")
+local FrostHammerMode = require("musha/equipment/frosthammer_mode")
 require("musha/skin_defs").Register()
 --local easing = require("easing")
 local assets = {
@@ -4628,11 +4629,11 @@ elseif inst.strength == "berserk" and not inst.berserks and not inst.fberserk th
 
 	if inst.strength == "full" then
 			inst.soundsname = "willow"
-			if weapon and weapon:HasTag("frost_hammer") and not weapon.boost then
-			inst.components.combat:SetAreaDamage(2, .5)
-			else
-			inst.components.combat:SetAreaDamage(0, 0)
-			end
+			local area_range, area_multiplier = FrostHammerMode.GetAreaDamage(
+				inst.strength,
+				weapon ~= nil and weapon:HasTag("frost_hammer"),
+				weapon ~= nil and weapon.boost == true)
+			inst.components.combat:SetAreaDamage(area_range, area_multiplier)
 			--inst.components.health:StartRegen(0, 0)
 			--inst:RemoveEventCallback("onhitother", berserk_hit)
 			--inst:RemoveEventCallback("attacked", On_freeze)
@@ -4777,11 +4778,11 @@ elseif inst.hardscores then
 			end
 	if inst.strength == "normal" then
 			inst.soundsname = "willow"
-			if weapon and weapon:HasTag("frost_hammer") and not weapon.boost then
-			inst.components.combat:SetAreaDamage(2, .5)
-			else
-			inst.components.combat:SetAreaDamage(0, 0)
-			end
+			local area_range, area_multiplier = FrostHammerMode.GetAreaDamage(
+				inst.strength,
+				weapon ~= nil and weapon:HasTag("frost_hammer"),
+				weapon ~= nil and weapon.boost == true)
+			inst.components.combat:SetAreaDamage(area_range, area_multiplier)
 			--inst.components.health:StartRegen(0, 0)
 			--inst:RemoveEventCallback("onhitother", berserk_hit)
 			--inst:RemoveEventCallback("attacked", On_freeze)
@@ -4926,11 +4927,11 @@ elseif inst.hardscores then
 		end
 	if inst.strength == "valkyrie" then
 			inst.soundsname = "willow"
-			if weapon and weapon:HasTag("frost_hammer") and not weapon.boost then
-			inst.components.combat:SetAreaDamage(2, .5)
-			else
-			inst.components.combat:SetAreaDamage(0, 0)
-			end
+			local area_range, area_multiplier = FrostHammerMode.GetAreaDamage(
+				inst.strength,
+				weapon ~= nil and weapon:HasTag("frost_hammer"),
+				weapon ~= nil and weapon.boost == true)
+			inst.components.combat:SetAreaDamage(area_range, area_multiplier)
 			--inst.components.sanity.dapperness = (0)
 			--inst:RemoveEventCallback("onhitother", berserk_hit)
 			--inst:RemoveEventCallback("attacked", On_freeze)
@@ -5068,11 +5069,11 @@ elseif inst.hardscores then
 			end
 	if inst.strength == "berserk" then
 			inst.soundsname = "wendy"
-			if weapon and weapon:HasTag("frost_hammer") and not weapon.boost then
-			inst.components.combat:SetAreaDamage(4, .5, BerserkAreaHitCheck)
-			else
-			inst.components.combat:SetAreaDamage(2.5, .5, BerserkAreaHitCheck)
-			end
+			local area_range, area_multiplier = FrostHammerMode.GetAreaDamage(
+				inst.strength,
+				weapon ~= nil and weapon:HasTag("frost_hammer"),
+				weapon ~= nil and weapon.boost == true)
+			inst.components.combat:SetAreaDamage(area_range, area_multiplier, BerserkAreaHitCheck)
 			inst.components.combat:SetRange(2)
 			--inst.components.health:StartRegen(1, 1)
 			--inst:ListenForEvent("onhitother", berserk_hit)

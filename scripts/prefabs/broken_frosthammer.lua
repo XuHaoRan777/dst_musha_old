@@ -495,6 +495,10 @@ end
 --------------Shield hat
 local stopusingshield = FrostArmor.StopUsingShield
 
+local function CanUseButterflyShield(inst)
+	return not inst.no_butterfly_shield
+end
+
 local function onequip(inst, owner) 
 if EquipUtils.ShouldRejectMushaItemWearer(inst, owner) then
          owner.components.inventory:Unequip(EQUIPSLOTS.BODY, true)
@@ -580,10 +584,16 @@ if data and data.attacker and math.random() < expchance and inst.level < 4010 th
 	
     inst:ListenForEvent("attacked", inst.expfn, owner)
 
-	inst:ListenForEvent("newstate", stopusingshield, owner)
+	if CanUseButterflyShield(inst) then
+		inst:ListenForEvent("newstate", stopusingshield, owner)
+	end
 	
 end
 local function onuseshield(inst,owner)
+	if not CanUseButterflyShield(inst) then
+		off_shield(inst)
+		return
+	end
 	if inst.shield then
 		return
 	end

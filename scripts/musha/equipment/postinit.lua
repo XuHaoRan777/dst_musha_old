@@ -62,6 +62,34 @@ local function RegisterTalkerCleanup(add_prefab_post_init, prefab)
 	end)
 end
 
+local function DisableFrostArmorShield(inst)
+	inst.no_butterfly_shield = true
+	inst.shield = false
+
+	if inst.consume ~= nil then
+		inst.consume:Cancel()
+		inst.consume = nil
+	end
+
+	if inst.components == nil then
+		return
+	end
+
+	if inst.components.fueled ~= nil then
+		inst.components.fueled:StopConsuming()
+	end
+	if inst.components.heater ~= nil then
+		inst:RemoveComponent("heater")
+	end
+	if inst.components.useableitem ~= nil then
+		inst:RemoveComponent("useableitem")
+	end
+	if inst.components.machine ~= nil then
+		inst:RemoveComponent("machine")
+	end
+	EquipUtils.SyncArmorConditionFromFuel(inst)
+end
+
 function EquipmentPostInit.Register(config, add_prefab_post_init)
 	local talker_cleanup_prefabs =
 	{
@@ -97,7 +125,7 @@ function EquipmentPostInit.Register(config, add_prefab_post_init)
 
 	add_prefab_post_init("broken_frosthammer", function(inst)
 		if config.butterfly_shield == 2 then
-			inst.no_butterfly_shield = true
+			DisableFrostArmorShield(inst)
 		end
 	end)
 

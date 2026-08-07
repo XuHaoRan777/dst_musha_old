@@ -67,6 +67,7 @@ $dirsToRemove = @(
     "docs",
     "modinfo_src",
     "tools",
+    "source_anim",
     ".github",
     ".vscode",
     ".idea"

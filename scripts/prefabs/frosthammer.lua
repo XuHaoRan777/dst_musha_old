@@ -1,5 +1,6 @@
 local SkillDefs = require("musha/skills/defs")
 local EquipUtils = require("musha/equipment/utils")
+local FrostHammerMode = require("musha/equipment/frosthammer_mode")
 
 local assets=
 {
@@ -20,6 +21,7 @@ local prefabs =
 
 local PLANAR_DAMAGE_LEVEL = 3000
 local PLANAR_DAMAGE_VALUE = 50
+local summoning
 
 local function RefreshPlanarDamage(inst)
 if inst.level ~= nil and inst.level >= PLANAR_DAMAGE_LEVEL and not inst.broken then
@@ -30,6 +32,16 @@ if inst.level ~= nil and inst.level >= PLANAR_DAMAGE_LEVEL and not inst.broken t
 elseif inst.components.planardamage ~= nil then
 	inst:RemoveComponent("planardamage")
 end
+end
+
+local function RefreshModeComponents(inst)
+	FrostHammerMode.SyncTentacleSpell(inst, summoning)
+end
+
+local function RefreshOwnerCombatArea(inst, owner)
+	local inventoryitem = inst.components ~= nil and inst.components.inventoryitem or nil
+	owner = owner or inventoryitem ~= nil and inventoryitem.owner or nil
+	FrostHammerMode.SyncCombatArea(owner, inst)
 end
 
 local function boostFX(inst)
@@ -50,6 +62,7 @@ local function levelexp(inst,data)
 	local max_exp = 4100
 	local exp = math.min(inst.level, max_exp)
 	RefreshPlanarDamage(inst)
+	RefreshModeComponents(inst)
 
 if inst.level >= 4005 then
 --inst.components.talker:Say(STRINGS.MUSHA_ITEM_BLADE_A.."[]-\n[Grow Points]".. (inst.level))
@@ -233,12 +246,15 @@ elseif inst.level >=4000 then
 	inst.components.talker:Say("[" ..STRINGS.MUSHA_WEAPON_FROSTHAMMER.. "] \n(Max30)\n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (200)")
 end
 end
-RefreshPlanarDamage(inst)
+	RefreshPlanarDamage(inst)
+	RefreshModeComponents(inst)
+	RefreshOwnerCombatArea(inst)
 end
 
 local function OnDurability(inst, data)
 inst.broken = true
  	Upgradedamage(inst)
+	RefreshOwnerCombatArea(inst)
 end
 local function forgelab(inst, data)
 inst._5 = false
@@ -283,8 +299,9 @@ local expchance2 = 0.2
 local expchance3 = 0.12
 	inst.components.fueled:DoDelta(5000000)
 	TakeItem_effect(inst)
-inst.broken = false      
-Upgradedamage(inst)
+	inst.broken = false
+	Upgradedamage(inst)
+	RefreshOwnerCombatArea(inst)
 if not inst.forgelab_on then
    if math.random() < expchance1 and inst.level <= 4005 then
 	inst.level = inst.level + 2
@@ -426,6 +443,7 @@ end
 if math.random() < expchance and not inst.broken and inst.level <= 4000 then
 	inst.level = inst.level + 1
 	RefreshPlanarDamage(inst)
+	RefreshModeComponents(inst)
 	inst.components.talker:Say(STRINGS.MUSHA_WEAPON..":GP+1")
 	--levelexp(inst)
 end
@@ -541,7 +559,7 @@ TakeItem_effect(inst)
 end
 --------
 
-local function summoning(staff, target, pos)
+summoning = function(staff, target, pos)
 --local player = inst.components.inventoryitem.owner
     local caster = staff.components.inventoryitem.owner
 if SkillDefs.HasMana(caster, "frost_tentacle") and caster.components.leader:CountFollowers("frost_tentacle") < 8 then
@@ -710,18 +728,7 @@ end
 
 end
 
-	if inst.level >=2200 then	--lv10
-		if not inst.components.spellcaster then
-    inst:AddComponent("spellcaster")
-    inst.components.spellcaster:SetSpellFn(summoning)
-    inst.components.spellcaster.canuseonpoint = true
-		end
-		--[[if not inst.components.reticule then
-	inst:AddComponent("reticule")
-    inst.components.reticule.targetfn = yellow_reticuletargetfn
-    inst.components.reticule.ease = true
-		end]]
-	end
+	RefreshModeComponents(inst)
 	
     MakeHauntableLaunch(inst)
     AddHauntableCustomReaction(inst, function(inst, haunter)
@@ -749,9 +756,7 @@ local function Preserved_Frost(inst, data)
 	if inst.components.reticule then
 
 	end
-	if inst.components.spellcaster then
-    inst:RemoveComponent("spellcaster")
- 	end
+	RefreshModeComponents(inst)
 end 
 
  
@@ -766,11 +771,13 @@ local function OnPutInInventory(inst)
 local function onunequip(inst, owner) 
 inst.boost = false
 inst.power = false
+	RefreshModeComponents(inst)
 owner.frost = false
 owner.frosthammer2 = false
 inst.cost_on = false
 --if inst.task2 then inst.task2:Cancel() inst.task2 = nil end
     Upgradedamage(inst)
+    FrostHammerMode.SyncCombatArea(owner, nil)
     if inst.components.heater then
 	inst:RemoveComponent("heater")
 	end
@@ -778,9 +785,6 @@ inst.cost_on = false
 	if inst.components.reticule then
 	inst:RemoveComponent("reticule")
 	end
-	if inst.components.spellcaster then
-    inst:RemoveComponent("spellcaster")
- 	end
     if inst.task then inst.task:Cancel() inst.task = nil end
     owner.AnimState:ClearOverrideSymbol("swap_object")
      owner.AnimState:Hide("ARM_carry") 
@@ -797,8 +801,10 @@ if EquipUtils.ShouldRejectMushaItemWearer(inst, owner) then
         owner:DoTaskInTime(0.5, function()  owner.components.inventory:DropItem(inst) end)
 	end
 	
- inst.boost = false
- owner.frost = true
+	 inst.boost = false
+	 RefreshModeComponents(inst)
+	 RefreshOwnerCombatArea(inst, owner)
+	 owner.frost = true
  owner.frosthammer2 = true
  Upgradedamage(inst)
  --inst.task2 = inst:DoPeriodicTask(3, function() mana_cost(inst, owner) end)
@@ -822,6 +828,7 @@ local function on_boost(inst)
 if not inst.boost then
 	
 	inst.boost = true
+	RefreshOwnerCombatArea(inst, nil)
     inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
 	Release_Frost(inst)
 	--inst.cost_on = true
@@ -893,6 +900,7 @@ elseif inst.level >=4000 then
 end
 	Preserved_Frost(inst)
 	inst.boost = false
+	RefreshOwnerCombatArea(inst, nil)
 	--inst.cost_on = false
 	frosta_hammer(inst)
 		

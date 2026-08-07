@@ -29,6 +29,7 @@ end
 
 function IsPowerAttackTarget(target)
 	return target ~= nil
+		and target.prefab ~= "shadowchanneler"
 		and (target:HasTag("character") or target:HasTag("pig") or target:HasTag("monster") or target:HasTag("animal"))
 end
 
