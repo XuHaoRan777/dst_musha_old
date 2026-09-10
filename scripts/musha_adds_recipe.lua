@@ -218,7 +218,7 @@ dummy_arrow3.tagneeded = false
 dummy_arrow3.builder_tag ="musha"
 
 --tuna
-local tunacan = AddRecipe("tunacan_musha", { GLOBAL.Ingredient("fish_cooked", 1),GLOBAL.Ingredient("charcoal", 1)}, RECIPETABS.MUSHA, TECH.SCIENCE_TWO, nil, nil, nil, nil, nil, "images/inventoryimages/tunacan_musha.xml", "tunacan_musha.tex" )
+local tunacan = AddRecipe("tunacan_musha", { GLOBAL.Ingredient("fishmeat_small_cooked", 1),GLOBAL.Ingredient("charcoal", 1)}, RECIPETABS.MUSHA, TECH.SCIENCE_TWO, nil, nil, nil, nil, nil, "images/inventoryimages/tunacan_musha.xml", "tunacan_musha.tex" )
 tunacan.tagneeded = false
 tunacan.builder_tag ="musha"
 --grass hut
@@ -404,7 +404,7 @@ dummy_arrow3.tagneeded = false
 dummy_arrow3.builder_tag ="musha"
 
 --tuna
-local tunacan = AddRecipe("tunacan_musha", { GLOBAL.Ingredient("fish_cooked", 1),GLOBAL.Ingredient("charcoal", 1)}, RECIPETABS.MUSHA, TECH.SCIENCE_TWO, nil, nil, nil, nil, nil, "images/inventoryimages/tunacan_musha.xml", "tunacan_musha.tex" )
+local tunacan = AddRecipe("tunacan_musha", { GLOBAL.Ingredient("fishmeat_small_cooked", 1),GLOBAL.Ingredient("charcoal", 1)}, RECIPETABS.MUSHA, TECH.SCIENCE_TWO, nil, nil, nil, nil, nil, "images/inventoryimages/tunacan_musha.xml", "tunacan_musha.tex" )
 tunacan.tagneeded = false
 tunacan.builder_tag ="musha"
 --grass hut

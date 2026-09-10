@@ -7,7 +7,7 @@ local assets=
 
 local prefabs =
 {
- "fish_cooked"
+ "fishmeat_small_cooked"
  }    
  
 local function Offuse(inst)
@@ -21,7 +21,7 @@ local function Open(inst)
 	     				stacksize = inst.components.stackable:StackSize()
 	     			end 
 	
-					local fish = SpawnPrefab("fish_cooked")
+					local fish = SpawnPrefab("fishmeat_small_cooked")
 	     			if fish.components.stackable then 
 	     				fish.components.stackable:SetStackSize(stacksize)
 	     			end 
@@ -45,7 +45,7 @@ local function Onuse(inst)
 	     				stacksize = inst.components.stackable:StackSize()
 	     			end 
 	
-					local fish = SpawnPrefab("fish_cooked")
+					local fish = SpawnPrefab("fishmeat_small_cooked")
 	     			if fish.components.stackable then 
 	     				fish.components.stackable:SetStackSize(stacksize)
 	     			end 
