@@ -3,6 +3,7 @@ require "prefabutil"
 local assets =
 {
 	Asset("ANIM", "anim/musha_oven.zip"),
+	Asset("ANIM", "anim/musha_oven_open.zip"),
 	Asset("ANIM", "anim/ui_chest_3x3.zip"),
 }
 
@@ -42,7 +43,7 @@ local function cooked(inst)
 		     	elseif item.prefab == "log" then 
 		     		replacement = "charcoal"
 					
-		     	elseif item.components.burnable and not item.prefab == "log" then 
+		      elseif item.components.burnable and item.prefab ~= "log" then
 		     		replacement = "ash"				
 		     	end  
 		     	if replacement then 
@@ -101,24 +102,23 @@ local function cooked(inst)
 	end 
 	end
 	
-local function onopen(inst) 
-if not inst.burning then
-inst.AnimState:SetBuild("musha_oven_open")
+local function update_door_visual(inst)
+	local container = inst.components.container
+	inst.AnimState:SetBuild((inst.burning or (container ~= nil and container:IsOpen())) and "musha_oven_open" or "musha_oven")
 end
-inst.SoundEmitter:PlaySound("dontstarve/common/icebox_open")
-	--inst.SoundEmitter:PlaySound("dontstarve/common/craftable/icebox_open")
-end 
 
-local function onclose(inst) 
-if inst.burning then
-cooked(inst)
+local function onopen(inst)
+	update_door_visual(inst)
+	inst.SoundEmitter:PlaySound("dontstarve/common/icebox_open")
 end
-if not inst.burning then
-inst.AnimState:SetBuild("musha_oven")
+
+local function onclose(inst)
+	if inst.burning then
+		cooked(inst)
+	end
+	update_door_visual(inst)
+	inst.SoundEmitter:PlaySound("dontstarve/common/icebox_close")
 end
-inst.SoundEmitter:PlaySound("dontstarve/common/icebox_close")
-	--inst.SoundEmitter:PlaySound("dontstarve/common/craftable/icebox_close")		
-end 
 
 local function onhammered(inst, worker)
 	inst.components.lootdropper:DropLoot()
@@ -147,46 +147,85 @@ local function onhit(inst, worker)
 end
 
 local function onignite(inst)
-inst.burning = true
-inst.AnimState:SetBuild("musha_oven_open")
-    if not inst.components.cooker then
-        inst:AddComponent("cooker")
-    end
+	inst.burning = true
+	inst.components.machine.ison = true
+	if inst.on_cold then
+		inst:AddTag("fridge")
+	end
+	update_door_visual(inst)
+	if not inst.components.cooker then
+		inst:AddComponent("cooker")
+	end
 end
 
-local function on_fire(inst, data)
-if not inst.on_fire and inst.components.burnable:IsBurning() then
-	inst.components.burnable:Extinguish() inst:RemoveComponent("burnable") end
-	if not inst.components.burnable then
-		inst:AddComponent("burnable")
-		end
-inst.on_fire = true
-inst.on_cold = false
-inst:RemoveTag("fridge")
-inst.components.talker:Say("[[Warm Fire]]\nOven-(On)")
-inst.components.burnable:AddBurnFX("musha_ovenfire", Vector3(0,0,0) )
+local function set_mode(inst, cold)
+	local burnable = inst.components.burnable
+	burnable:Extinguish()
+	-- Keep the component during loading; only replace its extinguished FX recipe.
+	burnable.fxdata = {}
+	inst.on_cold = cold
+	inst.on_fire = not cold
+	burnable:AddBurnFX(cold and "musha_ovenfire_cold" or "musha_ovenfire", Vector3(0, 0, 0))
+	-- The mouth is opaque even in the open build, so the flame must render in front.
+	-- Keep the authored position/scale and leave the shared forge FX unchanged.
+	burnable:OverrideBurnFXFinalOffset(1)
 end
-local function on_cold(inst, data)
-if not inst.on_cold and inst.components.burnable:IsBurning() then
-	inst.components.burnable:Extinguish() inst:RemoveComponent("burnable") end
-	if not inst.components.burnable then
-		inst:AddComponent("burnable") end
-inst.on_cold = true
-inst.on_fire = false
-inst:AddTag("fridge")
-inst.components.talker:Say("[[Cold Fire]]\nCooler Box-(On)")
-inst.components.burnable:AddBurnFX("musha_ovenfire_cold", Vector3(0,0,0) )
+
+local function turnon(inst)
+	if inst._loading_oven then
+		return
+	end
+	set_mode(inst, not inst.on_cold)
+	if not inst.components.fueled:IsEmpty() then
+		inst.components.burnable:Ignite()
+		inst.components.burnable:SetFXLevel(inst.components.fueled:GetCurrentSection(), inst.components.fueled:GetSectionPercent())
+		inst.components.talker:Say(inst.on_cold and "[[Cold Fire]]\nCooler Box-(On)" or "[[Warm Fire]]\nOven-(On)")
+	end
+end
+
+local function turnoff(inst)
+	if not inst._loading_oven then
+		inst.components.burnable:Extinguish()
+	end
 end
 
 local function onextinguish(inst)
-inst.burning = false
-inst.AnimState:SetBuild("musha_oven")
-    if inst.components.cooker then
-        inst:RemoveComponent("cooker")
-    end
-    if inst.components.fueled then
-        inst.components.fueled:InitializeFuelLevel(0)
-    end
+	inst.burning = false
+	inst.components.machine.ison = false
+	inst:RemoveTag("fridge")
+	update_door_visual(inst)
+	if inst.components.cooker then
+		inst:RemoveComponent("cooker")
+	end
+end
+
+local function onsave(inst, data)
+	data.on_cold = inst.on_cold == true
+	data.burning = inst.burning == true
+end
+
+local function onpreload(inst)
+	-- Machine:OnLoad calls TurnOn/TurnOff; loading must not advance the fire mode.
+	inst._loading_oven = true
+end
+
+local function onload(inst, data)
+	local cold = data ~= nil and data.on_cold
+	if cold == nil then
+		-- Older saves used machine.ison to mean cold fire, not power.
+		cold = data ~= nil and data.machine ~= nil and data.machine.ison == true
+	end
+	local burning = data == nil or data.burning ~= false
+	set_mode(inst, cold == true)
+	if burning and not inst.components.fueled:IsEmpty() then
+		inst.components.burnable:Ignite()
+		inst.components.burnable:SetFXLevel(inst.components.fueled:GetCurrentSection(), inst.components.fueled:GetSectionPercent())
+	else
+		onextinguish(inst)
+		inst.components.fueled:StopConsuming()
+	end
+	inst._loading_oven = nil
+	update_door_visual(inst)
 end
 
 local function fn(Sim)
@@ -210,28 +249,9 @@ local function fn(Sim)
     inst.AnimState:PlayAnimation("idle", false)    
     inst.MiniMapEntity:SetIcon( "musha_oven.tex" )
 
-    -----------------------
-    inst:AddComponent("burnable")
-    --inst.components.burnable:SetFXLevel(2)
-	
-	if not inst.on_cold then
-    inst.components.burnable:AddBurnFX("musha_ovenfire", Vector3(0,0,0) )
-	elseif inst.on_cold then
-	inst.components.burnable:AddBurnFX("musha_ovenfire_cold", Vector3(0,0,0) )
-		end
-   
-	
-	
-    inst:ListenForEvent("onextinguish", onextinguish)
-    inst:ListenForEvent("onignite", onignite)
-		
-		
-		--if inst.DLC or inst.DLC2 then
-	inst:AddComponent("machine")
-    inst.components.machine.turnonfn = on_cold
-    inst.components.machine.turnofffn = on_fire
-    inst.components.machine.cooldowntime = 0	
-		--end
+    -- Advertise machine actions to clients; authoritative components are server-only.
+    inst:AddTag("enabled")
+
 	inst:AddComponent("talker")
     inst.components.talker.fontsize = 30
     inst.components.talker.font = TALKINGFONT
@@ -247,6 +267,18 @@ local function fn(Sim)
 		end)
 		return inst
 	end
+	inst:AddComponent("machine")
+	inst.components.machine.turnonfn = turnon
+	inst.components.machine.turnofffn = turnoff
+	inst.components.machine.cooldowntime = 0
+
+	inst:AddComponent("burnable")
+	inst.components.burnable:AddBurnFX("musha_ovenfire", Vector3(0, 0, 0))
+	inst.components.burnable:OverrideBurnFXFinalOffset(1)
+	inst.on_cold = false
+	inst.on_fire = true
+	inst:ListenForEvent("onextinguish", onextinguish)
+	inst:ListenForEvent("onignite", onignite)
 	-------------------------
  	inst:AddComponent("container")  
     inst.components.container:WidgetSetup("chest_yamche5")
@@ -284,9 +316,13 @@ local function fn(Sim)
     end)
         
     inst.components.fueled:SetSectionCallback( function(section)
+        if inst._loading_oven then
+            return
+        end
         if section == 0 then
-            inst.components.burnable:Extinguish() 
-        else
+            inst.components.burnable:Extinguish()
+            inst.components.machine.ison = false
+        elseif inst.components.machine:IsOn() then
             if not inst.components.burnable:IsBurning() then
                 inst.components.burnable:Ignite()
             end
@@ -295,7 +331,12 @@ local function fn(Sim)
             
         end
     end)
+    inst.components.machine.ison = true
     inst.components.fueled:InitializeFuelLevel(TUNING.FIREPIT_FUEL_START)    
+
+    inst.OnPreLoad = onpreload
+    inst.OnSave = onsave
+    inst.OnLoad = onload
     
     -----------------------------
 
@@ -309,7 +350,7 @@ local function fn(Sim)
     inst:AddComponent("inspectable")
     inst.components.inspectable.getstatus = function(inst)
         local sec = inst.components.fueled:GetCurrentSection()
-        if sec == 0 then 
+        if not inst.burning or sec == 0 then
             return "OUT"
         elseif sec <= 4 then
             local t = {"EMBERS","LOW","NORMAL","HIGH"}

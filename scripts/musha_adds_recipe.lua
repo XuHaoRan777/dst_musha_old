@@ -232,10 +232,10 @@ moontree.atlas = "images/inventoryimages/moontree_musha.xml"
 moontree.tagneeded = false
 moontree.builder_tag ="musha"
 --oven 
---[[local musha_oven = AddRecipe("musha_oven", { glowdust3, GLOBAL.Ingredient("rocks", 10), GLOBAL.Ingredient("froglegs", 5), GLOBAL.Ingredient("purplegem", 1) }, RECIPETABS.MUSHA, TECH.SCIENCE_TWO, "musha_oven_placer" ) 
+local musha_oven = AddRecipe("musha_oven", { glowdust3, GLOBAL.Ingredient("rocks", 10), GLOBAL.Ingredient("froglegs", 5), GLOBAL.Ingredient("purplegem", 1) }, RECIPETABS.MUSHA, TECH.SCIENCE_TWO, "musha_oven_placer" )
 musha_oven.atlas = "images/inventoryimages/musha_oven.xml"
 musha_oven.tagneeded = false
-musha_oven.builder_tag ="musha"]]
+musha_oven.builder_tag ="musha"
 --forge
 -- working on
 local forge_musha = AddRecipe("forge_musha", { GLOBAL.Ingredient("gears", 1), GLOBAL.Ingredient("redgem", 3), GLOBAL.Ingredient("dragon_scales", 1), GLOBAL.Ingredient("rocks", 10) }, RECIPETABS.MUSHA, TECH.SCIENCE_TWO, "forge_musha_placer" ) 
@@ -418,10 +418,10 @@ moontree.atlas = "images/inventoryimages/moontree_musha.xml"
 moontree.tagneeded = false
 moontree.builder_tag ="musha"
 --oven
---[[local musha_oven = AddRecipe("musha_oven", { glowdust5, GLOBAL.Ingredient("rocks", 20), GLOBAL.Ingredient("froglegs", 10), GLOBAL.Ingredient("purplegem", 2) }, RECIPETABS.MUSHA, TECH.SCIENCE_TWO, "musha_oven_placer" ) 
+local musha_oven = AddRecipe("musha_oven", { glowdust5, GLOBAL.Ingredient("rocks", 20), GLOBAL.Ingredient("froglegs", 10), GLOBAL.Ingredient("purplegem", 2) }, RECIPETABS.MUSHA, TECH.SCIENCE_TWO, "musha_oven_placer" )
 musha_oven.atlas = "images/inventoryimages/musha_oven.xml"
 musha_oven.tagneeded = false
-musha_oven.builder_tag ="musha"]]
+musha_oven.builder_tag ="musha"
 --forge
 
 local forge_musha = AddRecipe("forge_musha", { GLOBAL.Ingredient("gears", 2), GLOBAL.Ingredient("redgem", 6), GLOBAL.Ingredient("dragon_scales", 1), GLOBAL.Ingredient("rocks", 20) }, RECIPETABS.MUSHA, TECH.SCIENCE_TWO, "forge_musha_placer" ) 

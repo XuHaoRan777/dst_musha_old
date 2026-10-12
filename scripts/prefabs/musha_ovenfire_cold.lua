@@ -23,7 +23,7 @@ local function fn(Sim)
     inst.AnimState:SetBuild("musha_oven_fire_cold")
 	inst.AnimState:SetBloomEffectHandle( "shaders/anim.ksh" )
     inst.AnimState:SetRayTestOnBB(true)
-	inst.AnimState:SetFinalOffset(-1)
+	inst.AnimState:SetFinalOffset(0)
     
     inst:AddTag("fx")
 
