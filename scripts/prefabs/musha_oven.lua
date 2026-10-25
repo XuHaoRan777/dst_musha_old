@@ -14,8 +14,6 @@ local prefabs =
     "collapse_small",
 }    
 
-
-
 local function cooked(inst)
 
 	local container = inst.components.container
@@ -282,7 +280,6 @@ local function fn(Sim)
 	-------------------------
  	inst:AddComponent("container")  
     inst.components.container:WidgetSetup("chest_yamche5")
-   
     inst.components.container.onopenfn = onopen
     inst.components.container.onclosefn = onclose
     
@@ -307,7 +304,7 @@ local function fn(Sim)
         fx2.entity:SetParent(inst.entity)
 	    fx2.Transform:SetPosition(0, 3, 0)
 		end
-    inst.components.fueled.rate = 1
+    inst.components.fueled.rate = 0.5
 
     inst.components.fueled:SetUpdateFn( function()
         if inst.components.burnable and inst.components.fueled then
@@ -315,13 +312,19 @@ local function fn(Sim)
         end
     end)
         
-    inst.components.fueled:SetSectionCallback( function(section)
+    inst.components.fueled:SetSectionCallback( function(section, oldsection)
         if inst._loading_oven then
             return
         end
         if section == 0 then
             inst.components.burnable:Extinguish()
             inst.components.machine.ison = false
+        elseif oldsection == 0 and not inst.components.machine:IsOn() then
+            -- Fuel was added after depletion: resume the saved fire mode without toggling it.
+            inst.components.machine.ison = true
+            inst.components.burnable:Ignite()
+            inst.components.burnable:SetFXLevel(section, inst.components.fueled:GetSectionPercent())
+            inst.components.talker:Say(inst.on_cold and "[[Cold Fire]]\nCooler Box-(On)" or "[[Warm Fire]]\nOven-(On)")
         elseif inst.components.machine:IsOn() then
             if not inst.components.burnable:IsBurning() then
                 inst.components.burnable:Ignite()
