@@ -43,23 +43,46 @@ local function GetPhoenixAxeGrowth(inst)
 	return { crit = max_rank.crit, critdamage = max_rank.critdamage, slow = max_rank.slow, weakness = max_rank.weakness, duration = max_rank.duration }
 end
 
+local PHOENIX_AXE_LEVEL_THRESHOLDS = {
+	10, 30, 50, 70, 90, 120, 150, 180, 210, 250,
+	350, 450, 550, 650, 750, 850, 950, 1050, 1200, 1400,
+	1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 4000,
+}
+
+local function GetPhoenixAxeLevelText(inst)
+	local exp = math.max(0, inst.level or 0)
+	if exp >= 4000 then
+		return "Max30"
+	end
+
+	local level = 1
+	for _, threshold in ipairs(PHOENIX_AXE_LEVEL_THRESHOLDS) do
+		if exp < threshold then
+			break
+		end
+		level = level + 1
+	end
+	return "LV" .. level
+end
+
 local function UpdatePhoenixAxeCombatInfo(inst)
 	if inst.components.talker == nil or inst.components.weapon == nil then
 		return
 	end
+	local level_text = "(" .. GetPhoenixAxeLevelText(inst) .. ")"
 	if inst.broken then
-		inst.components.talker:Say(STRINGS.MUSHA_WEAPON_BROKEN.." \n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (1)")
+		inst.components.talker:Say("["..STRINGS.MUSHA_WEAPON_SWORD_AXE.."]\n"..level_text.."\n"..STRINGS.MUSHA_WEAPON_BROKEN.." \n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (1)")
 		return
 	end
 	local stats = GetPhoenixAxeGrowth(inst)
 	local damage = math.floor(inst.components.weapon.damage + 0.5)
 	if inst.boost then
-		inst.components.talker:Say("["..STRINGS.MUSHA_WEAPON_SWORD_PAXE.."]\n"..STRINGS.MUSHA_WEAPON_DAMAGE.." ("..damage..")\n"
+		inst.components.talker:Say("["..STRINGS.MUSHA_WEAPON_SWORD_PAXE.."]\n"..level_text.."\n"..STRINGS.MUSHA_WEAPON_DAMAGE.." ("..damage..")\n"
 			..STRINGS.MUSHA_WEAPON_SLOW.." "..math.floor(stats.slow * 100 + 0.5).."%\n"
 			..STRINGS.MUSHA_WEAPON_WEAKNESS.." "..math.floor(stats.weakness * 100 + 0.5).."% / "
 			..math.floor(stats.duration + 0.5).."s")
 	else
-		inst.components.talker:Say("["..STRINGS.MUSHA_WEAPON_SWORD_AXE.."]\n"..STRINGS.MUSHA_WEAPON_DAMAGE.." ("..damage..")\n"
+		inst.components.talker:Say("["..STRINGS.MUSHA_WEAPON_SWORD_AXE.."]\n"..level_text.."\n"..STRINGS.MUSHA_WEAPON_DAMAGE.." ("..damage..")\n"
 			..STRINGS.MUSHA_WEAPON_CRIT.." "..math.floor(stats.crit * 100 + 0.5).."%\n"
 			..STRINGS.MUSHA_WEAPON_CRIT_DAMAGE.." "..math.floor(stats.critdamage * 100 + 0.5).."%")
 	end
