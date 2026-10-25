@@ -518,6 +518,7 @@ return {
 		FROSTHAMMER = "혹한의 힘이 적을 무찌를거야!",
 		BROKEN_FROSTHAMMER =  "이 망치에서 바스러지는 소리가 들려",
 		HAT_MPHOENIX = "뮤샤에겐 익숙한 투구야! 한번 써보고 싶었어!",
+		MUSHASWORD4 = "군벌의 무기야! 뮤샤가 갖고 싶어 했어!",
 		HAT_MPRINCESS = "뮤샤가 썼던 티아라는 이것과 거의 비슷해",
 		HAT_MBUNNY = "수색할 시간이네",
 		ARMOR_MUSHAA = "이건 뮤샤 특제 가방이야",

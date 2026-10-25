@@ -9,6 +9,19 @@ local assets=
 
 local PLANAR_DEFENSE_LEVEL = 3000
 local PLANAR_DEFENSE_VALUE = 25
+local KNOCKBACK_IMMUNITY_LEVEL = 4000
+
+local function RefreshKnockbackArmorTags(inst)
+	inst:RemoveTag("heavyarmor")
+	inst:RemoveTag("superheavyarmor")
+	if inst.boost and not inst.broken then
+		if inst.level ~= nil and inst.level >= KNOCKBACK_IMMUNITY_LEVEL then
+			inst:AddTag("superheavyarmor")
+		else
+			inst:AddTag("heavyarmor")
+		end
+	end
+end
 
 local function RefreshPlanarDefense(inst)
 if inst.level ~= nil and inst.level >= PLANAR_DEFENSE_LEVEL then
@@ -29,6 +42,7 @@ local function levelexp(inst,data)
 
 	local max_exp = 4100
 	local exp = math.min(inst.level, max_exp)
+    RefreshKnockbackArmorTags(inst)
     RefreshPlanarDefense(inst)
 
 if inst.level >= 4005 then
@@ -128,6 +142,7 @@ end
 end
 
 local function UpgradeArmor(inst, data, owner)
+RefreshKnockbackArmorTags(inst)
 if inst.components.fueled:IsEmpty() then
 inst.broken = true
 elseif not inst.components.fueled:IsEmpty() then
@@ -572,6 +587,7 @@ local function onunequip(inst, owner)
 inst.components.fueled:StopConsuming()  
 	UpgradeArmor(inst)      
 	inst.boost = false 
+	RefreshKnockbackArmorTags(inst)
 	if inst.task then inst.task:Cancel() inst.task = nil end
 	if inst.health then inst.health:Cancel() inst.health = nil end	
     inst:RemoveEventCallback("attacked", inst.gasfn, owner)
@@ -694,6 +710,7 @@ local function fn()
         inst.components.fueled.accepting = true
 inst.components.fueled:StopConsuming()
 	inst.level = 0
+RefreshKnockbackArmorTags(inst)
 inst:ListenForEvent("levelup", levelexp)
 inst.check_level = levelexp
 	inst.OnSave = onsave

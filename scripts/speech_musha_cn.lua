@@ -173,6 +173,7 @@ return {
 		FROSTHAMMER = "大地！听从Musha指挥！", -- War3 Pandaren Brewmaster
 		BROKEN_FROSTHAMMER =  "Musha喜欢这冰冷的装备。",  -- this is frost armor, grow up : frost armor II
 		HAT_MPHOENIX = "暴君的头盔！Musha很想要！",
+		MUSHASWORD4 = "暴君的武器！Musha很想要！",
 		HAT_MPRINCESS = "Musha的皇冠回来了！",   --grow up : Queen crown
 		HAT_MBUNNY = "侦查开始。", -- Lol Caitlyn
 		ARMOR_MUSHAA = "看见这件装备了吗？\n是的。这是Musha基本装备。",

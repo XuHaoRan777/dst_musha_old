@@ -172,6 +172,7 @@ return {
 		FROSTHAMMER = "Земля, отзовись Муше!", -- War3 Pandaren Brewmaster
 		BROKEN_FROSTHAMMER =  "Муше нравится эта прохладная броня.",  -- this is frost armor, grow up : frost armor II
 		HAT_MPHOENIX = "Воинский шлем! Муше хочется такой!",
+		MUSHASWORD4 = "Оружие военачальника! Муша хотела заполучить его!",
 		HAT_MPRINCESS = "Мушина корона вернулась!",   --grow up : Queen crown
 		HAT_MBUNNY = "Время встряхнуться.", -- Lol Caitlyn
 		ARMOR_MUSHAA = "Видишь эту броню? \nДа. Это Мушина основная броня.",

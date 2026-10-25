@@ -14,6 +14,57 @@ local assets=
 local PLANAR_DAMAGE_LEVEL = 3000
 local PLANAR_DAMAGE_VALUE = 35
 
+local PHOENIX_AXE_GROWTH = {
+	{ exp = 0, crit = 0.50, critdamage = 1.40, slow = 0.35, weakness = 0.15, duration = 10 },
+	{ exp = 210, crit = 0.55, critdamage = 1.50, slow = 0.40, weakness = 0.18, duration = 12 },
+	{ exp = 650, crit = 0.60, critdamage = 1.60, slow = 0.45, weakness = 0.21, duration = 14 },
+	{ exp = 1200, crit = 0.65, critdamage = 1.70, slow = 0.50, weakness = 0.24, duration = 16 },
+	{ exp = 2200, crit = 0.70, critdamage = 1.80, slow = 0.55, weakness = 0.27, duration = 18 },
+	{ exp = 4000, crit = 0.80, critdamage = 1.90, slow = 0.60, weakness = 0.30, duration = 20 },
+}
+
+local function GetPhoenixAxeGrowth(inst)
+	local exp = math.max(0, math.min(inst.level or 0, 4000))
+	for i = 2, #PHOENIX_AXE_GROWTH do
+		local next_rank = PHOENIX_AXE_GROWTH[i]
+		if exp < next_rank.exp then
+			local prev_rank = PHOENIX_AXE_GROWTH[i - 1]
+			local t = (exp - prev_rank.exp) / (next_rank.exp - prev_rank.exp)
+			return {
+				crit = prev_rank.crit + (next_rank.crit - prev_rank.crit) * t,
+				critdamage = prev_rank.critdamage + (next_rank.critdamage - prev_rank.critdamage) * t,
+				slow = prev_rank.slow + (next_rank.slow - prev_rank.slow) * t,
+				weakness = prev_rank.weakness + (next_rank.weakness - prev_rank.weakness) * t,
+				duration = prev_rank.duration + (next_rank.duration - prev_rank.duration) * t,
+			}
+		end
+	end
+	local max_rank = PHOENIX_AXE_GROWTH[#PHOENIX_AXE_GROWTH]
+	return { crit = max_rank.crit, critdamage = max_rank.critdamage, slow = max_rank.slow, weakness = max_rank.weakness, duration = max_rank.duration }
+end
+
+local function UpdatePhoenixAxeCombatInfo(inst)
+	if inst.components.talker == nil or inst.components.weapon == nil then
+		return
+	end
+	if inst.broken then
+		inst.components.talker:Say(STRINGS.MUSHA_WEAPON_BROKEN.." \n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (1)")
+		return
+	end
+	local stats = GetPhoenixAxeGrowth(inst)
+	local damage = math.floor(inst.components.weapon.damage + 0.5)
+	if inst.boost then
+		inst.components.talker:Say("["..STRINGS.MUSHA_WEAPON_SWORD_PAXE.."]\n"..STRINGS.MUSHA_WEAPON_DAMAGE.." ("..damage..")\n"
+			..STRINGS.MUSHA_WEAPON_SLOW.." "..math.floor(stats.slow * 100 + 0.5).."%\n"
+			..STRINGS.MUSHA_WEAPON_WEAKNESS.." "..math.floor(stats.weakness * 100 + 0.5).."% / "
+			..math.floor(stats.duration + 0.5).."s")
+	else
+		inst.components.talker:Say("["..STRINGS.MUSHA_WEAPON_SWORD_AXE.."]\n"..STRINGS.MUSHA_WEAPON_DAMAGE.." ("..damage..")\n"
+			..STRINGS.MUSHA_WEAPON_CRIT.." "..math.floor(stats.crit * 100 + 0.5).."%\n"
+			..STRINGS.MUSHA_WEAPON_CRIT_DAMAGE.." "..math.floor(stats.critdamage * 100 + 0.5).."%")
+	end
+end
+
 local function RefreshPlanarDamage(inst)
 if inst.level ~= nil and inst.level >= PLANAR_DAMAGE_LEVEL and not inst.broken then
 	if inst.components.planardamage == nil then
@@ -212,6 +263,7 @@ end
 
 local function OnDurability(inst, data)
 inst.broken = true
+inst:RemoveTag("phoenix_axe_crit")
 SetPhoenixAxeToolMode(inst, ACTIONS.CHOP, 1, false)
 inst.pick = false
 inst.axe = true
@@ -430,6 +482,7 @@ end
 
 end
 RefreshPlanarDamage(inst)
+UpdatePhoenixAxeCombatInfo(inst)
 end
 
 
@@ -539,243 +592,135 @@ local function OnLoad(inst, data)
     Upgradedamage(inst)
 end
 
-local function ClearPoisonState(inst, target, poison)
-	if target ~= nil and target:IsValid() then
-		if target.components.locomotor ~= nil then
-			target.components.locomotor.groundspeedmultiplier = 1
-		end
-		target:RemoveTag("slow_poison")
+local function ClearPhoenixAxeDebuff(target)
+	if target == nil or not target:IsValid() then
+		return
 	end
-	if poison ~= nil and poison:IsValid() then
-		poison:Remove()
+	if target.phoenixaxe_debuff_task ~= nil then
+		target.phoenixaxe_debuff_task:Cancel()
+		target.phoenixaxe_debuff_task = nil
 	end
-	if inst.blood ~= nil and inst.blood:IsValid() then
-		inst.blood:Remove()
+	if target.components.locomotor ~= nil then
+		target.components.locomotor:RemoveExternalSpeedMultiplier(target, "phoenixaxe")
 	end
-	inst.blood = nil
+	if target.components.combat ~= nil and target.components.combat.externaldamagetakenmultipliers ~= nil then
+		target.components.combat.externaldamagetakenmultipliers:RemoveModifier(target, "phoenixaxe")
+	end
+	target:RemoveTag("phoenix_axe_debuff")
+	if target.phoenixaxe_debuff_fx ~= nil and target.phoenixaxe_debuff_fx:IsValid() then
+		target.phoenixaxe_debuff_fx:Remove()
+	end
+	target.phoenixaxe_debuff_fx = nil
 end
 
-local function StartPoisonTask(inst, attacker, target, poison, damage)
-	local poison_task = nil
-	poison_task = TheWorld:DoPeriodicTask(3, function()
-		if target == nil
-			or not target:IsValid()
-			or not target:HasTag("slow_poison")
-			or target.components.health == nil
-			or target.components.health:IsDead() then
-			if poison_task ~= nil then
-				poison_task:Cancel()
-				poison_task = nil
-			end
-			return
+local function ApplyPhoenixAxeDebuff(target, stats)
+	ClearPhoenixAxeDebuff(target)
+	target:AddTag("phoenix_axe_debuff")
+	if target.components.locomotor ~= nil then
+		target.components.locomotor:SetExternalSpeedMultiplier(target, "phoenixaxe", 1 - stats.slow)
+	end
+	if target.components.combat ~= nil and target.components.combat.externaldamagetakenmultipliers ~= nil then
+		target.components.combat.externaldamagetakenmultipliers:SetModifier(target, 1 + stats.weakness, "phoenixaxe")
+	end
+	local fx = SpawnPrefab("debuff_blood")
+	if fx ~= nil then
+		fx.Transform:SetPosition(target:GetPosition():Get())
+		local follower = fx.entity:AddFollower()
+		if target:HasTag("cavedweller") then
+			follower:FollowSymbol(target.GUID, "body", 0, -10, 0.5)
+		elseif target.components.combat ~= nil then
+			follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -10, 0.5)
 		end
-		if attacker ~= nil and attacker:IsValid() and attacker.components.health ~= nil then
-			attacker.components.health:DoDelta(damage)
-		end
-		if target.components.combat ~= nil then
-			if target:HasTag("epic") then
-				target.components.health:DoDelta(-damage)
-			else
-				target.components.combat:GetAttacked(inst, damage)
-			end
-		end
-		if target.SoundEmitter ~= nil and damage > 4 then
-			target.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
-		end
-	end)
-	TheWorld:DoTaskInTime(15, function()
-		if poison_task ~= nil then
-			poison_task:Cancel()
-			poison_task = nil
-		end
-		ClearPoisonState(inst, target, poison)
+		target.phoenixaxe_debuff_fx = fx
+	end
+	target.phoenixaxe_debuff_task = target:DoTaskInTime(stats.duration, function()
+		ClearPhoenixAxeDebuff(target)
 	end)
 end
 
 
 local function onattack_FRAME(inst, attacker, target)
-local owner = inst.components.inventoryitem.owner
-local framechance1 = 0.12
-local framechance2 = 0.20
-local framechance3 = 0.28
-local framechance4 = 0.36
-local poisone_1 = 0.5
-local poisone_2 = 0.55
-local poisone_3 = 0.6
+	local expchance = 0.05
+	local damagedur1 = 0.2
+	local damagedur2 = 0.5
+	local damagedur3 = 0.7
+	local damagedur4 = 1
 
-local expchance = 0.05
-local damagedur1 = 0.2
-local damagedur2 = 0.5
-local damagedur3 = 0.7
-local damagedur4 = 1
+	if math.random() < expchance and not inst.broken and inst.level < 4000 then
+		inst.level = inst.level + 1
+		RefreshPlanarDamage(inst)
+		UpdatePhoenixAxeCombatInfo(inst)
+		inst.components.talker:Say(STRINGS.MUSHA_WEAPON..":GP+1")
+	end
 
-
-if math.random() < expchance and not inst.broken and inst.level < 4000 then
-	inst.level = inst.level + 1
-	RefreshPlanarDamage(inst)
-	inst.components.talker:Say(STRINGS.MUSHA_WEAPON..":GP+1")
-	--levelexp(inst)
-end
-    if target and not inst.broken and math.random() < damagedur1 then
-inst.components.fueled:DoDelta(-150000)
-    elseif target and not inst.broken and math.random() < damagedur2 then
-inst.components.fueled:DoDelta(-75000)
-    elseif target and not inst.broken and math.random() < damagedur3 then
-inst.components.fueled:DoDelta(-35000)
-    elseif target and not inst.broken and math.random() < damagedur4 then
-inst.components.fueled:DoDelta(-20000)
-    elseif target and inst.broken then
+	if target ~= nil and not inst.broken and math.random() < damagedur1 then
+		inst.components.fueled:DoDelta(-150000)
+	elseif target ~= nil and not inst.broken and math.random() < damagedur2 then
+		inst.components.fueled:DoDelta(-75000)
+	elseif target ~= nil and not inst.broken and math.random() < damagedur3 then
+		inst.components.fueled:DoDelta(-35000)
+	elseif target ~= nil and not inst.broken and math.random() < damagedur4 then
+		inst.components.fueled:DoDelta(-20000)
+	elseif target ~= nil and inst.broken then
 		local splash = SpawnPrefab("splash")
-	local pos = Vector3(target.Transform:GetWorldPosition())
-splash.Transform:SetPosition(pos:Get())
-	inst.components.talker:Say(STRINGS.MUSHA_WEAPON_BROKEN.." \n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (1)")
-    end
+		splash.Transform:SetPosition(target:GetPosition():Get())
+		inst.components.talker:Say(STRINGS.MUSHA_WEAPON_BROKEN.." \n"..STRINGS.MUSHA_WEAPON_DAMAGE.." (1)")
+	end
 
-if  target ~= nil and target.components.health and not target.components.health:IsDead() and not target:HasTag("stalkerminion") and not target:HasTag("smashable") and not target:HasTag("alignwall") and not target:HasTag("shadowminion") then
-	  
---if not inst.boost then
-  
-  	  if target and inst.level <250 and not target:HasTag("structure") and not target:HasTag("stalkerminion") and not target:HasTag("smashable") and not target:HasTag("alignwall") and not target:HasTag("shadowminion") and target.components.health and not target.components.health:IsDead() and math.random() < framechance1 then
-	  local fx = SpawnPrefab("firesplash_fx")
-		fx.Transform:SetScale(0.4, 0.4, 0.4)
-		fx.Transform:SetPosition(target:GetPosition():Get())
-        if target.components.burnable then
-		target.components.burnable:Ignite()
-		end
-local fx2 = SpawnPrefab("statue_transition")
-local pos = Vector3(target.Transform:GetWorldPosition())
-	fx2.Transform:SetPosition(pos:Get())
-        target.components.health:DoDelta(-10)
-		attacker.components.sanity:DoDelta(1)
-  	  elseif target and inst.level >=250 and inst.level <1400 and not target:HasTag("structure") and not target:HasTag("stalkerminion") and not target:HasTag("smashable") and not target:HasTag("alignwall") and not target:HasTag("shadowminion") and target.components.health and not target.components.health:IsDead() and math.random() < framechance2 then
-		local fx = SpawnPrefab("firesplash_fx")
-		fx.Transform:SetScale(0.4, 0.4, 0.4)
-		fx.Transform:SetPosition(target:GetPosition():Get())
-        if target.components.burnable then
-		target.components.burnable:Ignite()
-		end
-local fx2 = SpawnPrefab("statue_transition")
-local pos = Vector3(target.Transform:GetWorldPosition())
-	fx2.Transform:SetPosition(pos:Get())
-        target.components.health:DoDelta(-15)
-		attacker.components.sanity:DoDelta(1)
-  	  elseif target and inst.level >=1400 and inst.level <2200 and not target:HasTag("structure") and not target:HasTag("stalkerminion") and not target:HasTag("smashable") and not target:HasTag("alignwall") and not target:HasTag("shadowminion") and target.components.health and not target.components.health:IsDead() and math.random() < framechance3 then
-	  local fx = SpawnPrefab("firesplash_fx")
-		fx.Transform:SetScale(0.4, 0.4, 0.4)
-		fx.Transform:SetPosition(target:GetPosition():Get())
-         if target.components.burnable then
-		target.components.burnable:Ignite()
-		end
-local fx2 = SpawnPrefab("statue_transition")
-local pos = Vector3(target.Transform:GetWorldPosition())
-	fx2.Transform:SetPosition(pos:Get())
-        target.components.health:DoDelta(-20)
-       attacker.components.sanity:DoDelta(1)
-  	  elseif target and inst.level >=2200 and not target:HasTag("structure") and not target:HasTag("stalkerminion") and not target:HasTag("smashable") and not target:HasTag("alignwall") and not target:HasTag("shadowminion") and target.components.health and not target.components.health:IsDead() and math.random() < framechance4 then
-	  local fx = SpawnPrefab("firesplash_fx")
-		fx.Transform:SetScale(0.4, 0.4, 0.4)
-		fx.Transform:SetPosition(target:GetPosition():Get())
-         if target.components.burnable then
-		target.components.burnable:Ignite()
-		end
-local fx2 = SpawnPrefab("statue_transition")
-local pos = Vector3(target.Transform:GetWorldPosition())
-	fx2.Transform:SetPosition(pos:Get())
-       target.components.health:DoDelta(-25)
- 	  attacker.components.sanity:DoDelta(1)
-       
+	if target == nil or target.components.health == nil or target.components.health:IsDead()
+		or target:HasTag("structure") or target:HasTag("stalkerminion")
+		or target:HasTag("smashable") or target:HasTag("alignwall")
+		or target:HasTag("shadowminion") then
+		return
 	end
 
 	if inst.boost then
-
-local fx3 = SpawnPrefab("groundpoundring_fx")
-local pos = Vector3(target.Transform:GetWorldPosition())
-	fx3.Transform:SetScale(0.3, 0.3, 0.3)
-	fx3.Transform:SetPosition(pos:Get())
-	
-	if (target.components.burnable or target.components.freezable) and not target:HasTag("structure") and not target:HasTag("smashable") and not target:HasTag("companion") and not target:HasTag("yamcheb") and not target:HasTag("yamche") then
-	
-		if math.random() < poisone_1 and inst.boost and inst.level <250 and not target:HasTag("slow_poison") then
-        
-		local poison = SpawnPrefab("debuff_blood")
-		poison.Transform:SetPosition(target:GetPosition():Get())
-		--poison.Transform:SetScale(1,1,1)
-		target:AddTag("slow_poison")
-		if poison and target:HasTag("slow_poison") then
-			if not inst.blood then 
-            inst.blood = SpawnPrefab( "debuff_blood" )
-            local follower = inst.blood.entity:AddFollower()
-                     --follower:FollowSymbol( owner.GUID, "swap_object", 1, -150, 0.5 )
+		if not target:HasTag("companion") and not target:HasTag("yamcheb") and not target:HasTag("yamche") then
+			ApplyPhoenixAxeDebuff(target, GetPhoenixAxeGrowth(inst))
+			local fx = SpawnPrefab("groundpoundring_fx")
+			if fx ~= nil then
+				fx.Transform:SetScale(0.3, 0.3, 0.3)
+				fx.Transform:SetPosition(target:GetPosition():Get())
 			end
-		local follower = poison.entity:AddFollower()
-			if target:HasTag("cavedweller") then
-			follower:FollowSymbol(target.GUID, "body", 0, -10, 0.5 )
+		end
+	elseif not inst.broken and math.random() < GetPhoenixAxeGrowth(inst).crit then
+		local fx = SpawnPrefab("statue_transition")
+		if fx ~= nil then
+			fx.Transform:SetPosition(target:GetPosition():Get())
+		end
+		if attacker ~= nil and target.components.combat ~= nil then
+			-- The regular weapon hit has already been applied by the combat component.
+			-- Add only the difference between the requested crit multiplier and 100%,
+			-- using the attacker's full normal damage calculation so combat bonuses,
+			-- weapon damage modifiers, and target-specific damage bonuses are honored.
+			local normaldamage, normalspdamage
+			if attacker.components.combat ~= nil then
+				normaldamage, normalspdamage = attacker.components.combat:CalcDamage(target, inst)
 			else
-			follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -10, 0.5 )
+				normaldamage = inst.components.weapon.damage
+			end
+			local critbonus = GetPhoenixAxeGrowth(inst).critdamage - 1
+			local bonusdamage = normaldamage * critbonus
+			local bonusspdamage
+			if normalspdamage ~= nil then
+				for damagetype, damage in pairs(normalspdamage) do
+					local bonus = damage * critbonus
+					if bonus > 0 then
+						bonusspdamage = bonusspdamage or {}
+						bonusspdamage[damagetype] = bonus
+					end
+				end
+			end
+			if bonusdamage > 0 or bonusspdamage ~= nil then
+				target.components.combat:GetAttacked(attacker, bonusdamage, inst, nil, bonusspdamage)
 			end
 		end
-		StartPoisonTask(inst, attacker, target, poison, 4)
-		
-	elseif math.random() < poisone_2 and inst.boost and inst.level >=250 and inst.level <1400 and not target:HasTag("slow_poison")  then
-        
- 		local poison = SpawnPrefab("debuff_blood")
-		poison.Transform:SetPosition(target:GetPosition():Get())
-		--poison.Transform:SetScale(1,1,1)
-		target:AddTag("slow_poison")
-		if poison and target:HasTag("slow_poison") then
-		if not inst.blood then 
-            inst.blood = SpawnPrefab( "debuff_blood" )
-            local follower = inst.blood.entity:AddFollower()
-            --follower:FollowSymbol( owner.GUID, "swap_object", 1, -150, 0.5 )
-			end
-		local follower = poison.entity:AddFollower()
-			if target:HasTag("cavedweller") then
-			follower:FollowSymbol(target.GUID, "body", 0, -10, 0.5 )
-			else
-			follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -10, 0.5 )
-			end
-		end
-		StartPoisonTask(inst, attacker, target, poison, 7)
-	
-	elseif math.random() < poisone_3 and inst.boost and inst.level >=1400 and not target:HasTag("slow_poison") then
-        
-		local poison = SpawnPrefab("debuff_blood")
-		poison.Transform:SetPosition(target:GetPosition():Get())
-		--poison.Transform:SetScale(1,1,1)
-		target:AddTag("slow_poison")
-		if poison and target:HasTag("slow_poison") then
-		if not inst.blood then 
-            inst.blood = SpawnPrefab( "debuff_blood" )
-            local follower = inst.blood.entity:AddFollower()
-            --follower:FollowSymbol( owner.GUID, "swap_object", 1, -150, 0.5 )
-			end
-		local follower = poison.entity:AddFollower()
-			if target:HasTag("cavedweller") then
-			follower:FollowSymbol(target.GUID, "body", 0, -10, 0.5 )
-			else
-			follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -10, 0.5 )
-			end
-		end
-		StartPoisonTask(inst, attacker, target, poison, 9)
-		end
-end		
-		
-end
-	
-end
-	
+	end
 
-
-    if target.components.burnable and target.components.burnable:IsBurning() and not target:HasTag("buzzard") then 
-        target.components.burnable:Extinguish()
-    end
-	
-    if target.components.combat and not target:HasTag("companion") then
-        target.components.combat:SuggestTarget(attacker)
-    end
-		 
+	if target.components.combat ~= nil and not target:HasTag("companion") then
+		target.components.combat:SuggestTarget(attacker)
+	end
 end
-
 
 local function onequip(inst, owner)
 
@@ -789,6 +734,7 @@ local owner = inst.components.inventoryitem.owner
   	owner.fire = true
 	if not inst.broken then
     if inst.pick then
+	inst:RemoveTag("phoenix_axe_crit")
 	inst.components.weapon:SetRange(1)
 	SetPhoenixAxeToolMode(inst, ACTIONS.MINE, 2, true)
 	inst.axe = false
@@ -799,6 +745,7 @@ local owner = inst.components.inventoryitem.owner
 	inst.boost = true
 	AddFireSporeCaster(inst)
 	else
+	inst:AddTag("phoenix_axe_crit")
 	inst.components.weapon:SetRange(0)
 	SetPhoenixAxeToolMode(inst, ACTIONS.CHOP, 2, true)
 	inst.axe = true
@@ -818,6 +765,7 @@ local owner = inst.components.inventoryitem.owner
     owner.AnimState:Show("ARM_carry") 
     owner.AnimState:Hide("ARM_normal") 
 	inst:RemoveTag("phoenix_axe")
+	inst:RemoveTag("phoenix_axe_crit")
 	RemoveFireSporeCaster(inst)
 	end
 
@@ -848,6 +796,7 @@ local function onunequip(inst, owner)
 
 		--owner:RemoveTag("phoenixblade") 
 		inst:RemoveTag("phoenix_axe")
+		inst:RemoveTag("phoenix_axe_crit")
 		
 	RemoveFireSporeCaster(inst)
 	
@@ -866,6 +815,7 @@ if owner ~= nil then
 		if inst:HasTag("phoenix_axe") then
 		inst:RemoveTag("phoenix_axe")
 		end
+		inst:RemoveTag("phoenix_axe_crit")
 		if inst.components.blinkstaff ~= nil then
 			inst:RemoveComponent("blinkstaff")
 		end
@@ -873,6 +823,7 @@ if owner ~= nil then
 	if not inst.broken then
 
 	SetPhoenixAxeToolMode(inst, ACTIONS.CHOP, 2, true)
+	inst:AddTag("phoenix_axe_crit")
 
 	inst.components.weapon:SetRange(0)
 
@@ -885,6 +836,7 @@ if owner ~= nil then
 	boostFX(inst)
 
 	elseif inst.broken then
+	inst:RemoveTag("phoenix_axe_crit")
 
 	inst.components.talker:Say("-"..STRINGS.MUSHA_WEAPON.."\n"..STRINGS.MUSHA_ITEM_DUR.." (0)")
     owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixaxe_broken", "phoenixaxe")
@@ -909,6 +861,7 @@ if owner ~= nil and inst.broken then
 	inst.axe = true	
 	inst.pick = false
 	inst:RemoveTag("phoenix_axe")
+		inst:RemoveTag("phoenix_axe_crit")
 	SetPhoenixAxeToolMode(inst, ACTIONS.CHOP, 1, false)
 	inst.components.talker:Say("-"..STRINGS.MUSHA_WEAPON.."\n"..STRINGS.MUSHA_ITEM_DUR.." (0)")
     owner.AnimState:OverrideSymbol("swap_object", "swap_phoenixaxe_broken", "phoenixaxe")
@@ -926,6 +879,7 @@ if owner ~= nil and not inst.boost and not inst.broken then
 	inst.pick = true	
 	inst.axe = false
 	inst:AddTag("phoenix_axe")
+	inst:RemoveTag("phoenix_axe_crit")
 	inst.components.weapon:SetRange(.9)
 
 	--inst.SoundEmitter:PlaySound("dontstarve/common/gem_shatter")
@@ -949,7 +903,6 @@ local function fn()
     inst.entity:AddAnimState()
 	inst.entity:AddSoundEmitter()
     inst.entity:AddNetwork()
-	
     MakeInventoryPhysics(inst)
  	
     inst.AnimState:SetBank("mushasword4")

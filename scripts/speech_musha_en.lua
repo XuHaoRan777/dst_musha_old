@@ -513,6 +513,7 @@ return {
 		FROSTHAMMER = "Earth! Heed Musha's call!", -- War3 Pandaren Brewmaster
 		BROKEN_FROSTHAMMER =  "Musha Loves this chilly armor.",  -- this is frost armor, grow up : frost armor II
 		HAT_MPHOENIX = "The Warlord's helm! Musha wanted to have it!",
+		MUSHASWORD4 = "The Warlord's weapon! Musha wanted to have it!",
 		HAT_MPRINCESS = "Musha's crown has returned!",   --grow up : Queen crown
 		HAT_MBUNNY = "Time for a shakedown.", -- Lol Caitlyn
 		ARMOR_MUSHAA = "Have you seen this armor? \nYes. This is Musha's basic armor.",
