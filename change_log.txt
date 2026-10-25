@@ -1,3 +1,29 @@
+T 14.2.4-maint.14
+
+中文更新日志
+
+- 凤凰头盔
+  - 强化模式开启且未损坏时获得抗击飞处理；装备经验未满 4000 时使用 `heavyarmor`，达到 4000 经验后升级为 `superheavyarmor`。
+  - 关闭强化模式、卸下或损坏后移除抗击飞效果。
+  - 装备经验达到 3000 后提供 25 点位面防御。
+- 凤凰斧
+  - 斧形态移除旧的火焰直伤、点燃、理智回复和攻速加成，改为随装备经验成长的暴击率与暴击伤害；暴击保留暗影特效，不再附带火焰，暴击倍率同时作用于普通伤害和位面伤害。
+  - 镐形态移除随机毒伤与吸血，命中目标时施加减速和易伤效果；效果按装备经验成长，重复命中刷新持续时间且不叠加。
+  - 镐形态右键地面可消耗 20 点理智召唤火精灵，最多同时存在 2 只；火精灵会保护主人、攻击相关敌人，并在死亡或消失时触发火焰爆炸。
+  - 装备经验达到 3000 且武器未损坏时提供 35 点位面伤害。
+
+English Update Log
+
+- Phoenix Helmet
+  - While reinforced mode is active and the helmet is not broken, it applies knockback-resistant handling; below 4000 equipment experience it uses `heavyarmor`, and at 4000 experience it upgrades to `superheavyarmor`.
+  - The knockback effect is removed when reinforced mode is disabled, the helmet is unequipped, or it breaks.
+  - Grants 25 planar defense at 3000 equipment experience.
+- Phoenix Axe
+  - Axe mode removes the old direct fire damage, ignition, sanity recovery, and attack-speed bonuses. It now gains equipment-experience scaling critical chance and critical damage; critical hits keep the shadow effect, no longer apply fire, and multiply both regular and planar damage.
+  - Pickaxe mode removes random poison damage and lifesteal. Hits apply slow and vulnerability, scaling with equipment experience; repeated hits refresh the duration instead of stacking.
+  - Right-clicking the ground in pickaxe mode spends 20 sanity to summon a Fire Wisp, with a maximum of 2 active wisps. Wisps protect their owner, attack related threats, and trigger a fire explosion when they die or disappear.
+  - Grants 35 planar damage at 3000 equipment experience while the weapon is not broken.
+
 T 13.7
 
 - fixed crash issue : when you equipped Yamchae on head and opened his container.
