@@ -2821,10 +2821,7 @@ local function ApplyBerserkVisual(inst)
 	if inst.visual_cos then
 		MushaAnim.SetBuild(inst, "musha_hunger")
 	elseif not inst.change_visual then
-		local build = MushaAnim.GetBuildForForm(inst, "berserk")
-		if build ~= nil then
-			MushaAnim.SetBuild(inst, build)
-		end
+		MushaAnim.ApplyFormBuild(inst, "berserk")
 	end
 end
 

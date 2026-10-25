@@ -13,6 +13,8 @@ return CreatePrefabSkin("musha_old_skin_none",
     assets =
     {
         Asset("ANIM", "anim/musha_old.zip"),
+        Asset("ANIM", "anim/musha_battle_p_old.zip"),
+        Asset("ANIM", "anim/musha_hunger_p_old.zip"),
         Asset("ANIM", "anim/ghost_musha_build.zip"),
         Asset("IMAGE", "bigportraits/musha_old_skin_none.tex"),
         Asset("ATLAS", "bigportraits/musha_old_skin_none.xml"),

@@ -57,6 +57,21 @@ local SKIN_FORM_BUILDS =
     },
 }
 
+local SKIN_FORM_OVERRIDE_BUILDS =
+{
+    musha_old_skin_none =
+    {
+        valkyrie = "musha_battle_p_old",
+        berserk = "musha_hunger_p_old",
+    },
+}
+
+local SKIN_OVERRIDE_BUILDS =
+{
+    "musha_battle_p_old",
+    "musha_hunger_p_old",
+}
+
 local DEFAULT_BUILD_FORMS =
 {
     musha = "full",
@@ -101,19 +116,28 @@ local function UsesDefaultVisualSet(inst)
     return inst.set_on and inst.visual_hold and not (inst.visual_hold2 and inst.visual_hold3 and inst.visual_hold4)
 end
 
-local function ResolveDefaultBuild(inst, build)
-    local form = DEFAULT_BUILD_FORMS[build]
+local function ResolveDefaultBuild(inst, build, form)
+    form = form or DEFAULT_BUILD_FORMS[build]
     if form ~= nil and UsesDefaultVisualSet(inst) then
-        return GetSkinDefaultBuild(inst, form) or build
+        return GetSkinDefaultBuild(inst, form) or build, GetSelectedSkinName(inst), form
     end
 
-    return build
+    return build, nil, nil
 end
 
-function MushaAnim.SetBuild(inst, build)
+function MushaAnim.SetBuild(inst, build, form)
     if HasAnimState(inst) and build ~= nil then
-        build = ResolveDefaultBuild(inst, build)
+        local skin_name, resolved_form
+        build, skin_name, resolved_form = ResolveDefaultBuild(inst, build, form)
         inst.AnimState:SetBuild(build)
+        for _, override_build in ipairs(SKIN_OVERRIDE_BUILDS) do
+            inst.AnimState:ClearOverrideBuild(override_build)
+        end
+        local skin_overrides = skin_name ~= nil and SKIN_FORM_OVERRIDE_BUILDS[skin_name] or nil
+        local override_build = skin_overrides ~= nil and skin_overrides[resolved_form] or nil
+        if override_build ~= nil then
+            inst.AnimState:AddOverrideBuild(override_build)
+        end
         inst.musha_current_build = build
         return true
     end
@@ -157,7 +181,7 @@ function MushaAnim.GetBuildForForm(inst, form)
 end
 
 function MushaAnim.ApplyFormBuild(inst, form)
-    return MushaAnim.SetBuild(inst, MushaAnim.GetBuildForForm(inst, form))
+    return MushaAnim.SetBuild(inst, MushaAnim.GetBuildForForm(inst, form), form)
 end
 
 function MushaAnim.GetCurrentForm(inst)

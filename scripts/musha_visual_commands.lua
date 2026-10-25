@@ -69,10 +69,7 @@ local function GetMushaCurrentForm(inst)
 end
 
 local function ApplyCurrentFormBuild(inst, env)
-	local build = env.MushaAnim.GetBuildForForm(inst, GetMushaCurrentForm(inst))
-	if build ~= nil then
-		env.MushaAnim.SetBuild(inst, build)
-	end
+	env.MushaAnim.ApplyFormBuild(inst, GetMushaCurrentForm(inst))
 end
 
 local function MakeFlags(overrides)
