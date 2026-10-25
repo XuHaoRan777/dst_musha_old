@@ -194,6 +194,7 @@ require("musha/companions/commands").Register({
 
 -----------------------------------------------
 require("musha/world/postinit").Register(AddPrefabPostInit, IsServer)
+require("musha/world/pickable_compat").Register(AddComponentPostInit, SpawnPrefab)
 
 -----------------------------------------------
 VisualCommands.Register({
