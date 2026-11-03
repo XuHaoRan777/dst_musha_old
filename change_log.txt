@@ -1,3 +1,13 @@
+T 14.2.4-maint.16
+
+中文更新日志
+
+- 修复燃烧物品拾取规则：恢复原版例外，允许拾取带有 `torch` 标签或 `lighter` 组件的燃烧物品；其他燃烧物和飞行中的投射物仍不可拾取。玩家与 Musha 召唤物使用相同规则。
+
+English Update Log
+
+- Fixed pickup handling for burning items: restored the vanilla exceptions so burning items tagged `torch` or equipped with a `lighter` component can be picked up. Other burning items and airborne projectiles remain unpickable. The same rule applies to players and Musha companions.
+
 T 14.2.4-maint.15
 
 中文更新日志

@@ -264,7 +264,10 @@ if act.doer.critter_musha or act.doer:HasTag("yamcheb") then
         (act.target.components.inventoryitem.canbepickedup or
         (act.target.components.inventoryitem.canbepickedupalive and not act.doer:HasTag("player"))) and
         not (act.target:IsInLimbo() or
-            (act.target.components.burnable ~= nil and act.target.components.burnable:IsBurning()) or
+            (act.target.components.burnable ~= nil
+				and act.target.components.burnable:IsBurning()
+				and act.target.components.lighter == nil
+				and not act.target:HasTag("torch")) or
             (act.target.components.projectile ~= nil and act.target.components.projectile:IsThrown())) then
   
 
@@ -289,7 +292,10 @@ if not act.doer.critter_musha and not act.doer:HasTag("yamcheb") then
         (act.target.components.inventoryitem.canbepickedup or
         (act.target.components.inventoryitem.canbepickedupalive and not act.doer:HasTag("player"))) and
         not (act.target:IsInLimbo() or
-            (act.target.components.burnable ~= nil and act.target.components.burnable:IsBurning()) or
+            (act.target.components.burnable ~= nil
+				and act.target.components.burnable:IsBurning()
+				and act.target.components.lighter == nil
+				and not act.target:HasTag("torch")) or
             (act.target.components.projectile ~= nil and act.target.components.projectile:IsThrown())) then
 
         if act.doer.components.itemtyperestrictions ~= nil and not act.doer.components.itemtyperestrictions:IsAllowed(act.target) then
