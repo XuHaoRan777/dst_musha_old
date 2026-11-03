@@ -1,3 +1,21 @@
+T 14.2.4-maint.15
+
+中文更新日志
+
+- 修复蚁狮战斗中女武神护甲反击导致崩溃的问题：排除地刺类攻击实体，并在反击伤害后重新确认攻击者及其组件仍然有效。
+- 修复凤凰从海面返回地面后脚部残留水纹的问题；失去 `drownable` 组件时也会清理仍存活的水面涟漪。
+- 月光玻璃现在可修复接受 `CHEMICAL` 燃料的 Musha 装备；修复量由装备自身设定。
+- 新增地面 Boss 宝藏：克劳斯、远古守护者、恐怖之眼、双子魔眼、天体英雄最终阶段和远古织影者，在符合 Musha 击杀判定时会于附近生成宝藏点。克劳斯仅在最终阶段触发；远古织影者自然衰退时不会触发。
+- 新增海上 Boss 宝藏：蟹王和邪天翁死亡后会在附近生成随机沉底宝箱，不影响原有掉落。
+
+English Update Log
+
+- Fixed a crash during Antlion fights caused by Valkyrie armor counterattacks. Ground-spike attackers are now excluded, and the attacker and its components are revalidated after counterattack damage.
+- Fixed Phoenix water ripples remaining around its feet after returning to land. Live ripples are also cleared if the `drownable` component is unavailable.
+- Moon Glass can now repair Musha equipment that accepts `CHEMICAL` fuel. The repair amount is determined by each item's existing settings.
+- Added nearby treasure spots for the following land bosses when the kill qualifies as a Musha kill: Klaus, Ancient Guardian, Eye of Terror, both Twins of Terror, the final Celestial Champion phase, and Ancient Fuelweaver. Klaus only triggers on his final phase, and Ancient Fuelweaver's natural decay does not trigger a treasure spot.
+- Added random nearby sunken chests when Crab King or Malbatross dies. Their existing drops are preserved.
+
 T 13.7
 
 - fixed crash issue : when you equipped Yamchae on head and opened his container.

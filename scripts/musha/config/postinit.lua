@@ -81,6 +81,7 @@ function ConfigPostInit.Register(config, add_prefab_post_init, is_server, tuning
 		"rocks",
 		"flint",
 		"marble",
+		"moonglass",
 		"moonrocknugget",
 		"thulecite_pieces",
 		"boneshard",

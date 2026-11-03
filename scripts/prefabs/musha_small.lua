@@ -260,10 +260,47 @@ end
 
 --compatible with shipwrecked
 
+local function ClearYamcheWaterRipples(inst)
+	local ripples = inst.weregoose_ripples
+	if ripples ~= nil then
+		for i = #ripples, 1, -1 do
+			local ripple = ripples[i]
+			if ripple ~= nil and ripple:IsValid() then
+				ripple:Remove()
+			end
+		end
+		inst.weregoose_ripples = nil
+	end
+end
+
+local function TrackYamcheWaterRipple(inst, ripple)
+	if ripple == nil then
+		return
+	end
+
+	ripple.entity:SetParent(inst.entity)
+	local ripples = inst.weregoose_ripples
+	if ripples == nil then
+		ripples = {}
+		inst.weregoose_ripples = ripples
+	end
+	for i = #ripples, 1, -1 do
+		if ripples[i] == nil or not ripples[i]:IsValid() then
+			table.remove(ripples, i)
+		end
+	end
+	ripples[#ripples + 1] = ripple
+end
+
 local function Rippletask(inst)
-if inst.components.drownable ~= nil then 
+	if inst.components.drownable == nil then
+		inst.on_ground = true
+		ClearYamcheWaterRipples(inst)
+		return
+	end
+
 	if inst.components.drownable:IsOverWater() then
-	SpawnPrefab("weregoose_ripple"..tostring(math.random(2))).entity:SetParent(inst.entity)
+	TrackYamcheWaterRipple(inst, SpawnPrefab("weregoose_ripple"..tostring(math.random(2))))
 	inst.on_ground = false
 		local x, y, z = inst.Transform:GetWorldPosition()
         local fx = SpawnPrefab("splash_water_drop")
@@ -277,19 +314,13 @@ if inst.components.drownable ~= nil then
 		inst.sg:GoToState("walk") 
 		end		
 	else
-	inst.on_ground = true
+		inst.on_ground = true
+		ClearYamcheWaterRipples(inst)
 	end
-end
 end
 
 local function Splash_Ripple(inst)
-	inst.Rippletask = Rippletask(inst)
-	if inst.on_ground then
-			if inst.Rippletask ~= nil then
-				inst.Rippletask:Cancel()
-				inst.Rippletask = nil
-			end
-	end
+	Rippletask(inst)
 end
 
 

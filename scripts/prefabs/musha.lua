@@ -2463,46 +2463,48 @@ if not IsProtectedLightningEntity(inst, v) and inst.level < 430 and inst.active_
 	-- valkyrie armor
 
 		------------------
-	local function On_frameshield_1(attacked, data) --
-        if data.attacker and data.attacker.components.burnable and data.attacker.components.health ~= nil and data.attacker.components.burnable and not data.attacker:HasTag("thorny") and not data.attacker:HasTag("shadowcreature") and not data.attacker:HasTag("antlion") and not data.attacker.burn then
-            data.attacker.components.health:DoDelta(-10)
-            data.attacker.components.burnable:Ignite()
+	local function On_frameshield_attacked(attacked, data, damage)
+		local attacker = data ~= nil and data.attacker or nil
+		if attacker == nil or not attacker:IsValid() or attacker.components == nil then
+			return
 		end
-    if data.attacker and data.attacker.components.burnable and data.attacker.components.burnable:IsBurning() and not data.attacker:HasTag("buzzard") then
-        data.attacker.components.burnable:Extinguish()
-        end
-		 data.attacker.burn = true
+
+		local burnable = attacker.components.burnable
+		if burnable ~= nil
+			and attacker.components.health ~= nil
+			and not attacker:HasTag("thorny")
+			and not attacker:HasTag("shadowcreature")
+			and not attacker:HasTag("antlion")
+			and not attacker:HasTag("groundspike")
+			and not attacker.burn then
+			attacker.components.health:DoDelta(-damage)
+
+			if attacker:IsValid() and attacker.components ~= nil and attacker.components.burnable ~= nil then
+				attacker.components.burnable:Ignite()
+			end
 		end
-	local function On_frameshield_2(attacked, data)  --
-        if data.attacker and data.attacker.components.burnable and data.attacker.components.health ~= nil and data.attacker.components.burnable and not data.attacker:HasTag("thorny") and not data.attacker:HasTag("shadowcreature") and not data.attacker:HasTag("antlion") and not data.attacker.burn then
-            data.attacker.components.health:DoDelta(-20)
-            data.attacker.components.burnable:Ignite()
+
+		if attacker:IsValid() and attacker.components ~= nil then
+			burnable = attacker.components.burnable
+			if burnable ~= nil and burnable:IsBurning() and not attacker:HasTag("buzzard") then
+				burnable:Extinguish()
+			end
+			attacker.burn = true
 		end
-    if data.attacker and data.attacker.components.burnable and data.attacker.components.burnable:IsBurning() and not data.attacker:HasTag("buzzard") then
-        data.attacker.components.burnable:Extinguish()
-        end
-		 data.attacker.burn = true
-		end
-	local function On_frameshield_3(attacked, data)  --
-        if data.attacker and data.attacker.components.burnable and data.attacker.components.health ~= nil and data.attacker.components.burnable and not data.attacker:HasTag("thorny") and not data.attacker:HasTag("shadowcreature") and not data.attacker:HasTag("antlion") and not data.attacker.burn then
-            data.attacker.components.health:DoDelta(-30)
-            data.attacker.components.burnable:Ignite()
-		end
-    if data.attacker and data.attacker.components.burnable and data.attacker.components.burnable:IsBurning() and not data.attacker:HasTag("buzzard") then
-        data.attacker.components.burnable:Extinguish()
-        end
-		 data.attacker.burn = true
-		end
-	local function On_frameshield_4(attacked, data)  --
-        if data.attacker and data.attacker.components.burnable and data.attacker.components.health ~= nil and data.attacker.components.burnable and not data.attacker:HasTag("thorny") and not data.attacker:HasTag("shadowcreature") and not data.attacker:HasTag("antlion") and not data.attacker.burn then
-            data.attacker.components.health:DoDelta(-40)
-            data.attacker.components.burnable:Ignite()
-		end
-    if data.attacker and data.attacker.components.burnable and data.attacker.components.burnable:IsBurning() and not data.attacker:HasTag("buzzard") then
-        data.attacker.components.burnable:Extinguish()
-        end
-		 data.attacker.burn = true
-		end
+	end
+
+	local function On_frameshield_1(attacked, data)
+		On_frameshield_attacked(attacked, data, 10)
+	end
+	local function On_frameshield_2(attacked, data)
+		On_frameshield_attacked(attacked, data, 20)
+	end
+	local function On_frameshield_3(attacked, data)
+		On_frameshield_attacked(attacked, data, 30)
+	end
+	local function On_frameshield_4(attacked, data)
+		On_frameshield_attacked(attacked, data, 40)
+	end
 
 	local function Off_frameshield(inst)
 			inst:RemoveEventCallback("attacked", On_frameshield_1)
@@ -4007,6 +4009,7 @@ end
 local smallScale = 0.5
 local medScale = 0.7
 local largeScale = 1.1
+
 local function onkilll(inst, data)
 	local victim = data.victim
 	if IsValidVictim(victim) then
