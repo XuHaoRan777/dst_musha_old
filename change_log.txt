@@ -2,11 +2,11 @@ T 14.2.4-maint.16
 
 中文更新日志
 
-- 修复拾取规则：燃烧中的火炬和打火机类物品现在可以拾取，其他燃烧物和飞行投射物仍不可拾取。
+- 修复女王火炬无法拾取的问题。
 
 English Update Log
 
-- Fixed pickup rules: burning torches and lighters can now be picked up; other burning items and airborne projectiles remain unpickable.
+- Fixed an issue that prevented the Queen Torch from being picked up.
 
 T 14.2.4-maint.15
 
