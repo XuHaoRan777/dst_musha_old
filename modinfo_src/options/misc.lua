@@ -51,4 +51,20 @@ return {
         },
         "off"
     ),
+    ConfigOption(
+        "phoenixaxe_tilling",
+        "凤凰斧九宫格耕地",
+        "Phoenix Axe 3x3 Tilling",
+        "开启后，凤凰斧镐形态在农田地皮右键时重置本格耕地并生成九宫格；作物或障碍所在位置会跳过。其他地面仍可召唤火精灵。",
+        "When enabled, right-clicking farm soil with the Phoenix Axe pick form resets tilling in that tile and creates a 3x3 grid. Positions blocked by crops or obstacles are skipped. Other ground still summons the fire spirit.",
+        {
+            {description = T("开启", "On", "켜기", "Вкл."), data = "on"},
+            {description = T("关闭", "Off", "끄기", "Выкл."), data = "off"},
+        },
+        "off",
+        "불사조 도끼 3x3 밭갈이",
+        "Вспашка 3×3 Фениксовым топором",
+        "활성화하면 불사조 도끼 곡괭이 형태로 농장 타일을 우클릭할 때 해당 타일을 초기화하고 3x3으로 경작합니다. 작물이나 장애물이 있는 칸은 건너뜁니다. 다른 지형에서는 화염 정령을 소환합니다.",
+        "После включения щелчок правой кнопкой по фермерской почве киркой-Фениксом заново вспашет участок сеткой 3×3. Клетки с растениями или препятствиями будут пропущены. На другой местности по-прежнему вызывается огненный дух."
+    ),
 }

@@ -1,4 +1,5 @@
 local EquipUtils = require("musha/equipment/utils")
+local Slow = require("musha/combat/slow")
 
 local assets=
 {
@@ -341,47 +342,43 @@ local function OnLoad(inst, data)
     Upgradedamage(inst)
 end
 
-local function ClearPoisonState(target, poison)
+local function ClearPoisonState(target)
 	if target ~= nil and target:IsValid() then
-		if target.components.locomotor ~= nil then
-			target.components.locomotor.groundspeedmultiplier = 1
-		end
 		target:RemoveTag("slow_poison")
-	end
-	if poison ~= nil and poison:IsValid() then
-		poison:Remove()
 	end
 end
 
-local function StartPoisonTask(inst, target, poison, damage, duration)
-	local poison_task = nil
-	poison_task = TheWorld:DoPeriodicTask(3, function()
-		if target == nil
-			or not target:IsValid()
-			or not target:HasTag("slow_poison")
-			or target.components.health == nil
-			or target.components.health:IsDead() then
-			if poison_task ~= nil then
-				poison_task:Cancel()
-				poison_task = nil
+local function StartPoisonTask(inst, target, damage, duration)
+	local poison = SpawnPrefab("poisonbubble_short2")
+	if poison ~= nil then
+		poison.Transform:SetPosition(target:GetPosition():Get())
+		poison.Transform:SetScale(0.3, 0.3, 0.3)
+		local follower = poison.entity:AddFollower()
+		local symbol = target:HasTag("cavedweller") and "body"
+			or (target.components.combat ~= nil and target.components.combat.hiteffectsymbol or "body")
+		follower:FollowSymbol(target.GUID, symbol, 0, -10, 0.5)
+	end
+	local applied = Slow.Apply(target, "poison", {
+		duration = duration,
+		fx = poison,
+		on_clear = ClearPoisonState,
+		tick_period = 3,
+		tick_strength = damage,
+		on_tick = function(victim)
+			if victim.components.combat ~= nil then
+				if victim:HasTag("epic") then
+					victim.components.health:DoDelta(-damage)
+				elseif inst ~= nil and inst:IsValid() then
+					victim.components.combat:GetAttacked(inst, damage)
+				end
 			end
-			return
-		end
-		if target.components.combat ~= nil then
-			if target:HasTag("epic") then
-				target.components.health:DoDelta(-damage)
-			else
-				target.components.combat:GetAttacked(inst, damage)
-			end
-		end
-	end)
-	TheWorld:DoTaskInTime(duration, function()
-		if poison_task ~= nil then
-			poison_task:Cancel()
-			poison_task = nil
-		end
-		ClearPoisonState(target, poison)
-	end)
+		end,
+	})
+	if applied then
+		target:AddTag("slow_poison")
+	elseif poison ~= nil and poison:IsValid() then
+		poison:Remove()
+	end
 end
 
 
@@ -447,53 +444,14 @@ TakeItem_effect(inst)
 	-----
 if target ~= nil and not target:HasTag("smashable") and not target:HasTag("companion") and not target:HasTag("yamcheb") and not target:HasTag("yamche") and (target.components.burnable or target.components.freezable) then	
 	if target.components.locomotor and target.components.health and not target:HasTag("shadowcreature") and not target:HasTag("structure") and not target:HasTag("stalkerminion") and not target:HasTag("smashable") and not target:HasTag("alignwall") and not target:HasTag("shadowminion") and target.components.health and not target.components.health:IsDead() and not inst.boost then
-				if math.random() < poisone_1 and not inst.boost and inst.level <250 and not target:HasTag("slow_poison") then
-        
-		local poison = SpawnPrefab("poisonbubble_short2")
-		poison.Transform:SetPosition(target:GetPosition():Get())
-		poison.Transform:SetScale(0.3,0.3,0.3)
-		target:AddTag("slow_poison")
-		if poison and target:HasTag("slow_poison") then
-		local follower = poison.entity:AddFollower()
-			if not target:HasTag("cavedweller") then
-			follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -10, 0.5 )
-			else
-			follower:FollowSymbol(target.GUID, "body", 0, -10, 0.5 )
-			end
-		end
-		StartPoisonTask(inst, target, poison, 4, 9)
+				if math.random() < poisone_1 and not inst.boost and inst.level <250 then
+		StartPoisonTask(inst, target, 4, 9)
 		
-	elseif math.random() < poisone_2 and not inst.boost and inst.level >=250 and inst.level <1400 and not target:HasTag("slow_poison") then
-        
- 		local poison = SpawnPrefab("poisonbubble_short2")
-		poison.Transform:SetPosition(target:GetPosition():Get())
-		poison.Transform:SetScale(0.3,0.3,0.3)
-		target:AddTag("slow_poison")
-		if poison and target:HasTag("slow_poison") then
-		local follower = poison.entity:AddFollower()
-			if not target:HasTag("cavedweller") then
-			follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -10, 0.5 )
-			else
-			follower:FollowSymbol(target.GUID, "body", 0, -10, 0.5 )
-			end
-		end
-		StartPoisonTask(inst, target, poison, 8, 12)
+	elseif math.random() < poisone_2 and not inst.boost and inst.level >=250 and inst.level <1400 then
+		StartPoisonTask(inst, target, 8, 12)
 	
-	elseif math.random() < poisone_3 and not inst.boost and inst.level >=1400 and not target:HasTag("slow_poison") then
-        
-		local poison = SpawnPrefab("poisonbubble_short2")
-		poison.Transform:SetPosition(target:GetPosition():Get())
-		poison.Transform:SetScale(0.3,0.3,0.3)
-		target:AddTag("slow_poison")
-		if poison and target:HasTag("slow_poison") then
-		local follower = poison.entity:AddFollower()
-			if not target:HasTag("cavedweller") then
-			follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -10, 0.5 )
-			else
-			follower:FollowSymbol(target.GUID, "body", 0, -10, 0.5 )
-			end
-		end
-		StartPoisonTask(inst, target, poison, 12, 15)
+	elseif math.random() < poisone_3 and not inst.boost and inst.level >=1400 then
+		StartPoisonTask(inst, target, 12, 15)
 		end
 	
 	elseif target.components.health and not target:HasTag("shadowcreature") and not target:HasTag("structure") and not target:HasTag("stalkerminion") and not target:HasTag("smashable") and not target:HasTag("alignwall") and not target:HasTag("shadowminion") and target.components.health and not target.components.health:IsDead() and inst.boost then

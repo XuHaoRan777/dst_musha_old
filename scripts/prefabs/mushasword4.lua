@@ -1,4 +1,6 @@
 local EquipUtils = require("musha/equipment/utils")
+local Slow = require("musha/combat/slow")
+local PhoenixAxeTilling = require("musha/equipment/phoenixaxe_tilling")
 
 local assets=
 {
@@ -242,9 +244,21 @@ local function AddFireSporeCaster(inst)
 	end
 	inst.components.spellcaster:SetSpellFn(createlight)
 	inst.components.spellcaster.canuseonpoint = true
+	if TUNING.MUSHA_PHOENIXAXE_TILLING == true then
+		PhoenixAxeTilling.Attach(inst, {
+			enabled = true,
+			map = TheWorld.Map,
+			sim = TheSim,
+			spawnprefab = SpawnPrefab,
+			vector3 = Vector3,
+			tile_scale = TILE_SCALE,
+			equipslots = EQUIPSLOTS,
+		})
+	end
 end
 
 local function RemoveFireSporeCaster(inst)
+	PhoenixAxeTilling.Detach(inst)
 	if inst.components.spellcaster ~= nil then
 		inst:RemoveComponent("spellcaster")
 	end
@@ -619,32 +633,14 @@ local function ClearPhoenixAxeDebuff(target)
 	if target == nil or not target:IsValid() then
 		return
 	end
-	if target.phoenixaxe_debuff_task ~= nil then
-		target.phoenixaxe_debuff_task:Cancel()
-		target.phoenixaxe_debuff_task = nil
-	end
-	if target.components.locomotor ~= nil then
-		target.components.locomotor:RemoveExternalSpeedMultiplier(target, "phoenixaxe")
-	end
 	if target.components.combat ~= nil and target.components.combat.externaldamagetakenmultipliers ~= nil then
 		target.components.combat.externaldamagetakenmultipliers:RemoveModifier(target, "phoenixaxe")
 	end
 	target:RemoveTag("phoenix_axe_debuff")
-	if target.phoenixaxe_debuff_fx ~= nil and target.phoenixaxe_debuff_fx:IsValid() then
-		target.phoenixaxe_debuff_fx:Remove()
-	end
-	target.phoenixaxe_debuff_fx = nil
+	target.phoenixaxe_weakness = nil
 end
 
 local function ApplyPhoenixAxeDebuff(target, stats)
-	ClearPhoenixAxeDebuff(target)
-	target:AddTag("phoenix_axe_debuff")
-	if target.components.locomotor ~= nil then
-		target.components.locomotor:SetExternalSpeedMultiplier(target, "phoenixaxe", 1 - stats.slow)
-	end
-	if target.components.combat ~= nil and target.components.combat.externaldamagetakenmultipliers ~= nil then
-		target.components.combat.externaldamagetakenmultipliers:SetModifier(target, 1 + stats.weakness, "phoenixaxe")
-	end
 	local fx = SpawnPrefab("debuff_blood")
 	if fx ~= nil then
 		fx.Transform:SetPosition(target:GetPosition():Get())
@@ -654,11 +650,24 @@ local function ApplyPhoenixAxeDebuff(target, stats)
 		elseif target.components.combat ~= nil then
 			follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -10, 0.5)
 		end
-		target.phoenixaxe_debuff_fx = fx
 	end
-	target.phoenixaxe_debuff_task = target:DoTaskInTime(stats.duration, function()
-		ClearPhoenixAxeDebuff(target)
-	end)
+	if not Slow.Apply(target, "phoenixaxe", {
+		slow = stats.slow,
+		duration = stats.duration,
+		allow_stationary = true,
+		fx = fx,
+		on_clear = ClearPhoenixAxeDebuff,
+	}) then
+		if fx ~= nil and fx:IsValid() then
+			fx:Remove()
+		end
+		return
+	end
+	target:AddTag("phoenix_axe_debuff")
+	target.phoenixaxe_weakness = math.max(target.phoenixaxe_weakness or 0, stats.weakness)
+	if target.components.combat ~= nil and target.components.combat.externaldamagetakenmultipliers ~= nil then
+		target.components.combat.externaldamagetakenmultipliers:SetModifier(target, 1 + target.phoenixaxe_weakness, "phoenixaxe")
+	end
 end
 
 
@@ -1003,5 +1012,5 @@ inst:AddTag("musha_items")
     return inst
 end
 
-return Prefab( "common/inventory/mushasword4", fn, assets) 
+return Prefab( "common/inventory/mushasword4", fn, assets, { "farm_soil" })
 

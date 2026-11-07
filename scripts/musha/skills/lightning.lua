@@ -1,8 +1,5 @@
 local M = {}
-
-local function GetWorld(env)
-	return env.GetWorld ~= nil and env.GetWorld() or env.TheWorld
-end
+local Slow = require("musha/combat/slow")
 
 local function SpawnAt(env, prefab, target, scale)
 	local fx = env.SpawnPrefab(prefab)
@@ -90,9 +87,31 @@ local function ClearValkyrieLightning(inst, env, play_fx, refund)
 	inst.lightning_spell_cost = false
 end
 
+local function ApplyLightningSlow(env, target, dot_damage)
+	if not target:IsValid() or target.components.health == nil or target.components.health:IsDead() then
+		return
+	end
+	local debuff = SpawnAt(env, "debuff_short", target)
+	if debuff ~= nil then
+		local follower = debuff.entity:AddFollower()
+		local symbol = not target:HasTag("cavedweller") and target.components.combat ~= nil
+			and target.components.combat.hiteffectsymbol or "body"
+		follower:FollowSymbol(target.GUID, symbol, 0, -50, 0.5)
+	end
+	if not Slow.Apply(target, "lightning", {
+		fx = debuff,
+		tick_period = 2,
+		tick_strength = -dot_damage,
+		on_tick = function(v) v.components.health:DoDelta(dot_damage) end,
+	}) and debuff ~= nil and debuff:IsValid() then
+		debuff:Remove()
+	end
+end
+
 local function ApplyDelayedSlow(env, inst, target, direct_damage, shocked_damage, dot_damage)
 	target:DoTaskInTime(0.3, function(target)
-		if target == nil or not target:IsValid() or target.components.health == nil or target.components.health:IsDead() then
+		if target == nil or not target:IsValid() or target.components.health == nil
+			or target.components.health:IsDead() or IsProtectedLightningTarget(inst, target) then
 			return
 		end
 
@@ -105,20 +124,12 @@ local function ApplyDelayedSlow(env, inst, target, direct_damage, shocked_damage
 			end
 		end)
 
-		target.slow = true
-		if not target:HasTag("slow") then
-			target:AddTag("slow")
-		end
 		target.burn = false
 		target.bloom = false
 		target:RemoveTag("burn")
 		if not target:HasTag("lightninggoat") then
 			target.AnimState:SetBloomEffectHandle("")
 			target.bloom = false
-		end
-
-		if not target:HasTag("slow") then
-			return
 		end
 
 		SpawnSpinFx(env, inst, target, false)
@@ -130,31 +141,7 @@ local function ApplyDelayedSlow(env, inst, target, direct_damage, shocked_damage
 			target.shocked = false
 		end
 
-		local debuff = SpawnAt(env, "debuff_short", target)
-		if debuff ~= nil and target:HasTag("slow") then
-			local follower = debuff.entity:AddFollower()
-			if not target:HasTag("cavedweller") and target.components.combat ~= nil then
-				follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -50, 0.5)
-			else
-				follower:FollowSymbol(target.GUID, "body", 0, -50, 0.5)
-			end
-			GetWorld(env):DoPeriodicTask(2, function()
-				if target:IsValid() and target:HasTag("slow") and not target.components.health:IsDead() then
-					target.components.health:DoDelta(dot_damage)
-				end
-			end)
-		end
-
-		GetWorld(env):DoTaskInTime(15, function()
-			if target:IsValid() and target.components.locomotor ~= nil then
-				target.components.locomotor.groundspeedmultiplier = 1
-				target.slow = false
-				target:RemoveTag("slow")
-				if debuff ~= nil and debuff:IsValid() then
-					debuff:Remove()
-				end
-			end
-		end)
+		ApplyLightningSlow(env, target, dot_damage)
 	end)
 end
 
@@ -180,7 +167,10 @@ local function IsLightningTarget(inst, target)
 end
 
 local function StopAndHitTarget(target)
-	if target.components.locomotor ~= nil and not target:HasTag("ghost") then
+	-- Extra spell hit reactions must not interrupt boss phase transitions.
+	if target:IsValid() and not target.components.health:IsDead()
+		and target.components.locomotor ~= nil and not target:HasTag("ghost")
+		and not target:HasTag("epic") and not target:HasTag("giant") then
 		target.components.locomotor:StopMoving()
 		if target.sg ~= nil then
 			if target:HasTag("spider") and not target:HasTag("spiderqueen") then
@@ -200,7 +190,7 @@ end
 
 function M.OnHitLightning(inst, data)
 	local other = data ~= nil and data.target or nil
-	if other == nil
+	if other == nil or not other:IsValid()
 		or IsProtectedLightningTarget(inst, other)
 		or other:HasTag("smashable")
 		or other:HasTag("shadowminion")
@@ -281,45 +271,16 @@ local function BerserkLightning(inst, env)
 
 			if target:HasTag("burn") and target.components.combat ~= nil then
 				SpawnAt(env, "explode_small", target)
-				if not target:HasTag("slow") then
-					target:AddTag("slow")
+				if not target.shocked then
+					target.components.health:DoDelta(-30)
+				else
+					SpawnAt(env, "explode_small", target)
+					target.components.health:DoDelta(-45)
+					SpawnSpinFx(env, inst, target, false)
+					target.shocked = false
 				end
 
-				if target:HasTag("slow") then
-					if not target.shocked then
-						target.components.health:DoDelta(-30)
-					else
-						SpawnAt(env, "explode_small", target)
-						target.components.health:DoDelta(-45)
-						SpawnSpinFx(env, inst, target, false)
-						target.shocked = false
-					end
-
-					local debuff = SpawnAt(env, "debuff_short", target)
-					if debuff ~= nil and target:HasTag("slow") then
-						local follower = debuff.entity:AddFollower()
-						if not target:HasTag("cavedweller") then
-							follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, -50, 0.5)
-						else
-							follower:FollowSymbol(target.GUID, "body", 0, -50, 0.5)
-						end
-						GetWorld(env):DoPeriodicTask(2, function()
-							if target:IsValid() and target:HasTag("slow") and not target.components.health:IsDead() then
-								target.components.health:DoDelta(-2)
-							end
-						end)
-					end
-					GetWorld(env):DoTaskInTime(15, function()
-						if target:IsValid() and target.components.locomotor ~= nil then
-							target.components.locomotor.groundspeedmultiplier = 1
-							target.slow = false
-							target:RemoveTag("slow")
-							if debuff ~= nil and debuff:IsValid() then
-								debuff:Remove()
-							end
-						end
-					end)
-				end
+				ApplyLightningSlow(env, target, -2)
 			else
 				target.components.health:DoDelta(-25)
 			end
@@ -350,7 +311,8 @@ local function GhostLightning(inst, env)
 				SpawnSpinFx(env, inst, target, true)
 			end
 			target.components.health:DoDelta(-10)
-			if target.sg ~= nil then
+			if target:IsValid() and not target.components.health:IsDead() and target.sg ~= nil
+				and not target:HasTag("epic") and not target:HasTag("giant") then
 				if target:HasTag("spider") and not target:HasTag("spiderqueen") then
 					target.sg:GoToState("hit_stunlock")
 				elseif target:HasTag("hound") then

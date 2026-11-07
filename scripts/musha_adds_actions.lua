@@ -5,6 +5,16 @@ Recipe = GLOBAL.Recipe
 local STRINGS = GLOBAL.STRINGS
 local ACTIONS = GLOBAL.ACTIONS
 
+require("musha/equipment/phoenixaxe_tilling").Register({
+	addcomponentaction = AddComponentAction,
+	enabled = GLOBAL.TUNING.MUSHA_PHOENIXAXE_TILLING == true,
+	getmap = function()
+		return GLOBAL.TheWorld ~= nil and GLOBAL.TheWorld.Map or nil
+	end,
+	actions = ACTIONS,
+	equipslots = GLOBAL.EQUIPSLOTS,
+})
+
 ACTIONS.TURNON.priority = 3
 ACTIONS.TURNOFF.priority = 2
 ACTIONS.ABANDON.priority = 5

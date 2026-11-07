@@ -1,7 +1,14 @@
 local CONFIG_LANG = locale == "zh" or locale == "zhr" or locale == "zht"
 
-local function T(zh, en)
-    return CONFIG_LANG and zh or en
+local function T(zh, en, ko, ru)
+    if CONFIG_LANG then
+        return zh
+    elseif locale == "ko" then
+        return ko or en
+    elseif locale == "ru" then
+        return ru or en
+    end
+    return en
 end
 
 local function LanguageHover()
@@ -16,10 +23,10 @@ local function LanguageHover()
 end
 
 name = "[DST]Musha: Maintained Fork"
-version = "T 14.2.4-maint.17"
+version = "T 14.2.4-maint.18"
 description = T(
-    "[ 维护版 | 版本 : T 14.2.4-maint.17 ]\n原作者: Sunnyyyyholic\n-------------------------\n基于 Musha 的维护版本，修复问题并改善兼容性。",
-    "[ Maintained Fork | Version : T 14.2.4-maint.17 ]\nOriginal author: Sunnyyyyholic\n-------------------------\nA maintained edition of Musha. Issues are fixed and compatibility is improved."
+    "[ 维护版 | 版本 : T 14.2.4-maint.18 ]\n原作者: Sunnyyyyholic\n-------------------------\n基于 Musha 的维护版本，修复问题并改善兼容性。",
+    "[ Maintained Fork | Version : T 14.2.4-maint.18 ]\nOriginal author: Sunnyyyyholic\n-------------------------\nA maintained edition of Musha. Issues are fixed and compatibility is improved."
 )
 author = "Sunnyyyyholic、Code_xu"
 --version_compatible = ""
@@ -43,11 +50,11 @@ icon = "modicon.tex"
 
 server_filter_tags = {"musha"}
 
-local function ConfigOption(name, label_zh, label_en, hover_zh, hover_en, options, default)
+local function ConfigOption(name, label_zh, label_en, hover_zh, hover_en, options, default, label_ko, label_ru, hover_ko, hover_ru)
     return {
         name = name,
-        label = T(label_zh, label_en),
-        hover = T(hover_zh, hover_en),
+        label = T(label_zh, label_en, label_ko, label_ru),
+        hover = T(hover_zh, hover_en, hover_ko, hover_ru),
         options = options,
         default = default,
     }

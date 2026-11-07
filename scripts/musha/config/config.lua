@@ -25,6 +25,7 @@ function Config.Load(get_config, tuning)
 		butterfly_shield = ReadConfig(get_config, "on_butterfly_shield"),
 		moontree_stop = ReadConfig(get_config, "stop_spawning"),
 		frostblade3rd = ReadConfig(get_config, "frostblade3rd"),
+		phoenixaxe_tilling = ReadConfig(get_config, "phoenixaxe_tilling", "off"),
 		pirateback_slot = ReadConfig(get_config, "pirateback_slot", "auto"),
 		diet = ReadConfig(get_config, "dietmusha"),
 		dislike = ReadConfig(get_config, "favoritemusha"),
@@ -60,6 +61,7 @@ function Config.Load(get_config, tuning)
 	end
 
 	tuning.MUSHA_PIRATEBACK_SLOT = config.pirateback_slot
+	tuning.MUSHA_PHOENIXAXE_TILLING = config.phoenixaxe_tilling == "on"
 	tuning.MUSHA = config.keys
 
 	return config

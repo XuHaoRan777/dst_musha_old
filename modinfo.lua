@@ -1,7 +1,14 @@
 local CONFIG_LANG = locale == "zh" or locale == "zhr" or locale == "zht"
 
-local function T(zh, en)
-    return CONFIG_LANG and zh or en
+local function T(zh, en, ko, ru)
+    if CONFIG_LANG then
+        return zh
+    elseif locale == "ko" then
+        return ko or en
+    elseif locale == "ru" then
+        return ru or en
+    end
+    return en
 end
 
 local function LanguageHover()
@@ -16,10 +23,10 @@ local function LanguageHover()
 end
 
 name = "[DST]Musha: Maintained Fork"
-version = "T 14.2.4-maint.17"
+version = "T 14.2.4-maint.18"
 description = T(
-    "[ 维护版 | 版本 : T 14.2.4-maint.17 ]\n原作者: Sunnyyyyholic\n-------------------------\n基于 Musha 的维护版本，修复问题并改善兼容性。",
-    "[ Maintained Fork | Version : T 14.2.4-maint.17 ]\nOriginal author: Sunnyyyyholic\n-------------------------\nA maintained edition of Musha. Issues are fixed and compatibility is improved."
+    "[ 维护版 | 版本 : T 14.2.4-maint.18 ]\n原作者: Sunnyyyyholic\n-------------------------\n基于 Musha 的维护版本，修复问题并改善兼容性。",
+    "[ Maintained Fork | Version : T 14.2.4-maint.18 ]\nOriginal author: Sunnyyyyholic\n-------------------------\nA maintained edition of Musha. Issues are fixed and compatibility is improved."
 )
 author = "Sunnyyyyholic、Code_xu"
 --version_compatible = ""
@@ -43,11 +50,11 @@ icon = "modicon.tex"
 
 server_filter_tags = {"musha"}
 
-local function ConfigOption(name, label_zh, label_en, hover_zh, hover_en, options, default)
+local function ConfigOption(name, label_zh, label_en, hover_zh, hover_en, options, default, label_ko, label_ru, hover_ko, hover_ru)
     return {
         name = name,
-        label = T(label_zh, label_en),
-        hover = T(hover_zh, hover_en),
+        label = T(label_zh, label_en, label_ko, label_ru),
+        hover = T(hover_zh, hover_en, hover_ko, hover_ru),
         options = options,
         default = default,
     }
@@ -692,5 +699,21 @@ configuration_options =
             {description = T("选项3", "Option3"), data = "loud3"},
         },
         "off"
+    ),
+    ConfigOption(
+        "phoenixaxe_tilling",
+        "凤凰斧九宫格耕地",
+        "Phoenix Axe 3x3 Tilling",
+        "开启后，凤凰斧镐形态在农田地皮右键时重置本格耕地并生成九宫格；作物或障碍所在位置会跳过。其他地面仍可召唤火精灵。",
+        "When enabled, right-clicking farm soil with the Phoenix Axe pick form resets tilling in that tile and creates a 3x3 grid. Positions blocked by crops or obstacles are skipped. Other ground still summons the fire spirit.",
+        {
+            {description = T("开启", "On", "켜기", "Вкл."), data = "on"},
+            {description = T("关闭", "Off", "끄기", "Выкл."), data = "off"},
+        },
+        "off",
+        "불사조 도끼 3x3 밭갈이",
+        "Вспашка 3×3 Фениксовым топором",
+        "활성화하면 불사조 도끼 곡괭이 형태로 농장 타일을 우클릭할 때 해당 타일을 초기화하고 3x3으로 경작합니다. 작물이나 장애물이 있는 칸은 건너뜁니다. 다른 지형에서는 화염 정령을 소환합니다.",
+        "После включения щелчок правой кнопкой по фермерской почве киркой-Фениксом заново вспашет участок сеткой 3×3. Клетки с растениями или препятствиями будут пропущены. На другой местности по-прежнему вызывается огненный дух."
     ),
 } 

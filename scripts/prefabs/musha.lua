@@ -6,6 +6,7 @@ local MushaTasks = require("musha/utils/task")
 local MushaSave = require("musha/prefabs/musha_save")
 local MushaDeath = require("musha/prefabs/musha_death")
 local FrostHammerMode = require("musha/equipment/frosthammer_mode")
+local Slow = require("musha/combat/slow")
 require("musha/skin_defs").Register()
 --local easing = require("easing")
 local assets = {
@@ -1419,7 +1420,7 @@ if (inst.vl1 or inst.vl2 or inst.vl3 or inst.vl4 or inst.vl5 or inst.vl6 or inst
 local x,y,z = inst.Transform:GetWorldPosition()
 local ents = TheSim:FindEntities(x, y, z, 12)
 for k,v in pairs(ents) do
-	if v:IsValid() and v.entity:IsVisible() and not IsProtectedLightningEntity(inst, v) and v.components.health ~= nil and not v.components.health:IsDead() and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly")) and not v:HasTag("groundspike") and not v:HasTag("player") and not v:HasTag("stalkerminion") and not inst.components.rider ~= nil and not inst.components.rider:IsRiding() and not inst.sg:HasStateTag("moving") and not inst.sg:HasStateTag("attack") and not v:HasTag("structure") and v.components.combat ~= nil and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn") or v:HasTag("werepig") or v:HasTag("frog")) then
+	if v:IsValid() and v.entity:IsVisible() and not IsProtectedLightningEntity(inst, v) and v.components.health ~= nil and not v.components.health:IsDead() and not (v:HasTag("berrythief") or v:HasTag("bird") or v:HasTag("butterfly")) and not v:HasTag("groundspike") and not v:HasTag("player") and not v:HasTag("stalkerminion") and (inst.components.rider == nil or not inst.components.rider:IsRiding()) and not inst.sg:HasStateTag("moving") and not inst.sg:HasStateTag("attack") and not v:HasTag("structure") and v.components.combat ~= nil and (v.components.combat.target == inst or v:HasTag("monster") or v:HasTag("burn") or v:HasTag("werepig") or v:HasTag("frog")) then
 
 inst.call_lightining_on = true
 inst:DoTaskInTime( 10, function() if inst.call_lightining_on then inst.call_lightining_on = false inst.cast_call_lightining = false end end)
@@ -1436,7 +1437,8 @@ if inst.level < 430 then
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
 	end
 
-	if v.components.locomotor and not v:HasTag("ghost") then
+	if v.components.locomotor and v.sg ~= nil and not v:HasTag("ghost")
+        and not v:HasTag("epic") and not v:HasTag("giant") then
         v.components.locomotor:StopMoving()
 		if v:HasTag("spider") and not v:HasTag("spiderqueen") then
 			v.sg:GoToState("hit_stunlock")
@@ -1448,18 +1450,20 @@ if inst.level < 430 then
 		fx_2.Transform:SetScale(0.4, 0.4, 0.4)
 		fx_2.Transform:SetPosition(inst:GetPosition():Get())
 
-	v:DoTaskInTime(0.3, function() SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
+	v:DoTaskInTime(0.3, function()
+	if not v:IsValid() or v.components.health == nil or v.components.health:IsDead()
+        or IsProtectedLightningEntity(inst, v) then return end
+	SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
-	v:DoTaskInTime(0.4, function() SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
+	v:DoTaskInTime(0.4, function()
+	if not v:IsValid() then return end
+	SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	local fx_3 = SpawnPrefab("groundpoundring_fx")
 		fx_3.Transform:SetScale(0.3, 0.3, 0.3)
 		fx_3.Transform:SetPosition(v:GetPosition():Get())
 	  end)
 		if v:HasTag("burn") then
-			v.slow = true
-			if not v:HasTag("slow") then
-			v:AddTag("slow")
-			end
+			Slow.Apply(v, "passive_lightning")
 		else
 		v.components.health:DoDelta(-10)
 		--v.components.combat:GetAttacked(inst, 10)
@@ -1490,7 +1494,8 @@ elseif inst.level >= 430 and inst.level < 1880 then
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
 	end
 
-	if v.components.locomotor and not v:HasTag("ghost") then
+	if v.components.locomotor and v.sg ~= nil and not v:HasTag("ghost")
+        and not v:HasTag("epic") and not v:HasTag("giant") then
         v.components.locomotor:StopMoving()
 		if v:HasTag("spider") and not v:HasTag("spiderqueen") then
 			v.sg:GoToState("hit_stunlock")
@@ -1502,18 +1507,20 @@ elseif inst.level >= 430 and inst.level < 1880 then
 		fx_2.Transform:SetScale(0.4, 0.4, 0.4)
 		fx_2.Transform:SetPosition(inst:GetPosition():Get())
 
-	v:DoTaskInTime(0.3, function() SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
+	v:DoTaskInTime(0.3, function()
+	if not v:IsValid() or v.components.health == nil or v.components.health:IsDead()
+        or IsProtectedLightningEntity(inst, v) then return end
+	SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
-	v:DoTaskInTime(0.4, function() SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
+	v:DoTaskInTime(0.4, function()
+	if not v:IsValid() then return end
+	SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	local fx_3 = SpawnPrefab("groundpoundring_fx")
 		fx_3.Transform:SetScale(0.3, 0.3, 0.3)
 		fx_3.Transform:SetPosition(v:GetPosition():Get())
 	  end)
 		if v:HasTag("burn") then
-			v.slow = true
-			if not v:HasTag("slow") then
-			v:AddTag("slow")
-			end
+			Slow.Apply(v, "passive_lightning")
 		else
 
 		v.components.health:DoDelta(-15)
@@ -1544,7 +1551,8 @@ elseif inst.level >= 1880 and inst.level < 7000 then
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
 	end
 
-	if v.components.locomotor and not v:HasTag("ghost") then
+	if v.components.locomotor and v.sg ~= nil and not v:HasTag("ghost")
+        and not v:HasTag("epic") and not v:HasTag("giant") then
         v.components.locomotor:StopMoving()
 		if v:HasTag("spider") and not v:HasTag("spiderqueen") then
 			v.sg:GoToState("hit_stunlock")
@@ -1556,18 +1564,20 @@ elseif inst.level >= 1880 and inst.level < 7000 then
 		fx_2.Transform:SetScale(0.4, 0.4, 0.4)
 		fx_2.Transform:SetPosition(inst:GetPosition():Get())
 
-	v:DoTaskInTime(0.3, function() SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
+	v:DoTaskInTime(0.3, function()
+	if not v:IsValid() or v.components.health == nil or v.components.health:IsDead()
+        or IsProtectedLightningEntity(inst, v) then return end
+	SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
-	v:DoTaskInTime(0.4, function() SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
+	v:DoTaskInTime(0.4, function()
+	if not v:IsValid() then return end
+	SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	local fx_3 = SpawnPrefab("groundpoundring_fx")
 		fx_3.Transform:SetScale(0.3, 0.3, 0.3)
 		fx_3.Transform:SetPosition(v:GetPosition():Get())
 	  end)
 		if v:HasTag("burn") then
-			v.slow = true
-			if not v:HasTag("slow") then
-			v:AddTag("slow")
-			end
+			Slow.Apply(v, "passive_lightning")
 		else
 
 		v.components.health:DoDelta(-20)
@@ -1599,7 +1609,8 @@ elseif inst.level >= 7000 then
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
 	end
 
-	if v.components.locomotor and not v:HasTag("ghost") then
+	if v.components.locomotor and v.sg ~= nil and not v:HasTag("ghost")
+        and not v:HasTag("epic") and not v:HasTag("giant") then
         v.components.locomotor:StopMoving()
 		if v:HasTag("spider") and not v:HasTag("spiderqueen") then
 			v.sg:GoToState("hit_stunlock")
@@ -1611,18 +1622,20 @@ elseif inst.level >= 7000 then
 		fx_2.Transform:SetScale(0.4, 0.4, 0.4)
 		fx_2.Transform:SetPosition(inst:GetPosition():Get())
 
-	v:DoTaskInTime(0.3, function() SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
+	v:DoTaskInTime(0.3, function()
+	if not v:IsValid() or v.components.health == nil or v.components.health:IsDead()
+        or IsProtectedLightningEntity(inst, v) then return end
+	SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
 	SpawnPrefab("lightning2").Transform:SetPosition(v:GetPosition():Get())
-	v:DoTaskInTime(0.4, function() SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
+	v:DoTaskInTime(0.4, function()
+	if not v:IsValid() then return end
+	SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	local fx_3 = SpawnPrefab("groundpoundring_fx")
 		fx_3.Transform:SetScale(0.3, 0.3, 0.3)
 		fx_3.Transform:SetPosition(v:GetPosition():Get())
 	  end)
 		if v:HasTag("burn") then
-			v.slow = true
-			if not v:HasTag("slow") then
-			v:AddTag("slow")
-			end
+			Slow.Apply(v, "passive_lightning")
 		else
 
 		v.components.health:DoDelta(-25)
@@ -2339,47 +2352,6 @@ end
 
 end
 
-
-local function Call_lightining_debuff(inst, data)
-    local x, y, z = inst.Transform:GetWorldPosition()
-    local slow = TheSim:FindEntities(x, y, z, 25, { "slow" })
-    for i, v in ipairs(slow) do
-	if v.bloom then
-	v.AnimState:SetBloomEffectHandle( "" )
-	v.bloom = false
-	end
-	if v.components.health ~= nil and not v.components.health:IsDead() and v.components.locomotor and not v:HasTag("wet") then
-	if v:HasTag("giant") or v:HasTag("epic") then
-	v.components.locomotor.groundspeedmultiplier = 0.2
-	else
-	v.components.locomotor.groundspeedmultiplier = 0.05
-	end
-	end
-end
-    local x, y, z = inst.Transform:GetWorldPosition()
-    local slow_poison = TheSim:FindEntities(x, y, z, 25, { "slow_poison" })
-    for i, v in ipairs(slow_poison) do
-	if v.components.health ~= nil and not v.components.health:IsDead() and v.components.locomotor and not v:HasTag("wet") and not v:HasTag("slow") then
-	if v:HasTag("giant") or v:HasTag("epic") then
-	v.components.locomotor.groundspeedmultiplier = 0.45
-	else
-	v.components.locomotor.groundspeedmultiplier = 0.15
-	end
-	end
-	end
-    local x, y, z = inst.Transform:GetWorldPosition()
-    local slow_frozen = TheSim:FindEntities(x, y, z, 15, { "slow_frozen" })
-for i, v in ipairs(slow_frozen) do
-	if v.components.health ~= nil and not v.components.health:IsDead() and v.components.locomotor and not v:HasTag("wet") and not v:HasTag("slow") and not v:HasTag("slow_poison") then
-	if v:HasTag("giant") or v:HasTag("epic") then
-	v.components.locomotor.groundspeedmultiplier = 0.45
-	else
-	v.components.locomotor.groundspeedmultiplier = 0.15
-	end
-	end
-end
-
-end
 
 --[[
 local function Call_lightining_on(inst, data)
@@ -6170,7 +6142,6 @@ end
 MushaTasks.Listen(inst, "lightning_defense", "attacked", inst.Call_lightining_defense, inst)
 MushaTasks.Listen(inst, "lightning_attack", "onhitother", Call_lightining_attack)
 inst.Call_lightining_check = MushaTasks.Periodic(inst, "Call_lightining_check", 0.5, Call_lightining_check)
-inst.Call_lightining_debuff = MushaTasks.Periodic(inst, "Call_lightining_debuff", 0, Call_lightining_debuff)
 inst.berserk_changer = MushaTasks.Periodic(inst, "berserk_changer", 1, berserk_changer)
 
 inst.yamche_berserk_sync = MushaTasks.Periodic(inst, "yamche_berserk_sync", 2, function()
@@ -6538,7 +6509,8 @@ for k,v in pairs(ents) do
 	SpawnPrefab("sparks").Transform:SetPosition(v:GetPosition():Get())
 	--SpawnPrefab("shock_fx").Transform:SetPosition(v:GetPosition():Get())
 
-	if v.components.locomotor and not v:HasTag("ghost") then
+	if v.components.locomotor and v.sg ~= nil and not v:HasTag("ghost")
+        and not v:HasTag("epic") and not v:HasTag("giant") then
         v.components.locomotor:StopMoving()
 		if v:HasTag("spider") and not v:HasTag("spiderqueen") then
 			v.sg:GoToState("hit_stunlock")

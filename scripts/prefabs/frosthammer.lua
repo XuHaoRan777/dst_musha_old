@@ -1,6 +1,7 @@
 local SkillDefs = require("musha/skills/defs")
 local EquipUtils = require("musha/equipment/utils")
 local FrostHammerMode = require("musha/equipment/frosthammer_mode")
+local Slow = require("musha/combat/slow")
 
 local assets=
 {
@@ -411,6 +412,35 @@ local owner = inst.components.inventoryitem.owner
     end
 end
 
+local function ApplyFrostSlow(target)
+	if target.components.locomotor == nil or target.components.health == nil
+		or target.components.health:IsDead() or target:HasTag("shadowcreature")
+		or target:HasTag("structure") then
+		return
+	end
+	local frozen = SpawnPrefab("debuff_frozen")
+	if frozen ~= nil then
+		frozen.Transform:SetPosition(target:GetPosition():Get())
+		frozen.Transform:SetScale(0.5, 0.8, 0.5)
+		local follower = frozen.entity:AddFollower()
+		local symbol = target.components.combat ~= nil and target.components.combat.hiteffectsymbol or "body"
+		follower:FollowSymbol(target.GUID, symbol, 0, 0, 0)
+	end
+	local applied = Slow.Apply(target, "frost", {
+		fx = frozen,
+		on_clear = function(victim)
+			if victim:IsValid() then
+				victim:RemoveTag("slow_frozen")
+			end
+		end,
+	})
+	if applied then
+		target:AddTag("slow_frozen")
+	elseif frozen ~= nil and frozen:IsValid() then
+		frozen:Remove()
+	end
+end
+
 local function onattack_FROST(inst, attacker, target)
 local freezechance1 = 0.42
 local freezechance2 = 0.52
@@ -485,17 +515,7 @@ TakeItem_effect(inst)
 		fx.Transform:SetScale(1, 1.2, 1)
 		fx.Transform:SetPosition(target:GetPosition():Get())	
 		--target.components.health:DoDelta(-10)
-		if target.components.locomotor and target.components.health and not target.components.health:IsDead() and not target:HasTag("shadowcreature") and not target:HasTag("structure") and not target:HasTag("slow_frozen") then
-		target:AddTag("slow_frozen")
-		local frozen = SpawnPrefab("debuff_frozen")
-		frozen.Transform:SetPosition(target:GetPosition():Get())
-		frozen.Transform:SetScale(0.5,0.8,0.5)
-		if frozen and target:HasTag("slow_frozen") then
-		local follower = frozen.entity:AddFollower()
-		follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, 0, 0 )
-		end
-	TheWorld:DoTaskInTime(4, function() target.components.locomotor.groundspeedmultiplier = 1 target:RemoveTag("slow_frozen") frozen:Remove() end)
-		end
+		ApplyFrostSlow(target)
 	elseif math.random() < freezechance2 and target.components.freezable and inst.level >=250 and inst.level <1400 then
         target.components.freezable:AddColdness(0.8)
         local prefab = "icespike_fx_"..math.random(1,4)
@@ -503,17 +523,7 @@ TakeItem_effect(inst)
 		fx.Transform:SetScale(1, 1.35, 1)
 		fx.Transform:SetPosition(target:GetPosition():Get())
 		--target.components.health:DoDelta(-20)
-		if target.components.locomotor and target.components.health and not target.components.health:IsDead() and not target:HasTag("shadowcreature") and not target:HasTag("structure") and not target:HasTag("slow_frozen") then
-		target:AddTag("slow_frozen")
-		local frozen = SpawnPrefab("debuff_frozen")
-		frozen.Transform:SetPosition(target:GetPosition():Get())
-		frozen.Transform:SetScale(0.5,0.8,0.5)
-		if frozen and target:HasTag("slow_frozen") then
-		local follower = frozen.entity:AddFollower()
-		follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, 0, 0 )
-		end
-	TheWorld:DoTaskInTime(4, function() target.components.locomotor.groundspeedmultiplier = 1 target:RemoveTag("slow_frozen") frozen:Remove() end)
-		end
+		ApplyFrostSlow(target)
 	elseif math.random() < freezechance3 and target.components.freezable and inst.level >=1400 then
         target.components.freezable:AddColdness(0.9)
         local prefab = "icespike_fx_"..math.random(1,4)
@@ -521,17 +531,7 @@ TakeItem_effect(inst)
 		fx.Transform:SetScale(1, 1.5, 1)
 		fx.Transform:SetPosition(target:GetPosition():Get())	
 		--target.components.health:DoDelta(-30)	
-		if target.components.locomotor and target.components.health and not target.components.health:IsDead() and not target:HasTag("shadowcreature") and not target:HasTag("structure") and not target:HasTag("slow_frozen") then
-		target:AddTag("slow_frozen")
-		local frozen = SpawnPrefab("debuff_frozen")
-		frozen.Transform:SetPosition(target:GetPosition():Get())
-		frozen.Transform:SetScale(0.5,0.8,0.5)
-		if frozen and target:HasTag("slow_frozen") then
-		local follower = frozen.entity:AddFollower()
-		follower:FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, 0, 0 )
-		end
-	TheWorld:DoTaskInTime(4, function() target.components.locomotor.groundspeedmultiplier = 1 target:RemoveTag("slow_frozen") frozen:Remove() end)
-		end		
+		ApplyFrostSlow(target)
 	end
 	end
 	end

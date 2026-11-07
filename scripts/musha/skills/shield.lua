@@ -170,7 +170,8 @@ local function on_shield_act(inst, env)
 				follower:FollowSymbol(v.GUID, v.components.combat.hiteffectsymbol, 0, 0, 0.5)
 			end
 
-			if v.components.locomotor and not v:HasTag("ghost") then
+			if v.components.locomotor and v.sg ~= nil and not v:HasTag("ghost")
+				and not v:HasTag("epic") and not v:HasTag("giant") then
 				v.components.locomotor:StopMoving()
 				if v:HasTag("spider") and not v:HasTag("spiderqueen") then
 					v.sg:GoToState("hit_stunlock")
